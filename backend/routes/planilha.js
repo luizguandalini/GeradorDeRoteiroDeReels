@@ -16,8 +16,9 @@ router.post("/", async (req, res) => {
     const response = await axios.get(csvUrl);
     const linhas = response.data
       .split("\n")
-      .map((l) => l.split(",")[0])
-      .filter(Boolean);
+      .map((l) => l.split(",")[0].trim()) // pega só a coluna A
+      .slice(1) // ignora só o cabeçalho (primeira linha)
+      .filter((v) => v.length > 0); // remove linhas vazias
 
     res.json({ valores: linhas });
   } catch (error) {
