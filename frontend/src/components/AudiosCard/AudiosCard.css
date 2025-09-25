@@ -1,0 +1,50 @@
+/* LISTA – este é o contêiner que rola */
+.audios-container {
+  position: relative;
+  max-height: 260px;
+  overflow-y: auto; /* só a lista rola */
+  overflow-x: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--card-bg);
+  padding: 10px 12px; /* sem padding-bottom extra */
+}
+
+/* lista */
+.audios-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.audio-item {
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+/* BARRA de ações – fora do container rolável (não sobrepõe a lista) */
+.audios-actions-fixed {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0 0; /* respiro acima dos botões */
+}
+
+.btn-danger {
+  background: #e84118;
+  color: #fff;
+}
+.btn-neutral {
+  background: #6b7280;
+  color: #fff;
+}
+
+/* botões do toast de confirmação */
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}

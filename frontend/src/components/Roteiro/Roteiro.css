@@ -1,0 +1,80 @@
+/* LISTA rolável do roteiro */
+.editor-container {
+  max-height: 250px;
+  overflow-y: auto;
+  overflow-x: clip; /* evita qualquer barra horizontal */
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--card-bg);
+}
+
+/* conteúdo editável */
+.roteiro-editor {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 14px; /* sem padding extra no bottom agora */
+  color: var(--text-color);
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* AÇÕES — fora do container (sem linha/borda) */
+.audio-actions-fixed {
+  display: flex;
+  gap: 10px;
+  padding-top: 12px; /* só um respiro visual */
+}
+
+/* bloco do passo (narração + imagem) */
+.step {
+  position: relative;
+  padding: 12px 12px 12px 44px; /* espaço para a badge */
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* badge numerada */
+.step-badge {
+  position: absolute;
+  left: 10px;
+  top: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+  background: linear-gradient(90deg, #f58529, #dd2a7b, #8134af, #515bd4);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.step-row {
+  margin-bottom: 8px;
+}
+
+.label {
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.label-nar {
+  color: #d62828;
+}
+.label-img {
+  color: #1d7ed6;
+}
+
+.row-content {
+  color: var(--text-color);
+}
+
+.default-text {
+  color: var(--text-color);
+}

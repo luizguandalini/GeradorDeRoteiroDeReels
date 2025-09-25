@@ -8,16 +8,13 @@ import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
 import PlanilhaForm from "./components/PlanilhaForm/PlanilhaForm";
 import TemasList from "./components/TemasList/TemasList";
 import Roteiro from "./components/Roteiro/Roteiro";
+import AudiosCard from "./components/AudiosCard/AudiosCard";
 
 // Ícones
-import {
-  FaInstagram,
-  FaTable,
-  FaLightbulb,
-  FaRobot,
-  FaClock,
-  FaFilm,
-} from "react-icons/fa";
+import { FaTable, FaLightbulb, FaRobot, FaClock, FaFilm } from "react-icons/fa";
+
+// Logo personalizada
+import logoReels from "../reels-express.png";
 
 function App() {
   const [valores, setValores] = useState([]);
@@ -122,10 +119,11 @@ function App() {
       </div>
 
       <header className="app-header">
-        <h1>
-          <FaInstagram style={{ marginRight: "10px", color: "#dd2a7b" }} />
-          Gerador de Roteiro para Reels
-        </h1>
+        <img
+          src={logoReels}
+          alt="Reels Express"
+          style={{ marginRight: "12px", height: "100px" }}
+        />
       </header>
 
       <ToastContainer position="top-right" autoClose={3000} />
@@ -186,13 +184,15 @@ function App() {
         </p>
       </div>
 
-      <div className="card scrollable">
+      <div className="card">
         <h2>
           <FaFilm style={{ marginRight: "8px", color: "#e84118" }} />
           Roteiro
         </h2>
         <Roteiro roteiro={roteiro} />
       </div>
+
+      <AudiosCard />
 
       {loading && <LoadingSpinner />}
     </div>

@@ -62,6 +62,7 @@ body {
 .scrollable {
   max-height: 250px;
   overflow-y: auto;
+  overflow-x: hidden; /* 🔥 garante que nunca aparece barra horizontal */
 }
 
 h2 {
