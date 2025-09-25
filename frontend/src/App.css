@@ -1,0 +1,237 @@
+:root {
+  --bg-color: #f8f9fa;
+  --card-bg: #ffffff;
+  --text-color: #222;
+  --border-color: #ddd;
+  --accent-color: #c13584; /* Roxo Instagram */
+  --highlight-color: #5851db; /* Azul Instagram */
+}
+
+body.dark {
+  --bg-color: #1c1c27;
+  --card-bg: #2a2a3d;
+  --text-color: #e4e4e7;
+  --border-color: #444;
+}
+
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* ocupa altura total da tela */
+}
+
+.app-container {
+  max-width: 900px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* garante centralização vertical interna também */
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  background-color: var(--card-bg);
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  transition: background-color 0.3s, color 0.3s;
+  width: 100%;
+}
+
+.scrollable {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+h2 {
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  position: relative;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+h2::after {
+  content: "";
+  display: block;
+  height: 3px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #f58529, #dd2a7b, #8134af, #515bd4);
+  flex-grow: 1;
+  margin-left: 8px;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  transition: border 0.3s, box-shadow 0.3s;
+}
+
+input:focus {
+  border-color: var(--accent-color);
+  outline: none;
+  box-shadow: 0 0 5px rgba(193, 53, 132, 0.5);
+}
+
+button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
+  color: #fff;
+  transition: opacity 0.3s, transform 0.2s;
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  padding: 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+li:hover {
+  background-color: rgba(193, 53, 132, 0.1);
+  transform: translateX(4px);
+}
+
+li.selected {
+  background: linear-gradient(90deg, #f58529, #dd2a7b, #8134af, #515bd4);
+  color: #fff;
+  font-weight: 600;
+}
+
+.roteiro-item {
+  margin-bottom: 1.2rem;
+  padding: 0.8rem;
+  border-left: 4px solid var(--accent-color);
+  background-color: var(--card-bg);
+  border-radius: 6px;
+}
+
+.roteiro-item strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.roteiro-item em {
+  display: block;
+  margin-top: 4px;
+  color: var(--highlight-color);
+  font-weight: 500;
+  font-style: normal;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 6px;
+}
+
+.theme-toggle-container {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 28px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}

@@ -1,0 +1,41 @@
+.planilha-form {
+  display: flex;
+  flex-direction: column; /* input em cima, botão embaixo */
+  gap: 10px;
+  width: 100%;
+}
+
+.planilha-input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 1rem;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.botao-buscar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #ff4d4d, #7d4dff);
+  color: white;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  /* 🔑 limita largura */
+  width: fit-content; /* ocupa só o necessário */
+  align-self: flex-start; /* alinha à esquerda (pode trocar por center ou end) */
+}
+
+.botao-buscar:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
