@@ -149,7 +149,6 @@ const TopicosSection = ({
       {/* Busca */}
       <div className="search-container">
         <div className="search-input-container">
-          <FaSearch className="search-icon" />
           <input
             type="text"
             placeholder="Buscar tópicos..."
