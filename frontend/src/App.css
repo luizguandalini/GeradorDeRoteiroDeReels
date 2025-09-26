@@ -7,6 +7,26 @@
   --highlight-color: #5851db; /* Azul Instagram */
 }
 
+/* Responsividade para o roadmap */
+@media (max-width: 768px) {
+  .roadmap-steps {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .roadmap-step {
+    margin: 5px 0;
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .roadmap-arrow {
+    transform: rotate(90deg);
+    margin: 5px auto;
+    width: 15px;
+  }
+}
+
 body.dark {
   --bg-color: #1c1c27;
   --card-bg: #2a2a3d;
@@ -28,12 +48,137 @@ body {
 }
 
 .app-container {
-  max-width: 900px;
-  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Roadmap estilo */
+.roadmap-container {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  border: 1px solid var(--border-color);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.roadmap-container h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--accent-color);
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.roadmap-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.roadmap-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* garante centralização vertical interna também */
+  justify-content: center;
+  padding: 10px 15px;
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  margin: 0 5px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.roadmap-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #f1f1f1;
+  color: #555;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.roadmap-step.active .roadmap-number {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.roadmap-step.completed .roadmap-number {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.roadmap-step.active {
+  border-color: var(--accent-color);
+  box-shadow: 0 2px 10px rgba(193, 53, 132, 0.3);
+}
+
+.roadmap-step.completed {
+  border-color: #4CAF50;
+}
+
+.roadmap-arrow {
+  width: 20px;
+  height: 2px;
+  background-color: var(--border-color);
+  position: relative;
+}
+
+.roadmap-arrow:after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -3px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid var(--border-color);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+}
+
+.dark .roadmap-step.active {
+  background-color: #e1306c;
+  color: white;
+  border-color: #e1306c;
+}
+
+.dark .roadmap-step.completed {
+  background-color: #4CAF50;
+  color: white;
+  border-color: #4CAF50;
+}
+
+.dark .roadmap-arrow {
+  color: #777;
+}
+
+@media (max-width: 768px) {
+  .roadmap-steps {
+    flex-direction: column;
+  }
+  
+  .roadmap-arrow {
+    transform: rotate(90deg);
+  }
 }
 
 .app-header {

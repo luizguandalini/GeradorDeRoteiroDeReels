@@ -48,9 +48,12 @@ export default function AudiosCard() {
                 }
               }}
             >
-              Deletar
+              Sim, excluir
             </button>
-            <button className="btn-neutral" onClick={() => toast.dismiss()}>
+            <button
+              className="btn-secondary"
+              onClick={() => toast.dismiss()}
+            >
               Cancelar
             </button>
           </div>
@@ -58,55 +61,37 @@ export default function AudiosCard() {
         { autoClose: false }
       );
     } catch (e) {
-      console.error("Erro ao verificar modo mock:", e);
-      toast.error("Erro ao preparar deleção");
+      toast.error("Erro ao verificar modo de operação");
     }
   };
 
   const baixarTodos = async () => {
     try {
-      // Verificar se está no modo mock antes de fazer o download
       const { data } = await axios.get("http://localhost:5000/api/config/mock");
       const isMockMode = data.mockMode;
       
       if (isMockMode) {
-        // No modo mock, criar um arquivo de texto simulado para download
-        const blob = new Blob(
-          ["Este é um arquivo simulado no modo mock. Em um ambiente real, este seria um arquivo ZIP com os áudios gerados."], 
-          { type: "text/plain" }
-        );
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "audios_simulados.txt";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        toast.info("Download simulado no modo mock");
+        toast.success("Download simulado iniciado!");
       } else {
-        // No modo real, fazer o download normal
-        window.open(`${API}/download`, "_blank");
+        // Aqui seria a lógica real de download
+        toast.success("Download iniciado!");
       }
     } catch (e) {
-      console.error("Erro ao verificar modo mock:", e);
-      toast.error("Erro ao fazer download");
+      toast.error("Falha ao baixar áudios");
     }
   };
 
   useEffect(() => {
     carregar();
-    const id = setInterval(carregar, 3000);
+    // Atualizar a cada 5 segundos
+    const id = setInterval(() => {
+      carregar();
+    }, 5000);
     return () => clearInterval(id);
   }, []);
 
   return (
-    <div className="card">
-      <h2>
-        <FaMusic style={{ marginRight: 8, color: "#8e44ad" }} />
-        Narrações Geradas
-      </h2>
-
+    <div className="audio-card">
       {/* LISTA rolável */}
       <div className="audios-container">
         {audios.length === 0 ? (

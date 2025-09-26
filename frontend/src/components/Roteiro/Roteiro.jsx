@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { FaFilePdf, FaPlay } from "react-icons/fa";
+import { FaFilePdf, FaPlay, FaCopy } from "react-icons/fa";
 import axios from "axios";
 import jsPDF from "jspdf";
+import { toast } from "react-toastify";
 import "./Roteiro.css";
 
 function Roteiro({ roteiro }) {
@@ -22,6 +23,17 @@ function Roteiro({ roteiro }) {
 
   const handleInput = () => {
     setTexto(editorRef.current.innerText);
+  };
+  
+  const copiarRoteiro = () => {
+    if (!texto.trim()) return;
+    navigator.clipboard.writeText(texto)
+      .then(() => {
+        toast.success("Roteiro copiado para a área de transferência!");
+      })
+      .catch(() => {
+        toast.error("Erro ao copiar o roteiro");
+      });
   };
 
   const parseSteps = () => {
@@ -60,14 +72,14 @@ function Roteiro({ roteiro }) {
       if (s.nar) narracoes[`Narracao ${idx++}`] = s.nar;
     });
     if (Object.keys(narracoes).length === 0) {
-      alert("❌ Nenhuma narração encontrada no roteiro.");
+      toast.error("Nenhuma narração encontrada no roteiro.");
       return;
     }
     try {
       await axios.post("http://localhost:5000/api/narracoes", { narracoes });
-      alert("🎙️ Voz gerada com sucesso! Verifique a aba de Narrações.");
+      toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
     } catch {
-      alert("❌ Erro ao gerar voz");
+      toast.error("Erro ao gerar voz");
     }
   };
 
@@ -198,6 +210,12 @@ function Roteiro({ roteiro }) {
       {/* AÇÕES (fora do container) — não possui linha/borda */}
       {texto.trim() && (
         <div className="audio-actions-fixed">
+          <button
+            onClick={copiarRoteiro}
+            style={{ background: "#e1306c", color: "#fff" }}
+          >
+            <FaCopy /> Copiar Roteiro
+          </button>
           <button
             onClick={gerarVoz}
             style={{ background: "#e84118", color: "#fff" }}
