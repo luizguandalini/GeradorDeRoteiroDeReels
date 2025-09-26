@@ -4,6 +4,8 @@ import path from "path";
 import axios from "axios";
 import { fileURLToPath } from "url";
 import "dotenv/config";
+import { getMockMode } from "../config/mockConfig.js";
+import { narracoesMock } from "../config/mockData.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -64,6 +66,12 @@ async function gerarAudio(texto, nomeArquivo) {
 
 router.post("/", async (req, res) => {
   try {
+    // Verificar se está no modo mock
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para narrações");
+      return res.json(narracoesMock);
+    }
+    
     const { narracoes } = req.body;
     console.log("📩 Requisição recebida:", narracoes);
 

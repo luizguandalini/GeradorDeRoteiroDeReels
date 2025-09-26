@@ -1,10 +1,18 @@
 import express from "express";
 import axios from "axios";
+import { getMockMode } from "../config/mockConfig.js";
+import { planilhaMock } from "../config/mockData.js";
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
+    // Verificar se está no modo mock
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para planilha");
+      return res.json(planilhaMock);
+    }
+
     const { url } = req.body;
     const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!match) return res.status(400).json({ error: "URL inválida" });

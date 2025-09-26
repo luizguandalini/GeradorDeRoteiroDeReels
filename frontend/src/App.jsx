@@ -11,7 +11,7 @@ import Roteiro from "./components/Roteiro/Roteiro";
 import AudiosCard from "./components/AudiosCard/AudiosCard";
 
 // Ícones
-import { FaTable, FaLightbulb, FaRobot, FaClock, FaFilm } from "react-icons/fa";
+import { FaTable, FaLightbulb, FaRobot, FaClock, FaFilm, FaCode } from "react-icons/fa";
 
 // Logo personalizada
 import logoReels from "../reels-express.png";
@@ -23,6 +23,7 @@ function App() {
   const [duracao, setDuracao] = useState("90");
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [mockMode, setMockMode] = useState(false);
   const [selectedValor, setSelectedValor] = useState(null);
   const [selectedTema, setSelectedTema] = useState(null);
 
@@ -32,6 +33,9 @@ function App() {
       setDarkMode(true);
       document.body.classList.add("dark");
     }
+    
+    // Verificar o estado atual do modo mock
+    checkMockMode();
   }, []);
 
   const toggleTheme = () => {
@@ -43,6 +47,27 @@ function App() {
       localStorage.setItem("theme", "dark");
     }
     setDarkMode(!darkMode);
+  };
+  
+  const toggleMockMode = async () => {
+    try {
+      const newMockMode = !mockMode;
+      await axios.post("http://localhost:5000/api/config/mock", { mockMode: newMockMode });
+      setMockMode(newMockMode);
+      toast.info(`Modo ${newMockMode ? "simulação" : "real"} ativado`);
+    } catch (error) {
+      toast.error("Erro ao alterar o modo de operação");
+      console.error(error);
+    }
+  };
+  
+  const checkMockMode = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/config/mock");
+      setMockMode(response.data.mockMode);
+    } catch (error) {
+      console.error("Erro ao verificar o modo mock:", error);
+    }
   };
 
   const getPlanilha = async (url) => {
@@ -116,6 +141,18 @@ function App() {
           <input type="checkbox" checked={darkMode} onChange={toggleTheme} />
           <span className="slider"></span>
         </label>
+      </div>
+      
+      {/* Toggle para modo mock */}
+      <div className="mock-toggle-container">
+        <label className="switch">
+          <input type="checkbox" checked={mockMode} onChange={toggleMockMode} />
+          <span className="slider mock-slider"></span>
+        </label>
+        <span className="mock-label">
+          <FaCode style={{ marginRight: "5px" }} />
+          Modo {mockMode ? "Simulação" : "Real"}
+        </span>
       </div>
 
       <header className="app-header">

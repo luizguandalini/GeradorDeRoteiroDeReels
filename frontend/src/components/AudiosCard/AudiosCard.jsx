@@ -17,37 +17,81 @@ export default function AudiosCard() {
     }
   };
 
-  const deletarTodos = () => {
-    toast.info(
-      <div>
-        <p>Tem certeza que deseja excluir todos os áudios?</p>
-        <div className="confirm-actions">
-          <button
-            className="btn-danger"
-            onClick={async () => {
-              try {
-                await axios.delete(API);
-                toast.dismiss();
-                toast.success("Áudios deletados!");
-                carregar();
-              } catch (e) {
-                toast.error("Falha ao deletar áudios");
-              }
-            }}
-          >
-            Deletar
-          </button>
-          <button className="btn-neutral" onClick={() => toast.dismiss()}>
-            Cancelar
-          </button>
-        </div>
-      </div>,
-      { autoClose: false }
-    );
+  const deletarTodos = async () => {
+    // Verificar se está no modo mock
+    try {
+      const { data } = await axios.get("http://localhost:5000/api/config/mock");
+      const isMockMode = data.mockMode;
+      
+      toast.info(
+        <div>
+          <p>Tem certeza que deseja excluir todos os áudios?</p>
+          <div className="confirm-actions">
+            <button
+              className="btn-danger"
+              onClick={async () => {
+                try {
+                  if (isMockMode) {
+                    // No modo mock, apenas simular a deleção
+                    toast.dismiss();
+                    toast.success("Áudios deletados (simulação)!");
+                    carregar();
+                  } else {
+                    // No modo real, fazer a deleção normal
+                    await axios.delete(API);
+                    toast.dismiss();
+                    toast.success("Áudios deletados!");
+                    carregar();
+                  }
+                } catch (e) {
+                  toast.error("Falha ao deletar áudios");
+                }
+              }}
+            >
+              Deletar
+            </button>
+            <button className="btn-neutral" onClick={() => toast.dismiss()}>
+              Cancelar
+            </button>
+          </div>
+        </div>,
+        { autoClose: false }
+      );
+    } catch (e) {
+      console.error("Erro ao verificar modo mock:", e);
+      toast.error("Erro ao preparar deleção");
+    }
   };
 
-  const baixarTodos = () => {
-    window.open(`${API}/download`, "_blank");
+  const baixarTodos = async () => {
+    try {
+      // Verificar se está no modo mock antes de fazer o download
+      const { data } = await axios.get("http://localhost:5000/api/config/mock");
+      const isMockMode = data.mockMode;
+      
+      if (isMockMode) {
+        // No modo mock, criar um arquivo de texto simulado para download
+        const blob = new Blob(
+          ["Este é um arquivo simulado no modo mock. Em um ambiente real, este seria um arquivo ZIP com os áudios gerados."], 
+          { type: "text/plain" }
+        );
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "audios_simulados.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.info("Download simulado no modo mock");
+      } else {
+        // No modo real, fazer o download normal
+        window.open(`${API}/download`, "_blank");
+      }
+    } catch (e) {
+      console.error("Erro ao verificar modo mock:", e);
+      toast.error("Erro ao fazer download");
+    }
   };
 
   useEffect(() => {
@@ -71,7 +115,13 @@ export default function AudiosCard() {
           <ul className="audios-list">
             {audios.map((a, i) => (
               <li key={i} className="audio-item">
-                {a}
+                <span className="audio-name">{typeof a === 'object' ? a.nome : a}</span>
+                {typeof a === 'object' && a.duracao && (
+                  <span className="audio-duration">{a.duracao}</span>
+                )}
+                {typeof a === 'string' && (
+                  <span className="audio-duration">Calculando...</span>
+                )}
               </li>
             ))}
           </ul>

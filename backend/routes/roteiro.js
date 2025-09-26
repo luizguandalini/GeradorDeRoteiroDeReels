@@ -1,12 +1,20 @@
 import express from "express";
 import axios from "axios";
 import dotenv from "dotenv";
+import { getMockMode } from "../config/mockConfig.js";
+import { roteiroMock } from "../config/mockData.js";
 
 dotenv.config();
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
+    // Verificar se está no modo mock
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para roteiro");
+      return res.json(roteiroMock);
+    }
+    
     const { tema, duracao } = req.body;
     console.log("📩 Requisição recebida com dados:", { tema, duracao });
 
