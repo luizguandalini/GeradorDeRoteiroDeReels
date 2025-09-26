@@ -5,7 +5,7 @@ import jsPDF from "jspdf";
 import { toast } from "react-toastify";
 import "./Roteiro.css";
 
-function Roteiro({ roteiro }) {
+function Roteiro({ roteiro, onNarracoesGeradas }) {
   const [texto, setTexto] = useState("");
   const editorRef = useRef(null);
 
@@ -79,6 +79,10 @@ function Roteiro({ roteiro }) {
     try {
       await axios.post("http://localhost:5000/api/narracoes", { narracoes });
       toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
+      // Marcar que as narrações foram geradas
+      if (onNarracoesGeradas) {
+        onNarracoesGeradas(true);
+      }
     } catch {
       toast.error("Erro ao gerar voz");
     }

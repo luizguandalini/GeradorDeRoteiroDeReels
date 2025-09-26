@@ -31,6 +31,7 @@ function App() {
   const [mockMode, setMockMode] = useState(false);
   const [selectedValor, setSelectedValor] = useState(null);
   const [selectedTema, setSelectedTema] = useState(null);
+  const [narracoesGeradas, setNarracoesGeradas] = useState(false);
 
   // Configuração personalizada para o toast
   const toastConfig = {
@@ -109,6 +110,7 @@ function App() {
       setSelectedTema(null);
       setTemas([]);
       setRoteiro([]);
+      setNarracoesGeradas(false); // Reset narrações quando busca nova planilha
     } catch {
       toast.error("Erro ao carregar planilha", toastConfig);
     } finally {
@@ -122,6 +124,7 @@ function App() {
       setSelectedValor(topico);
       setSelectedTema(null);
       setRoteiro([]);
+      setNarracoesGeradas(false); // Reset narrações quando volta para passo anterior
       const res = await axios.post("http://localhost:5000/api/temas", {
         topico,
       });
@@ -149,6 +152,7 @@ function App() {
     try {
       setLoading(true);
       setSelectedTema(tema);
+      setNarracoesGeradas(false); // Reset narrações quando seleciona novo tema
       const res = await axios.post("http://localhost:5000/api/roteiro", {
         tema,
         duracao,
@@ -200,6 +204,7 @@ function App() {
         temas={temas}
         selectedTema={selectedTema}
         roteiro={roteiro}
+        narracoesGeradas={narracoesGeradas}
       />
 
       <div className="card">
@@ -223,7 +228,7 @@ function App() {
         onDurationChange={setDuracao}
       />
 
-      <ScriptSection roteiro={roteiro} />
+      <ScriptSection roteiro={roteiro} onNarracoesGeradas={setNarracoesGeradas} />
 
       <NarrationSection roteiro={roteiro} />
 

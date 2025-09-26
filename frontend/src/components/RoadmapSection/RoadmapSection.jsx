@@ -6,7 +6,8 @@ const RoadmapSection = ({
   selectedValor, 
   temas, 
   selectedTema, 
-  roteiro 
+  roteiro,
+  narracoesGeradas
 }) => {
   return (
     <div className="roadmap-container">
@@ -60,7 +61,7 @@ const RoadmapSection = ({
         </div>
         <div className="roadmap-arrow"></div>
 
-        <div className={`roadmap-step ${roteiro.length > 0 ? "active" : ""}`}>
+        <div className={`roadmap-step ${narracoesGeradas ? "completed" : roteiro.length > 0 ? "active" : ""}`}>
           <span className="roadmap-number">5</span>
           <span className="roadmap-text">Gerar Narrações</span>
         </div>
