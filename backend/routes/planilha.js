@@ -3,7 +3,6 @@ import axios from "axios";
 
 const router = express.Router();
 
-// Lê valores da coluna A de uma planilha pública
 router.post("/", async (req, res) => {
   try {
     const { url } = req.body;
@@ -16,9 +15,9 @@ router.post("/", async (req, res) => {
     const response = await axios.get(csvUrl);
     const linhas = response.data
       .split("\n")
-      .map((l) => l.split(",")[0].trim()) // pega só a coluna A
-      .slice(1) // ignora só o cabeçalho (primeira linha)
-      .filter((v) => v.length > 0); // remove linhas vazias
+      .map((l) => l.split(",")[0].trim())
+      .slice(1)
+      .filter((v) => v.length > 0);
 
     res.json({ valores: linhas });
   } catch (error) {

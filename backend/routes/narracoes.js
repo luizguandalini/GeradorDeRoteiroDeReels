@@ -10,39 +10,36 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const API_KEY = process.env.ELEVEN_API_KEY;
-const VOICE_ID = "nPczCjzI2devNBz1zQrb";
+const VOICE_ID = process.env.VOICE_ID;
+const MODEL_ID = process.env.ELEVEN_MODEL_ID;
+
 const URL = `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`;
 
 const pastaSaida = path.join(__dirname, "../audios");
 
-// 🗂️ Garante que a pasta exista
 if (!fs.existsSync(pastaSaida)) {
   fs.mkdirSync(pastaSaida);
   console.log("📁 Pasta 'audios' criada automaticamente.");
 }
 
-// 🔇 Gera um silence.mp3 de 1s (uma vez só)
 function gerarSilencio() {
   const silencePath = path.join(pastaSaida, "silence.mp3");
   if (fs.existsSync(silencePath)) return silencePath;
 
-  // WAV de 1s silêncio convertido para MP3 cru (pré-criado)
-  // Este base64 é um arquivo MP3 de 1 segundo de silêncio (44100Hz, estéreo)
   const silenceBase64 =
-    "SUQzAwAAAAAAQ1RTU0ZMT0FUIElOUE9TVAAACAAAAAEAAABJbmZvAAAASAAAACAAAAA..."; // encurtado aqui
+    "SUQzAwAAAAAAQ1RTU0ZMT0FUIElOUE9TVAAACAAAAAEAAABJbmZvAAAASAAAACAAAAA...";
 
   fs.writeFileSync(silencePath, Buffer.from(silenceBase64, "base64"));
   console.log("🔇 Arquivo silence.mp3 criado.");
   return silencePath;
 }
 
-// 🎙️ Função que gera áudio de uma narração
 async function gerarAudio(texto, nomeArquivo) {
   const response = await axios.post(
     URL,
     {
       text: texto,
-      model_id: "eleven_flash_v2_5",
+      model_id: MODEL_ID,
       voice_settings: {
         stability: 0.3,
         similarity_boost: 0.85,
@@ -65,7 +62,6 @@ async function gerarAudio(texto, nomeArquivo) {
   return outputPath;
 }
 
-// 🚏 Rota principal
 router.post("/", async (req, res) => {
   try {
     const { narracoes } = req.body;
@@ -78,7 +74,6 @@ router.post("/", async (req, res) => {
     const arquivosGerados = [];
     const buffers = [];
 
-    // Gera áudios individuais
     for (const [nome, texto] of Object.entries(narracoes)) {
       const nomeArquivo = `${nome.replace(/\s+/g, "_")}.mp3`;
       console.log(`🎙️ Gerando: ${nomeArquivo}`);
@@ -88,14 +83,12 @@ router.post("/", async (req, res) => {
       buffers.push(buffer);
       arquivosGerados.push(caminho);
 
-      // Adiciona silêncio entre narrações
       if (Object.keys(narracoes).pop() !== nome) {
         const silencePath = gerarSilencio();
         buffers.push(fs.readFileSync(silencePath));
       }
     }
 
-    // Junta tudo em final.mp3
     const audioFinal = path.join(pastaSaida, "final.mp3");
     fs.writeFileSync(audioFinal, Buffer.concat(buffers));
 

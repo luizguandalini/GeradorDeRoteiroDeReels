@@ -6,14 +6,15 @@ import archiver from "archiver";
 const router = express.Router();
 const pastaAudios = path.join(process.cwd(), "audios");
 
-// Lista todos os áudios (menos silence.mp3)
 router.get("/", (req, res) => {
   try {
     if (!fs.existsSync(pastaAudios)) return res.json({ audios: [] });
 
-    const files = fs.readdirSync(pastaAudios).filter(
-      (f) => f.endsWith(".mp3") && f !== "silence.mp3" && f !== "final.mp3" // opcional: excluir também o final.mp3 se não quiser na lista
-    );
+    const files = fs
+      .readdirSync(pastaAudios)
+      .filter(
+        (f) => f.endsWith(".mp3") && f !== "silence.mp3" && f !== "final.mp3"
+      );
 
     res.json({ audios: files });
   } catch (err) {
@@ -21,7 +22,6 @@ router.get("/", (req, res) => {
   }
 });
 
-// Deleta todos (menos silence.mp3)
 router.delete("/", (req, res) => {
   try {
     if (!fs.existsSync(pastaAudios))
@@ -42,7 +42,6 @@ router.delete("/", (req, res) => {
   }
 });
 
-// Download de todos em ZIP
 router.get("/download", (req, res) => {
   try {
     const zipName = "audios.zip";

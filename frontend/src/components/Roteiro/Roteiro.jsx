@@ -83,6 +83,9 @@ function Roteiro({ roteiro }) {
     const blockGap = 14;
     let y = margin;
 
+    const fontSize = 12;
+    const lineHeight = fontSize * 1.5;
+
     const newPageIfNeeded = (needed) => {
       const pageHeight = doc.internal.pageSize.getHeight();
       if (y + needed > pageHeight - margin) {
@@ -102,31 +105,37 @@ function Roteiro({ roteiro }) {
 
       if (step.nar) {
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
+        doc.setFontSize(fontSize);
         doc.setTextColor(214, 40, 40);
         doc.text("Narração:", margin, y);
 
         doc.setFont("helvetica", "normal");
         doc.setTextColor(40, 40, 40);
         const lines = doc.splitTextToSize(step.nar, usableWidth);
-        newPageIfNeeded(lines.length * 14 + lineGap);
-        y += 16;
-        lines.forEach((ln) => ((y += 14), doc.text(ln, margin, y)));
+        newPageIfNeeded(lines.length * lineHeight + lineGap);
+        y += lineHeight;
+        lines.forEach((ln) => {
+          doc.text(ln, margin, y);
+          y += lineHeight;
+        });
         y += lineGap;
       }
 
       if (step.img) {
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
+        doc.setFontSize(fontSize);
         doc.setTextColor(29, 126, 214);
         doc.text("Imagem/Vídeo:", margin, y);
 
         doc.setFont("helvetica", "normal");
         doc.setTextColor(40, 40, 40);
         const lines = doc.splitTextToSize(step.img, usableWidth);
-        newPageIfNeeded(lines.length * 14 + blockGap);
-        y += 16;
-        lines.forEach((ln) => ((y += 14), doc.text(ln, margin, y)));
+        newPageIfNeeded(lines.length * lineHeight + blockGap);
+        y += lineHeight;
+        lines.forEach((ln) => {
+          doc.text(ln, margin, y);
+          y += lineHeight;
+        });
         y += blockGap;
       } else {
         y += blockGap;

@@ -16,7 +16,6 @@ router.post("/", async (req, res) => {
     ).replace("{tema}", tema);
     console.log("📝 Prompt gerado:", prompt);
 
-    // Corpo principal com json_schema
     let body = {
       model: process.env.MODEL_NAME,
       response_format: {
@@ -35,12 +34,12 @@ router.post("/", async (req, res) => {
                     imagem: { type: "string" },
                   },
                   required: ["narracao", "imagem"],
-                  additionalProperties: false, // 🔑 exigido pelo provider
+                  additionalProperties: false,
                 },
               },
             },
             required: ["roteiro"],
-            additionalProperties: false, // 🔑 idem no nível raiz
+            additionalProperties: false,
           },
         },
       },
@@ -67,7 +66,6 @@ router.post("/", async (req, res) => {
         }
       );
     } catch (err) {
-      // Se falhar, loga detalhes completos
       if (err.response) {
         console.error("❌ Erro na rota / (primeira tentativa):", {
           status: err.response.status,
@@ -76,7 +74,6 @@ router.post("/", async (req, res) => {
         });
       }
 
-      // Fallback para response_format simples
       console.log("⚠️ Tentando fallback com response_format: 'json'...");
       body = {
         ...body,
@@ -97,7 +94,6 @@ router.post("/", async (req, res) => {
     let conteudo = response.data.choices[0].message.content;
     console.log("📦 Conteúdo retornado:", conteudo);
 
-    // limpa blocos de markdown caso venham (```json ... ```)
     conteudo = conteudo
       .replace(/```json/g, "")
       .replace(/```/g, "")
@@ -110,12 +106,10 @@ router.post("/", async (req, res) => {
       res.json(parsed);
     } catch (parseError) {
       console.error("❌ Erro ao fazer parse do JSON:", parseError.message);
-      res
-        .status(500)
-        .json({
-          error: "Falha ao interpretar resposta do modelo",
-          raw: conteudo,
-        });
+      res.status(500).json({
+        error: "Falha ao interpretar resposta do modelo",
+        raw: conteudo,
+      });
     }
   } catch (error) {
     if (error.response) {
