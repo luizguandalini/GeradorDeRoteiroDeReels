@@ -3,6 +3,7 @@ import axios from "axios";
 import dotenv from "dotenv";
 import { getMockMode } from "../config/mockConfig.js";
 import { temasMock } from "../config/mockData.js";
+import prisma from "../config/database.js";
 
 dotenv.config();
 const router = express.Router();
@@ -15,8 +16,17 @@ router.post("/", async (req, res) => {
       return res.json(temasMock);
     }
 
-    const { topico } = req.body;
-    console.log("📩 Requisição recebida com tópico:", topico);
+    const { topicoId } = req.body;
+    console.log("📩 Requisição recebida com tópico ID:", topicoId);
+
+    // Buscar o tópico no banco de dados
+    const topico = await prisma.topico.findUnique({
+      where: { id: parseInt(topicoId) }
+    });
+
+    if (!topico) {
+      return res.status(404).json({ error: "Tópico não encontrado" });
+    }
 
     const body = {
       model: process.env.MODEL_NAME,
@@ -35,7 +45,7 @@ router.post("/", async (req, res) => {
       },
       messages: [
         { role: "system", content: "Responda sempre em JSON válido" },
-        { role: "user", content: `${process.env.PROMPT_TEMAS} ${topico}` },
+        { role: "user", content: `${process.env.PROMPT_TEMAS} ${topico.nome}` },
       ],
     };
 
@@ -53,7 +63,23 @@ router.post("/", async (req, res) => {
     const parsed = JSON.parse(conteudo);
     console.log("📑 Conteúdo parseado:", parsed);
 
-    res.json(parsed);
+    // Salvar os temas no banco de dados
+    const temasCreated = await Promise.all(
+      parsed.temas.map(tema => 
+        prisma.tema.create({
+          data: {
+            titulo: tema,
+            topicoId: topico.id
+          }
+        })
+      )
+    );
+
+    console.log("💾 Temas salvos no banco de dados");
+    res.json({ 
+      temas: temasCreated.map(t => t.titulo), 
+      topico: topico.nome 
+    });
   } catch (error) {
     console.error("❌ Erro na rota /:", error.message);
     res.status(500).json({ error: error.message });
