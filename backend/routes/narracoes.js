@@ -102,6 +102,10 @@ router.post("/", async (req, res) => {
 
     console.log("✅ Áudio final gerado:", audioFinal);
 
+    // Notificar outros módulos que novos áudios foram criados
+    // Isso pode ser usado para invalidar caches ou notificar clientes
+    console.log("🔄 Novos áudios disponíveis - cache será atualizado na próxima consulta");
+
     res.json({
       mensagem: "Áudios gerados com sucesso!",
       arquivos: arquivosGerados.map((f) => path.basename(f)),

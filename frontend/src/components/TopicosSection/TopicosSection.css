@@ -117,11 +117,13 @@
   z-index: 2;
   pointer-events: none;
   font-size: 14px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 10px 10px 35px;
+  padding: 10px 10px 10px 40px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;

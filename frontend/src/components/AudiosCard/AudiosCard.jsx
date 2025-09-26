@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { FaMusic, FaTrash, FaDownload } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -6,14 +6,43 @@ import "./AudiosCard.css";
 
 export default function AudiosCard() {
   const [audios, setAudios] = useState([]);
+  const [lastModified, setLastModified] = useState(null);
+  const intervalRef = useRef(null);
   const API = "http://localhost:5000/api/audios";
 
-  const carregar = async () => {
+  const carregar = async (forceUpdate = false) => {
     try {
-      const { data } = await axios.get(API);
-      setAudios(data.audios || []);
+      const { data } = await axios.get(API, {
+        params: forceUpdate ? { force: true } : {}
+      });
+      
+      // Verificar se houve mudanças nos áudios
+      const currentModified = JSON.stringify(data.audios);
+      if (currentModified !== lastModified || forceUpdate) {
+        setAudios(data.audios || []);
+        setLastModified(currentModified);
+      }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const startPolling = () => {
+    // Limpar intervalo anterior se existir
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    // Iniciar polling apenas se há áudios ou se é a primeira verificação
+    intervalRef.current = setInterval(() => {
+      carregar();
+    }, audios.length > 0 ? 3000 : 10000); // 3s se há áudios, 10s se não há
+  };
+
+  const stopPolling = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
   };
 
@@ -35,13 +64,13 @@ export default function AudiosCard() {
                     // No modo mock, apenas simular a deleção
                     toast.dismiss();
                     toast.success("Áudios deletados (simulação)!");
-                    carregar();
+                    carregar(true);
                   } else {
                     // No modo real, fazer a deleção normal
                     await axios.delete(API);
                     toast.dismiss();
                     toast.success("Áudios deletados!");
-                    carregar();
+                    carregar(true);
                   }
                 } catch (e) {
                   toast.error("Falha ao deletar áudios");
@@ -79,12 +108,41 @@ export default function AudiosCard() {
   };
 
   useEffect(() => {
-    carregar();
-    // Atualizar a cada 5 segundos
-    const id = setInterval(() => {
-      carregar();
-    }, 5000);
-    return () => clearInterval(id);
+    // Carregar dados iniciais
+    carregar(true);
+    
+    // Iniciar polling inteligente
+    startPolling();
+    
+    // Cleanup ao desmontar componente
+    return () => {
+      stopPolling();
+    };
+  }, []);
+
+  // Reiniciar polling quando o número de áudios muda
+  useEffect(() => {
+    if (intervalRef.current) {
+      startPolling();
+    }
+  }, [audios.length]);
+
+  // Pausar polling quando a aba não está visível
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        carregar(true);
+        startPolling();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   return (
