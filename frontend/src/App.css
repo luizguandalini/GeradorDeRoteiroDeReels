@@ -7,6 +7,21 @@
   --highlight-color: #5851db; /* Azul Instagram */
 }
 
+/* Toggle para fonte de dados */
+.data-source-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 15px;
+}
+
+.data-source-label {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 16px;
+}
+
 /* Responsividade para o roadmap */
 @media (max-width: 768px) {
   .roadmap-steps {

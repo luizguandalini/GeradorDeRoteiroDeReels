@@ -8,6 +8,7 @@ import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
 import PlanilhaForm from "./components/PlanilhaForm/PlanilhaForm";
 import RoadmapSection from "./components/RoadmapSection/RoadmapSection";
 import SpreadsheetSection from "./components/SpreadsheetSection/SpreadsheetSection";
+import TopicosSection from "./components/TopicosSection/TopicosSection";
 import ThemeSection from "./components/ThemeSection/ThemeSection";
 import DurationSection from "./components/DurationSection/DurationSection";
 import ScriptSection from "./components/ScriptSection/ScriptSection";
@@ -30,8 +31,10 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [mockMode, setMockMode] = useState(false);
   const [selectedValor, setSelectedValor] = useState(null);
+  const [selectedTopico, setSelectedTopico] = useState(null);
   const [selectedTema, setSelectedTema] = useState(null);
   const [narracoesGeradas, setNarracoesGeradas] = useState(false);
+  const [useDatabase, setUseDatabase] = useState(true);
 
   // Configuração personalizada para o toast
   const toastConfig = {
@@ -121,14 +124,32 @@ function App() {
   const getTemas = async (topico) => {
     try {
       setLoading(true);
-      setSelectedValor(topico);
-      setSelectedTema(null);
-      setRoteiro([]);
-      setNarracoesGeradas(false); // Reset narrações quando volta para passo anterior
-      const res = await axios.post("http://localhost:5000/api/temas", {
-        topico,
-      });
-      setTemas(res.data.temas);
+      
+      if (useDatabase && topico.id) {
+        // Usando tópico do banco de dados
+        setSelectedTopico(topico);
+        setSelectedValor(topico.nome);
+        setSelectedTema(null);
+        setRoteiro([]);
+        setNarracoesGeradas(false);
+        
+        const res = await axios.post("http://localhost:5000/api/temas", {
+          topicoId: topico.id,
+        });
+        setTemas(res.data.temas);
+      } else {
+        // Usando tópico da planilha (modo legado)
+        setSelectedValor(topico);
+        setSelectedTopico(null);
+        setSelectedTema(null);
+        setRoteiro([]);
+        setNarracoesGeradas(false);
+        
+        const res = await axios.post("http://localhost:5000/api/temas", {
+          topico,
+        });
+        setTemas(res.data.temas);
+      }
     } catch {
       toast.error("Erro ao carregar temas da IA", toastConfig);
     } finally {
@@ -211,11 +232,45 @@ function App() {
         <PlanilhaForm onSubmit={getPlanilha} />
       </div>
 
-      <SpreadsheetSection 
-        valores={valores}
-        selectedValor={selectedValor}
-        onSelectTopic={getTemas}
-      />
+      {/* Toggle para escolher entre banco de dados ou planilha */}
+      <div className="card">
+        <div className="data-source-toggle">
+          <label className="switch">
+            <input 
+              type="checkbox" 
+              checked={useDatabase} 
+              onChange={(e) => {
+                setUseDatabase(e.target.checked);
+                // Reset selections when switching modes
+                setSelectedValor(null);
+                setSelectedTopico(null);
+                setSelectedTema(null);
+                setTemas([]);
+                setRoteiro([]);
+                setNarracoesGeradas(false);
+              }} 
+            />
+            <span className="slider"></span>
+          </label>
+          <span className="data-source-label">
+            {useDatabase ? "Banco de Dados" : "Planilha"}
+          </span>
+        </div>
+      </div>
+
+      {useDatabase ? (
+        <TopicosSection 
+          selectedTopico={selectedTopico}
+          onSelectTopic={getTemas}
+          toastConfig={toastConfig}
+        />
+      ) : (
+        <SpreadsheetSection 
+          valores={valores}
+          selectedValor={selectedValor}
+          onSelectTopic={getTemas}
+        />
+      )}
 
       <ThemeSection 
         temas={temas}
