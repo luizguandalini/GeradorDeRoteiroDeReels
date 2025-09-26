@@ -1,14 +1,25 @@
 // Dados mock para todas as APIs
 
-// Mock para a API de planilha
-export const planilhaMock = {
-  valores: [
-    "Dicas de produtividade",
-    "Receitas rápidas",
-    "Exercícios em casa",
-    "Tecnologia para iniciantes",
-    "Dicas de viagem"
-  ]
+// Mock para a API de tópicos
+export const topicosMock = {
+  topicos: [
+    { id: 1, nome: "Dicas de produtividade", ativo: true, createdAt: "2024-01-15T10:00:00Z" },
+    { id: 2, nome: "Receitas rápidas", ativo: true, createdAt: "2024-01-14T15:30:00Z" },
+    { id: 3, nome: "Exercícios em casa", ativo: true, createdAt: "2024-01-13T09:15:00Z" },
+    { id: 4, nome: "Tecnologia para iniciantes", ativo: true, createdAt: "2024-01-12T14:45:00Z" },
+    { id: 5, nome: "Dicas de viagem", ativo: true, createdAt: "2024-01-11T11:20:00Z" },
+    { id: 6, nome: "Organização pessoal", ativo: true, createdAt: "2024-01-10T16:00:00Z" },
+    { id: 7, nome: "Economia doméstica", ativo: true, createdAt: "2024-01-09T13:30:00Z" },
+    { id: 8, nome: "Saúde e bem-estar", ativo: true, createdAt: "2024-01-08T08:45:00Z" }
+  ],
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 8,
+    itemsPerPage: 10,
+    hasNext: false,
+    hasPrev: false
+  }
 };
 
 // Mock para a API de temas

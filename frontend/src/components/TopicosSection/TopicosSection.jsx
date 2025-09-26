@@ -13,7 +13,7 @@ const TopicosSection = ({
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingTopico, setEditingTopico] = useState(null);
-  const [formData, setFormData] = useState({ nome: '', descricao: '' });
+  const [formData, setFormData] = useState({ nome: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -62,7 +62,7 @@ const TopicosSection = ({
         toast.success('Tópico criado com sucesso!', toastConfig);
       }
       
-      setFormData({ nome: '', descricao: '' });
+      setFormData({ nome: '' });
       setShowForm(false);
       setEditingTopico(null);
       loadTopicos();
@@ -76,7 +76,7 @@ const TopicosSection = ({
 
   const handleEdit = (topico) => {
     setEditingTopico(topico);
-    setFormData({ nome: topico.nome, descricao: topico.descricao || '' });
+    setFormData({ nome: topico.nome });
     setShowForm(true);
   };
 
@@ -98,7 +98,7 @@ const TopicosSection = ({
   };
 
   const cancelForm = () => {
-    setFormData({ nome: '', descricao: '' });
+    setFormData({ nome: '' });
     setShowForm(false);
     setEditingTopico(null);
   };
@@ -132,15 +132,6 @@ const TopicosSection = ({
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 className="form-input"
                 required
-              />
-            </div>
-            <div className="form-group">
-              <textarea
-                placeholder="Descrição (opcional)"
-                value={formData.descricao}
-                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                className="form-textarea"
-                rows="3"
               />
             </div>
             <div className="form-actions">
@@ -189,9 +180,6 @@ const TopicosSection = ({
                   onClick={() => onSelectTopic(topico)}
                 >
                   <div className="topico-name">{topico.nome}</div>
-                  {topico.descricao && (
-                    <div className="topico-description">{topico.descricao}</div>
-                  )}
                 </div>
                 <div className="topico-actions">
                   <button

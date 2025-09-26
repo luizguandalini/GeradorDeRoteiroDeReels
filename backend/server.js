@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import planilhaRoutes from "./routes/planilha.js";
 import temasRoutes from "./routes/temas.js";
 import roteiroRoutes from "./routes/roteiro.js";
 import narracoesRoutes from "./routes/narracoes.js";
@@ -29,7 +28,6 @@ app.post("/api/config/mock", (req, res) => {
 });
 
 // Rotas
-app.use("/api/planilha", planilhaRoutes);
 app.use("/api/temas", temasRoutes);
 app.use("/api/roteiro", roteiroRoutes);
 app.use("/api/narracoes", narracoesRoutes);

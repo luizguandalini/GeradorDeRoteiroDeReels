@@ -1,11 +1,48 @@
 import express from "express";
 import prisma from "../config/database.js";
+import { getMockMode } from "../config/mockConfig.js";
+import { topicosMock } from "../config/mockData.js";
 
 const router = express.Router();
 
 // GET /api/topicos - Listar tópicos com paginação
 router.get("/", async (req, res) => {
   try {
+    // Verificar se está no modo mock
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para tópicos");
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const search = req.query.search || "";
+      
+      let filteredTopicos = topicosMock.topicos;
+      
+      // Aplicar filtro de busca se fornecido
+      if (search) {
+        filteredTopicos = topicosMock.topicos.filter(topico =>
+          topico.nome.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      
+      // Aplicar paginação
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedTopicos = filteredTopicos.slice(startIndex, endIndex);
+      
+      const totalPages = Math.ceil(filteredTopicos.length / limit);
+      
+      return res.json({
+        topicos: paginatedTopicos,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: filteredTopicos.length,
+          itemsPerPage: limit,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      });
+    }
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || "";
@@ -53,6 +90,19 @@ router.get("/", async (req, res) => {
 // GET /api/topicos/:id - Buscar tópico por ID
 router.get("/:id", async (req, res) => {
   try {
+    // Verificar se está no modo mock
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para buscar tópico por ID");
+      const { id } = req.params;
+      const topico = topicosMock.topicos.find(t => t.id === parseInt(id));
+      
+      if (!topico) {
+        return res.status(404).json({ error: "Tópico não encontrado" });
+      }
+      
+      return res.json(topico);
+    }
+
     const { id } = req.params;
     const topico = await prisma.topico.findUnique({
       where: { id: parseInt(id) }
@@ -72,6 +122,25 @@ router.get("/:id", async (req, res) => {
 // POST /api/topicos - Criar novo tópico
 router.post("/", async (req, res) => {
   try {
+    // Verificar se está no modo mock
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para criar tópico");
+      const { nome } = req.body;
+      
+      if (!nome) {
+        return res.status(400).json({ error: "Nome do tópico é obrigatório" });
+      }
+      
+      // Simular criação de tópico
+      const novoTopico = {
+        id: Math.max(...topicosMock.topicos.map(t => t.id)) + 1,
+        nome: nome.trim(),
+        ativo: true,
+        createdAt: new Date().toISOString()
+      };
+      
+      return res.status(201).json(novoTopico);
+    }
     const { nome, descricao } = req.body;
 
     if (!nome) {
@@ -99,6 +168,28 @@ router.post("/", async (req, res) => {
 // PUT /api/topicos/:id - Atualizar tópico
 router.put("/:id", async (req, res) => {
   try {
+    // Verificar se está no modo mock
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para atualizar tópico");
+      const { id } = req.params;
+      const { nome, ativo } = req.body;
+      
+      const topico = topicosMock.topicos.find(t => t.id === parseInt(id));
+      
+      if (!topico) {
+        return res.status(404).json({ error: "Tópico não encontrado" });
+      }
+      
+      // Simular atualização
+      const topicoAtualizado = {
+        ...topico,
+        ...(nome && { nome: nome.trim() }),
+        ...(ativo !== undefined && { ativo })
+      };
+      
+      return res.json(topicoAtualizado);
+    }
+
     const { id } = req.params;
     const { nome, descricao, ativo } = req.body;
 
@@ -128,6 +219,19 @@ router.put("/:id", async (req, res) => {
 // DELETE /api/topicos/:id - Deletar tópico (soft delete)
 router.delete("/:id", async (req, res) => {
   try {
+    // Verificar se está no modo mock
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para deletar tópico");
+      const { id } = req.params;
+      
+      const topico = topicosMock.topicos.find(t => t.id === parseInt(id));
+      
+      if (!topico) {
+        return res.status(404).json({ error: "Tópico não encontrado" });
+      }
+      
+      return res.json({ message: "Tópico desativado com sucesso (simulação)" });
+    }
     const { id } = req.params;
 
     const topico = await prisma.topico.update({
