@@ -227,7 +227,7 @@ function Roteiro({ roteiro }) {
             onClick={baixarPDF}
             style={{ background: "#8e44ad", color: "#fff" }}
           >
-            <FaFilePdf /> Baixar PDF
+            <FaFilePdf /> Baixar Roteiro em PDF
           </button>
         </div>
       )}
