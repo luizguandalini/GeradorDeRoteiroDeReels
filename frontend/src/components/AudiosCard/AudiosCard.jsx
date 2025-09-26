@@ -22,7 +22,7 @@ export default function AudiosCard() {
     try {
       const { data } = await axios.get("http://localhost:5000/api/config/mock");
       const isMockMode = data.mockMode;
-      
+
       toast.info(
         <div>
           <p>Tem certeza que deseja excluir todos os áudios?</p>
@@ -50,10 +50,7 @@ export default function AudiosCard() {
             >
               Sim, excluir
             </button>
-            <button
-              className="btn-secondary"
-              onClick={() => toast.dismiss()}
-            >
+            <button className="btn-secondary" onClick={() => toast.dismiss()}>
               Cancelar
             </button>
           </div>
@@ -69,7 +66,7 @@ export default function AudiosCard() {
     try {
       const { data } = await axios.get("http://localhost:5000/api/config/mock");
       const isMockMode = data.mockMode;
-      
+
       if (isMockMode) {
         toast.success("Download simulado iniciado!");
       } else {
@@ -100,11 +97,13 @@ export default function AudiosCard() {
           <ul className="audios-list">
             {audios.map((a, i) => (
               <li key={i} className="audio-item">
-                <span className="audio-name">{typeof a === 'object' ? a.nome : a}</span>
-                {typeof a === 'object' && a.duracao && (
+                <span className="audio-name">
+                  {typeof a === "object" ? a.nome : a}
+                </span>
+                {typeof a === "object" && a.duracao && (
                   <span className="audio-duration">{a.duracao}</span>
                 )}
-                {typeof a === 'string' && (
+                {typeof a === "string" && (
                   <span className="audio-duration">Calculando...</span>
                 )}
               </li>
@@ -117,11 +116,11 @@ export default function AudiosCard() {
       <div className="audios-actions-fixed">
         <button className="btn-danger" onClick={deletarTodos}>
           <FaTrash style={{ marginRight: 6 }} />
-          Deletar todos
+          Deletar Todas
         </button>
         <button onClick={baixarTodos}>
           <FaDownload style={{ marginRight: 6 }} />
-          Baixar todos
+          Baixar Todas
         </button>
       </div>
     </div>
