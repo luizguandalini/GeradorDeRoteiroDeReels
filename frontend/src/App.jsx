@@ -6,17 +6,15 @@ import "./App.css";
 
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
 import PlanilhaForm from "./components/PlanilhaForm/PlanilhaForm";
-import TemasList from "./components/TemasList/TemasList";
-import Roteiro from "./components/Roteiro/Roteiro";
-import AudiosCard from "./components/AudiosCard/AudiosCard";
+import RoadmapSection from "./components/RoadmapSection/RoadmapSection";
+import SpreadsheetSection from "./components/SpreadsheetSection/SpreadsheetSection";
+import ThemeSection from "./components/ThemeSection/ThemeSection";
+import DurationSection from "./components/DurationSection/DurationSection";
+import ScriptSection from "./components/ScriptSection/ScriptSection";
+import NarrationSection from "./components/NarrationSection/NarrationSection";
 
 // Ícones
 import {
-  FaTable,
-  FaLightbulb,
-  FaRobot,
-  FaClock,
-  FaFilm,
   FaCode,
 } from "react-icons/fa";
 
@@ -196,134 +194,38 @@ function App() {
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Roadmap de passos */}
-      <div className="roadmap-container">
-        <h2>Roadmap de Criação</h2>
-        <div className="roadmap-steps">
-          <div
-            className={`roadmap-step ${
-              valores.length > 0 ? "completed" : "active"
-            }`}
-          >
-            <span className="roadmap-number">1</span>
-            <span className="roadmap-text">Buscar Planilha</span>
-          </div>
-          <div className="roadmap-arrow"></div>
-
-          <div
-            className={`roadmap-step ${
-              selectedValor && temas.length > 0
-                ? "completed"
-                : valores.length > 0 && !selectedTema
-                ? "active"
-                : ""
-            }`}
-          >
-            <span className="roadmap-number">2</span>
-            <span className="roadmap-text">Selecionar Tópico</span>
-          </div>
-          <div className="roadmap-arrow"></div>
-
-          <div
-            className={`roadmap-step ${
-              selectedTema
-                ? "completed"
-                : temas.length > 0 && !selectedTema
-                ? "active"
-                : ""
-            }`}
-          >
-            <span className="roadmap-number">3</span>
-            <span className="roadmap-text">Escolher Sugestão</span>
-          </div>
-          <div className="roadmap-arrow"></div>
-
-          <div
-            className={`roadmap-step ${
-              roteiro.length > 0 ? "completed" : selectedTema ? "active" : ""
-            }`}
-          >
-            <span className="roadmap-number">4</span>
-            <span className="roadmap-text">Editar Roteiro</span>
-          </div>
-          <div className="roadmap-arrow"></div>
-
-          <div className={`roadmap-step ${roteiro.length > 0 ? "active" : ""}`}>
-            <span className="roadmap-number">5</span>
-            <span className="roadmap-text">Gerar Narrações</span>
-          </div>
-        </div>
-      </div>
+      <RoadmapSection 
+        valores={valores}
+        selectedValor={selectedValor}
+        temas={temas}
+        selectedTema={selectedTema}
+        roteiro={roteiro}
+      />
 
       <div className="card">
         <PlanilhaForm onSubmit={getPlanilha} />
       </div>
 
-      <div className="card scrollable">
-        <h2>
-          <FaTable style={{ marginRight: "8px" }} />
-          Tópicos da Planilha
-        </h2>
-        <ul>
-          {valores.map((v, i) => (
-            <li
-              key={i}
-              onClick={() => getTemas(v)}
-              className={selectedValor === v ? "selected" : ""}
-            >
-              {v}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <SpreadsheetSection 
+        valores={valores}
+        selectedValor={selectedValor}
+        onSelectTopic={getTemas}
+      />
 
-      <div className="card scrollable">
-        <h2>
-          <FaLightbulb style={{ marginRight: "8px", color: "#fbc531" }} />
-          <FaRobot style={{ marginRight: "8px", color: "#00a8ff" }} />
-          Sugestões da IA
-        </h2>
-        <ul>
-          {temas.map((t, i) => (
-            <li
-              key={i}
-              onClick={() => getRoteiro(t)}
-              className={selectedTema === t ? "selected" : ""}
-            >
-              {t}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ThemeSection 
+        temas={temas}
+        selectedTema={selectedTema}
+        onSelectTheme={getRoteiro}
+      />
 
-      <div className="card">
-        <h2>
-          <FaClock style={{ marginRight: "8px", color: "#9c88ff" }} />
-          Duração do Vídeo (segundos)
-        </h2>
-        <input
-          type="number"
-          value={duracao}
-          onChange={(e) => setDuracao(e.target.value)}
-          min="30"
-          className="duracao-input"
-        />
-      </div>
+      <DurationSection 
+        duracao={duracao}
+        onDurationChange={setDuracao}
+      />
 
-      <div className="card">
-        <h2>
-          <FaFilm style={{ marginRight: "8px", color: "#e84118" }} />
-          Roteiro
-        </h2>
-        <Roteiro roteiro={roteiro} />
-      </div>
+      <ScriptSection roteiro={roteiro} />
 
-      <div className="card">
-        <h2>
-          <FaFilm style={{ marginRight: "8px", color: "#e84118" }} />
-          Narrações
-        </h2>
-        <AudiosCard roteiro={roteiro} />
-      </div>
+      <NarrationSection roteiro={roteiro} />
 
       {loading && <LoadingSpinner />}
     </div>
