@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { getMockMode } from "../config/mockConfig.js";
 import { temasMock } from "../config/mockData.js";
 import prisma from "../config/database.js";
+import { getConfig } from "../config/configManager.js";
 
 dotenv.config();
 const router = express.Router();
@@ -28,8 +29,17 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: "Tópico não encontrado" });
     }
 
+    // Buscar configurações do banco
+    const modelName = await getConfig('MODEL_NAME', 'MODEL_NAME');
+    const promptTemas = await getConfig('PROMPT_TEMAS', 'PROMPT_TEMAS');
+    const openrouterApiKey = await getConfig('OPENROUTER_API_KEY', 'OPENROUTER_API_KEY');
+
+    if (!openrouterApiKey) {
+      return res.status(500).json({ error: "Chave da API OpenRouter não configurada" });
+    }
+
     const body = {
-      model: process.env.MODEL_NAME,
+      model: modelName,
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -45,7 +55,7 @@ router.post("/", async (req, res) => {
       },
       messages: [
         { role: "system", content: "Responda sempre em JSON válido" },
-        { role: "user", content: `${process.env.PROMPT_TEMAS} ${topico.nome}` },
+        { role: "user", content: `${promptTemas} ${topico.nome}` },
       ],
     };
 
@@ -53,7 +63,7 @@ router.post("/", async (req, res) => {
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       body,
-      { headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` } }
+      { headers: { Authorization: `Bearer ${openrouterApiKey}` } }
     );
 
     console.log("✅ Resposta recebida do OpenRouter");

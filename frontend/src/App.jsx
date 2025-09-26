@@ -11,10 +11,12 @@ import ThemeSection from "./components/ThemeSection/ThemeSection";
 import DurationSection from "./components/DurationSection/DurationSection";
 import ScriptSection from "./components/ScriptSection/ScriptSection";
 import NarrationSection from "./components/NarrationSection/NarrationSection";
+import ConfiguracoesSection from "./components/ConfiguracoesSection/ConfiguracoesSection";
 
 // Ícones
 import {
   FaCode,
+  FaCog,
 } from "react-icons/fa";
 
 // Logo personalizada
@@ -30,6 +32,7 @@ function App() {
   const [selectedTopico, setSelectedTopico] = useState(null);
   const [selectedTema, setSelectedTema] = useState(null);
   const [narracoesGeradas, setNarracoesGeradas] = useState(false);
+  const [showConfiguracoes, setShowConfiguracoes] = useState(false);
 
   // Configuração personalizada para o toast
   const toastConfig = {
@@ -167,6 +170,17 @@ function App() {
         </span>
       </div>
 
+      {/* Botão para configurações */}
+      <div className="config-toggle-container">
+        <button 
+          className="config-button"
+          onClick={() => setShowConfiguracoes(!showConfiguracoes)}
+          title="Configurações do Sistema"
+        >
+          <FaCog />
+        </button>
+      </div>
+
       <header className="app-header">
         <img
           src={logoReels}
@@ -186,26 +200,32 @@ function App() {
         narracoesGeradas={narracoesGeradas}
       />
 
-      <TopicosSection 
-        selectedTopico={selectedTopico}
-        onSelectTopic={getTemas}
-        toastConfig={toastConfig}
-      />
+      {showConfiguracoes ? (
+        <ConfiguracoesSection toastConfig={toastConfig} />
+      ) : (
+        <>
+          <TopicosSection 
+            selectedTopico={selectedTopico}
+            onSelectTopic={getTemas}
+            toastConfig={toastConfig}
+          />
 
-      <ThemeSection 
-        temas={temas}
-        selectedTema={selectedTema}
-        onSelectTheme={getRoteiro}
-      />
+          <ThemeSection 
+            temas={temas}
+            selectedTema={selectedTema}
+            onSelectTheme={getRoteiro}
+          />
 
-      <DurationSection 
-        duracao={duracao}
-        onDurationChange={setDuracao}
-      />
+          <DurationSection 
+            duracao={duracao}
+            onDurationChange={setDuracao}
+          />
 
-      <ScriptSection roteiro={roteiro} onNarracoesGeradas={setNarracoesGeradas} />
+          <ScriptSection roteiro={roteiro} onNarracoesGeradas={setNarracoesGeradas} />
 
-      <NarrationSection roteiro={roteiro} />
+          <NarrationSection roteiro={roteiro} />
+        </>
+      )}
 
       {loading && <LoadingSpinner />}
     </div>

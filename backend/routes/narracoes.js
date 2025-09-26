@@ -6,16 +6,11 @@ import { fileURLToPath } from "url";
 import "dotenv/config";
 import { getMockMode } from "../config/mockConfig.js";
 import { narracoesMock } from "../config/mockData.js";
+import { getConfig } from "../config/configManager.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const API_KEY = process.env.ELEVEN_API_KEY;
-const VOICE_ID = process.env.VOICE_ID;
-const MODEL_ID = process.env.ELEVEN_MODEL_ID;
-
-const URL = `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`;
 
 const pastaSaida = path.join(__dirname, "../audios");
 
@@ -36,12 +31,14 @@ function gerarSilencio() {
   return silencePath;
 }
 
-async function gerarAudio(texto, nomeArquivo) {
+async function gerarAudio(texto, nomeArquivo, voiceId, modelId, apiKey) {
+  const URL = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
+  
   const response = await axios.post(
     URL,
     {
       text: texto,
-      model_id: MODEL_ID,
+      model_id: modelId,
       voice_settings: {
         stability: 0.3,
         similarity_boost: 0.85,
@@ -53,7 +50,7 @@ async function gerarAudio(texto, nomeArquivo) {
       headers: {
         Accept: "audio/mpeg",
         "Content-Type": "application/json",
-        "xi-api-key": API_KEY,
+        "xi-api-key": apiKey,
       },
       responseType: "arraybuffer",
     }
@@ -79,13 +76,24 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Campo 'narracoes' é obrigatório" });
     }
 
+    // Buscar configurações do banco
+    const elevenApiKey = await getConfig('ELEVEN_API_KEY', 'ELEVEN_API_KEY');
+    const voiceId = await getConfig('VOICE_ID', 'VOICE_ID');
+    const elevenModelId = await getConfig('ELEVEN_MODEL_ID', 'ELEVEN_MODEL_ID');
+
+    if (!elevenApiKey || !voiceId || !elevenModelId) {
+      return res.status(500).json({ 
+        error: "Configurações do ElevenLabs não encontradas. Verifique ELEVEN_API_KEY, VOICE_ID e ELEVEN_MODEL_ID." 
+      });
+    }
+
     const arquivosGerados = [];
     const buffers = [];
 
     for (const [nome, texto] of Object.entries(narracoes)) {
       const nomeArquivo = `${nome.replace(/\s+/g, "_")}.mp3`;
       console.log(`🎙️ Gerando: ${nomeArquivo}`);
-      const caminho = await gerarAudio(texto, nomeArquivo);
+      const caminho = await gerarAudio(texto, nomeArquivo, voiceId, elevenModelId, elevenApiKey);
 
       const buffer = fs.readFileSync(caminho);
       buffers.push(buffer);

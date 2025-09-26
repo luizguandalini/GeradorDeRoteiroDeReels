@@ -7,8 +7,10 @@ import roteiroRoutes from "./routes/roteiro.js";
 import narracoesRoutes from "./routes/narracoes.js";
 import audiosRoutes from "./routes/audios.js";
 import topicosRoutes from "./routes/topicos.js";
+import configuracoesRoutes from "./routes/configuracoes.js";
 import { getMockMode, setMockMode } from "./config/mockConfig.js";
 import prisma from "./config/database.js";
+import { getConfig, initializeDefaultConfigs } from "./config/configManager.js";
 
 dotenv.config();
 const app = express();
@@ -33,6 +35,7 @@ app.use("/api/roteiro", roteiroRoutes);
 app.use("/api/narracoes", narracoesRoutes);
 app.use("/api/audios", audiosRoutes);
 app.use("/api/topicos", topicosRoutes);
+app.use("/api/configuracoes", configuracoesRoutes);
 
 // Teste de conexão com o banco
 app.get("/api/health", async (req, res) => {
@@ -44,7 +47,27 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
+// Inicialização do servidor
+async function startServer() {
+  try {
+    // Inicializa configurações padrão no banco
+    await initializeDefaultConfigs();
+    
+    // Busca a porta das configurações do banco
+    const PORT = await getConfig('PORT', 'PORT') || 5000;
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor rodando na porta ${PORT}`);
+      console.log(`📊 Modo mock: ${getMockMode() ? 'Ativado' : 'Desativado'}`);
+    });
+  } catch (error) {
+    console.error('❌ Erro ao inicializar servidor:', error);
+    process.exit(1);
+  }
+}
+
+// Inicia o servidor
+startServer();
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
@@ -52,5 +75,3 @@ process.on('SIGINT', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
-
-app.listen(PORT, () => console.log(`🚀 Backend rodando na porta ${PORT}`));

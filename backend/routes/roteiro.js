@@ -3,6 +3,7 @@ import axios from "axios";
 import dotenv from "dotenv";
 import { getMockMode } from "../config/mockConfig.js";
 import { roteiroMock } from "../config/mockData.js";
+import { getConfig } from "../config/configManager.js";
 
 dotenv.config();
 const router = express.Router();
@@ -18,14 +19,23 @@ router.post("/", async (req, res) => {
     const { tema, duracao } = req.body;
     console.log("📩 Requisição recebida com dados:", { tema, duracao });
 
-    const prompt = process.env.PROMPT_ROTEIRO.replace(
+    // Buscar configurações do banco
+    const modelName = await getConfig('MODEL_NAME', 'MODEL_NAME');
+    const promptRoteiro = await getConfig('PROMPT_ROTEIRO', 'PROMPT_ROTEIRO');
+    const openrouterApiKey = await getConfig('OPENROUTER_API_KEY', 'OPENROUTER_API_KEY');
+
+    if (!openrouterApiKey) {
+      return res.status(500).json({ error: "Chave da API OpenRouter não configurada" });
+    }
+
+    const prompt = promptRoteiro.replace(
       "{duracao}",
       duracao
     ).replace("{tema}", tema);
     console.log("📝 Prompt gerado:", prompt);
 
     let body = {
-      model: process.env.MODEL_NAME,
+      model: modelName,
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -69,7 +79,7 @@ router.post("/", async (req, res) => {
         body,
         {
           headers: {
-            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            Authorization: `Bearer ${openrouterApiKey}`,
           },
         }
       );
@@ -92,7 +102,7 @@ router.post("/", async (req, res) => {
         body,
         {
           headers: {
-            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            Authorization: `Bearer ${openrouterApiKey}`,
           },
         }
       );
