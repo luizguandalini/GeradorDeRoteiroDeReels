@@ -24,10 +24,11 @@ function Roteiro({ roteiro }) {
   const handleInput = () => {
     setTexto(editorRef.current.innerText);
   };
-  
+
   const copiarRoteiro = () => {
     if (!texto.trim()) return;
-    navigator.clipboard.writeText(texto)
+    navigator.clipboard
+      .writeText(texto)
       .then(() => {
         toast.success("Roteiro copiado para a área de transferência!");
       })
@@ -220,7 +221,7 @@ function Roteiro({ roteiro }) {
             onClick={gerarVoz}
             style={{ background: "#e84118", color: "#fff" }}
           >
-            <FaPlay /> Gerar Voz
+            <FaPlay /> Gerar Narrações
           </button>
           <button
             onClick={baixarPDF}
