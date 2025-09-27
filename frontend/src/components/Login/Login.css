@@ -117,6 +117,31 @@
   background-color: rgba(102, 126, 234, 0.1);
 }
 
+.login-container input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.login-container input.error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.error-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
 .eye-icon {
   color: #667eea;
   transition: color 0.2s ease;

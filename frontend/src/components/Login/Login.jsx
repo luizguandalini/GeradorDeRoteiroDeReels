@@ -11,31 +11,89 @@ const Login = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Limpar erro do campo quando o usuário começar a digitar
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrors({});
+
+    // Validação básica
+    const newErrors = {};
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+    
+    if (!formData.password.trim()) {
+      newErrors.password = 'Senha é obrigatória';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        toast.success('Login realizado com sucesso!');
+        toast.success('Login realizado com sucesso!', {
+          style: {
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: '#ffffff',
+            fontWeight: '500',
+          }
+        });
         navigate('/');
       } else {
-        toast.error(result.error);
+        // Definir erros específicos baseados na resposta
+        if (result.error && result.error.includes('email')) {
+          setErrors({ email: result.error });
+        } else if (result.error && result.error.includes('senha')) {
+          setErrors({ password: result.error });
+        } else {
+          setErrors({ general: result.error || 'Credenciais inválidas' });
+        }
+        
+        toast.error(result.error || 'Credenciais inválidas', {
+          style: {
+            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            color: '#ffffff',
+            fontWeight: '500',
+          }
+        });
       }
     } catch (error) {
-      toast.error('Erro inesperado no login');
+      console.error('Erro no login:', error);
+      setErrors({ general: 'Erro de conexão' });
+      toast.error('Erro de conexão. Verifique sua internet e tente novamente.', {
+        style: {
+          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          color: '#ffffff',
+          fontWeight: '500',
+        }
+      });
     } finally {
       setIsLoading(false);
     }
@@ -50,30 +108,45 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
+          {errors.general && (
+            <div className="error-message">
+              <svg className="error-icon" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.general}
+            </div>
+          )}
+          
           <div className="form-group">
-            <label htmlFor="email">Email</label>
             <input
               type="email"
-              id="email"
               name="email"
+              placeholder="Email"
               value={formData.email}
               onChange={handleChange}
+              className={errors.email ? 'error' : ''}
               required
-              placeholder="Digite seu email"
             />
+            {errors.email && (
+              <div className="error-message">
+                <svg className="error-icon" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {errors.email}
+              </div>
+            )}
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Senha</label>
             <div className="password-input-container">
               <input
                 type={showPassword ? "text" : "password"}
-                id="password"
                 name="password"
+                placeholder="Senha"
                 value={formData.password}
                 onChange={handleChange}
+                className={errors.password ? 'error' : ''}
                 required
-                placeholder="Digite sua senha"
               />
               <button
                 type="button"
@@ -81,56 +154,27 @@ const Login = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="eye-icon"
-                >
-                  {showPassword ? (
-                    // Ícone de olho fechado (senha oculta)
-                    <>
-                      <path
-                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M1 1l22 22"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </>
-                  ) : (
-                    // Ícone de olho aberto (senha visível)
-                    <>
-                      <path
-                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="3"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </>
-                  )}
-                </svg>
+                {showPassword ? (
+                  <svg className="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M1 1l22 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ) : (
+                  <svg className="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
               </button>
             </div>
+            {errors.password && (
+              <div className="error-message">
+                <svg className="error-icon" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {errors.password}
+              </div>
+            )}
           </div>
 
           <button 

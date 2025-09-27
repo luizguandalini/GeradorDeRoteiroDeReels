@@ -32,6 +32,28 @@ function App() {
             }
           />
         </Routes>
+        <ToastContainer 
+          position="top-right" 
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+          toastStyle={{
+            backgroundColor: "#ffffff",
+            color: "#262626",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            border: "1px solid #e6e6e6",
+          }}
+          progressStyle={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          }}
+        />
       </Router>
     </AuthProvider>
   );
@@ -185,8 +207,6 @@ function AppContent() {
 
       <div className={`main-content ${isCollapsed ? "sidebar-collapsed" : ""}`}>
         <Header />
-
-        <ToastContainer position="top-right" autoClose={3000} />
 
         <Routes>
           <Route
