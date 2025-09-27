@@ -66,6 +66,14 @@ function AppContent() {
       boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
       border: darkMode ? "1px solid #444" : "1px solid #e6e6e6",
     },
+    theme: "colored",
+    toastStyle: {
+      backgroundColor: darkMode ? "#262626" : "#ffffff",
+      color: darkMode ? "#ffffff" : "#262626",
+    },
+    progressStyle: {
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    },
   };
 
   useEffect(() => {
