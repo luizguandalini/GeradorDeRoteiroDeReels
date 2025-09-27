@@ -15,7 +15,7 @@ import Home from "./pages/Home/Home";
 import Configuracoes from "./pages/Configuracoes/Configuracoes";
 
 // Importar logo
-import logoReels from "../reels-express.png";
+import logoReels from "../shaka.png";
 
 function App() {
   return (
@@ -23,13 +23,13 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route 
-            path="/*" 
+          <Route
+            path="/*"
             element={
               <ProtectedRoute>
                 <AppContent />
               </ProtectedRoute>
-            } 
+            }
           />
         </Routes>
       </Router>
@@ -123,7 +123,7 @@ function AppContent() {
       setSelectedTema(null);
       setRoteiro([]);
       setNarracoesGeradas(false);
-      
+
       const res = await axios.post("http://localhost:5000/api/temas", {
         topicoId: topico.id,
       });
@@ -165,8 +165,8 @@ function AppContent() {
   };
 
   return (
-    <div className={`app-container ${darkMode ? 'dark-theme' : ''}`}>
-      <Sidebar 
+    <div className={`app-container ${darkMode ? "dark-theme" : ""}`}>
+      <Sidebar
         darkMode={darkMode}
         toggleTheme={toggleTheme}
         mockMode={mockMode}
@@ -175,14 +175,14 @@ function AppContent() {
         setIsCollapsed={setIsCollapsed}
       />
 
-      <div className={`main-content ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div className={`main-content ${isCollapsed ? "sidebar-collapsed" : ""}`}>
         <Header />
 
         <ToastContainer position="top-right" autoClose={3000} />
 
         <Routes>
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               <Home
                 selectedTopico={selectedTopico}
@@ -197,15 +197,15 @@ function AppContent() {
                 onNarracoesGeradas={setNarracoesGeradas}
                 toastConfig={toastConfig}
               />
-            } 
+            }
           />
-          <Route 
-            path="/configuracoes" 
+          <Route
+            path="/configuracoes"
             element={
               <ProtectedRoute requireAdmin={true}>
                 <Configuracoes toastConfig={toastConfig} />
               </ProtectedRoute>
-            } 
+            }
           />
         </Routes>
 

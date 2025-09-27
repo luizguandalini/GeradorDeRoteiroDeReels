@@ -98,8 +98,7 @@ body {
 }
 
 .dark-theme .app-header {
-  background: #2d3748;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  background: transparent;
 }
 
 /* Responsividade */

@@ -1,6 +1,5 @@
 .app-header {
   background: white;
-  border-bottom: 1px solid #e1e5e9;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -107,15 +106,15 @@
   .header-content {
     padding: 1rem;
   }
-  
+
   .user-details {
     display: none;
   }
-  
+
   .user-info {
     padding: 0.5rem;
   }
-  
+
   .header-right {
     gap: 0.5rem;
   }

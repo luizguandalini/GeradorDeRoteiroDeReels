@@ -127,28 +127,30 @@ const Sidebar = ({
           </button>
         </div>
 
-        {/* Toggle Mock/Real Mode */}
-        <div className="control-item">
-          <button 
-            className="control-button"
-            onClick={toggleMockMode}
-            title={mockMode ? 'Modo Real' : 'Modo Simulação'}
-          >
-            <FaCode className="control-icon" />
+        {/* Toggle Mock/Real Mode - Only for Admins */}
+        {isAdmin() && (
+          <div className="control-item">
+            <button 
+              className="control-button"
+              onClick={toggleMockMode}
+              title={mockMode ? 'Modo Real' : 'Modo Simulação'}
+            >
+              <FaCode className="control-icon" />
+              {!isCollapsed && (
+                <span className="control-label">
+                  {mockMode ? 'Modo Real' : 'Modo Simulação'}
+                </span>
+              )}
+            </button>
             {!isCollapsed && (
-              <span className="control-label">
-                {mockMode ? 'Modo Real' : 'Modo Simulação'}
-              </span>
+              <div className="mode-indicator">
+                <span className={`mode-badge ${mockMode ? 'mock' : 'real'}`}>
+                  {mockMode ? 'SIMULAÇÃO' : 'REAL'}
+                </span>
+              </div>
             )}
-          </button>
-          {!isCollapsed && (
-            <div className="mode-indicator">
-              <span className={`mode-badge ${mockMode ? 'mock' : 'real'}`}>
-                {mockMode ? 'SIMULAÇÃO' : 'REAL'}
-              </span>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
