@@ -11,6 +11,7 @@ import {
   FaChevronLeft,
   FaChevronRight
 } from 'react-icons/fa';
+import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = ({ 
@@ -22,6 +23,7 @@ const Sidebar = ({
   setIsCollapsed 
 }) => {
   const location = useLocation();
+  const { isAdmin } = useAuth();
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -38,7 +40,8 @@ const Sidebar = ({
       path: '/configuracoes',
       icon: FaCog,
       label: 'Configurações do Sistema',
-      id: 'config'
+      id: 'config',
+      adminOnly: true
     }
   ];
 
@@ -61,7 +64,9 @@ const Sidebar = ({
       {/* Navegação */}
       <nav className="sidebar-nav">
         <ul className="nav-list">
-          {menuItems.map((item) => {
+          {menuItems
+            .filter(item => !item.adminOnly || isAdmin())
+            .map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             
