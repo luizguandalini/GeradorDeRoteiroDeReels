@@ -8,6 +8,8 @@ import narracoesRoutes from "./routes/narracoes.js";
 import audiosRoutes from "./routes/audios.js";
 import topicosRoutes from "./routes/topicos.js";
 import configuracoesRoutes from "./routes/configuracoes.js";
+import authRoutes from "./routes/auth.js";
+import { authenticateToken, requireAdmin } from "./middleware/auth.js";
 import { getMockMode, setMockMode } from "./config/mockConfig.js";
 import prisma from "./config/database.js";
 import { getConfig, initializeDefaultConfigs } from "./config/configManager.js";
@@ -18,24 +20,29 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Rota para controlar o modo mock
-app.get("/api/config/mock", (req, res) => {
+// Rotas de autenticação (públicas)
+app.use("/api/auth", authRoutes);
+
+// Rota para controlar o modo mock (apenas admin)
+app.get("/api/config/mock", authenticateToken, requireAdmin, (req, res) => {
   res.json({ mockMode: getMockMode() });
 });
 
-app.post("/api/config/mock", (req, res) => {
+app.post("/api/config/mock", authenticateToken, requireAdmin, (req, res) => {
   const { mockMode } = req.body;
   setMockMode(mockMode);
   res.json({ mockMode: getMockMode() });
 });
 
-// Rotas
-app.use("/api/temas", temasRoutes);
-app.use("/api/roteiro", roteiroRoutes);
-app.use("/api/narracoes", narracoesRoutes);
-app.use("/api/audios", audiosRoutes);
-app.use("/api/topicos", topicosRoutes);
-app.use("/api/configuracoes", configuracoesRoutes);
+// Rotas protegidas (requerem autenticação)
+app.use("/api/temas", authenticateToken, temasRoutes);
+app.use("/api/roteiro", authenticateToken, roteiroRoutes);
+app.use("/api/narracoes", authenticateToken, narracoesRoutes);
+app.use("/api/audios", authenticateToken, audiosRoutes);
+app.use("/api/topicos", authenticateToken, topicosRoutes);
+
+// Rotas de configurações (apenas admin)
+app.use("/api/configuracoes", authenticateToken, requireAdmin, configuracoesRoutes);
 
 // Teste de conexão com o banco
 app.get("/api/health", async (req, res) => {

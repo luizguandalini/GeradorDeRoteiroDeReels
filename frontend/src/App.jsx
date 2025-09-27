@@ -5,6 +5,10 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
+import Login from "./components/Login/Login";
+import Header from "./components/Header/Header";
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Home from "./pages/Home/Home";
@@ -14,6 +18,26 @@ import Configuracoes from "./pages/Configuracoes/Configuracoes";
 import logoReels from "../reels-express.png";
 
 function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route 
+            path="/*" 
+            element={
+              <ProtectedRoute>
+                <AppContent />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+function AppContent() {
   // Estados principais
   const [selectedTopico, setSelectedTopico] = useState("");
   const [temas, setTemas] = useState([]);
@@ -141,57 +165,53 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className={`app-container ${darkMode ? 'dark-theme' : ''}`}>
-        <Sidebar 
-          darkMode={darkMode}
-          toggleTheme={toggleTheme}
-          mockMode={mockMode}
-          toggleMockMode={toggleMockMode}
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-        />
+    <div className={`app-container ${darkMode ? 'dark-theme' : ''}`}>
+      <Sidebar 
+        darkMode={darkMode}
+        toggleTheme={toggleTheme}
+        mockMode={mockMode}
+        toggleMockMode={toggleMockMode}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
+      />
 
-        <div className={`main-content ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
-          <header className="app-header">
-            <img
-              src={logoReels}
-              alt="Reels Express"
-              style={{ marginRight: "12px", height: "100px" }}
-            />
-          </header>
+      <div className={`main-content ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+        <Header />
 
-          <ToastContainer position="top-right" autoClose={3000} />
+        <ToastContainer position="top-right" autoClose={3000} />
 
-          <Routes>
-            <Route 
-              path="/" 
-              element={
-                <Home
-                  selectedTopico={selectedTopico}
-                  temas={temas}
-                  selectedTema={selectedTema}
-                  roteiro={roteiro}
-                  narracoesGeradas={narracoesGeradas}
-                  duracao={duracao}
-                  onSelectTopic={getTemas}
-                  onSelectTheme={getRoteiro}
-                  onDurationChange={setDuracao}
-                  onNarracoesGeradas={setNarracoesGeradas}
-                  toastConfig={toastConfig}
-                />
-              } 
-            />
-            <Route 
-              path="/configuracoes" 
-              element={<Configuracoes toastConfig={toastConfig} />} 
-            />
-          </Routes>
+        <Routes>
+          <Route 
+            path="/" 
+            element={
+              <Home
+                selectedTopico={selectedTopico}
+                temas={temas}
+                selectedTema={selectedTema}
+                roteiro={roteiro}
+                narracoesGeradas={narracoesGeradas}
+                duracao={duracao}
+                onSelectTopic={getTemas}
+                onSelectTheme={getRoteiro}
+                onDurationChange={setDuracao}
+                onNarracoesGeradas={setNarracoesGeradas}
+                toastConfig={toastConfig}
+              />
+            } 
+          />
+          <Route 
+            path="/configuracoes" 
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <Configuracoes toastConfig={toastConfig} />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
 
-          {loading && <LoadingSpinner />}
-        </div>
+        {loading && <LoadingSpinner />}
       </div>
-    </Router>
+    </div>
   );
 }
 
