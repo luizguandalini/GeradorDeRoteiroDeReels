@@ -24,7 +24,8 @@ export const authenticateToken = async (req, res, next) => {
         email: true,
         name: true,
         role: true,
-        active: true
+        active: true,
+        provider: true
       }
     });
 

@@ -74,8 +74,10 @@ async function startServer() {
   }
 }
 
-// Inicia o servidor
-startServer();
+// Inicia o servidor quando não estiver em modo de teste
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
@@ -83,3 +85,6 @@ process.on('SIGINT', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
+
+export { app, startServer };
+export default app;

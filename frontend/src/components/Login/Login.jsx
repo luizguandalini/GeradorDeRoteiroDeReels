@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { FcGoogle } from 'react-icons/fc';
 import './Login.css';
 
 const Login = () => {
@@ -12,8 +13,102 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const googleButtonRef = useRef(null);
+  const [googleReady, setGoogleReady] = useState(false);
+
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  const handleGoogleCredential = useCallback(async (response) => {
+    if (!response?.credential) {
+      toast.error('Não foi possível obter as credenciais do Google. Tente novamente.', {
+        style: {
+          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          color: '#ffffff',
+          fontWeight: '500',
+        }
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    const result = await loginWithGoogle(response.credential);
+
+    if (result.success) {
+      toast.success('Login com Google realizado com sucesso!', {
+        style: {
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          color: '#ffffff',
+          fontWeight: '500',
+        }
+      });
+      navigate('/');
+    } else {
+      setErrors({ general: result.error });
+      toast.error(result.error, {
+        style: {
+          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          color: '#ffffff',
+          fontWeight: '500',
+        }
+      });
+    }
+
+    setIsLoading(false);
+  }, [loginWithGoogle, navigate]);
+
+  useEffect(() => {
+    if (!googleClientId || googleReady) {
+      return undefined;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 30;
+    let intervalId = null;
+
+    const tryInitialize = () => {
+      if (window.google?.accounts?.id && googleButtonRef.current) {
+        googleButtonRef.current.innerHTML = '';
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleGoogleCredential,
+          ux_mode: 'popup'
+        });
+
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: 'outline',
+          size: 'large',
+          type: 'standard',
+          width: 320
+        });
+
+        setGoogleReady(true);
+        return true;
+      }
+      return false;
+    };
+
+    if (!tryInitialize()) {
+      intervalId = setInterval(() => {
+        attempts += 1;
+        if (tryInitialize()) {
+          clearInterval(intervalId);
+        } else if (attempts >= maxAttempts) {
+          clearInterval(intervalId);
+          console.error('Google Sign-In script não inicializou.');
+          toast.error('Não foi possível carregar o botão do Google.');
+        }
+      }, 200);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [googleClientId, googleReady, handleGoogleCredential]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -185,6 +280,20 @@ const Login = () => {
             {isLoading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
+
+        {googleClientId && (
+          <div className="divider">
+            <span></span>
+            <p>Ou continue com</p>
+            <span></span>
+          </div>
+        )}
+
+        <div className="social-login">
+          {googleClientId && (
+            <div className="google-button" ref={googleButtonRef} aria-disabled={!googleReady}></div>
+          )}
+        </div>
 
         <div className="login-footer">
           <p>Não tem uma conta? Entre em contato com o administrador.</p>

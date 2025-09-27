@@ -183,6 +183,73 @@
   box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
 }
 
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 30px 0 20px;
+  color: #999;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.divider span {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.4), rgba(102, 126, 234, 0.1));
+}
+
+.social-login {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.google-button {
+  display: flex;
+  justify-content: center;
+}
+
+.social-button {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.social-button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.social-button.google {
+  background: #ffffff;
+  border: 1px solid #e1e5e9;
+  color: #1a1a1a;
+}
+
+.social-button.google:hover:not(:disabled) {
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+.social-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 @keyframes loading {
   0% {
     transform: translateX(-100%);

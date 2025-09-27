@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -43,6 +43,13 @@ export const AuthProvider = ({ children }) => {
     verifyToken();
   }, [token]);
 
+  const handleAuthSuccess = useCallback((authToken, userData) => {
+    setToken(authToken);
+    setUser(userData);
+    localStorage.setItem('token', authToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+  }, []);
+
   const login = async (email, password) => {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', {
@@ -51,17 +58,34 @@ export const AuthProvider = ({ children }) => {
       });
 
       const { token: newToken, user: userData } = response.data;
-      
-      setToken(newToken);
-      setUser(userData);
-      localStorage.setItem('token', newToken);
-      
+
+      handleAuthSuccess(newToken, userData);
+
       return { success: true, user: userData };
     } catch (error) {
       console.error('Erro no login:', error);
       return { 
         success: false, 
         error: error.response?.data?.error || 'Erro no login' 
+      };
+    }
+  };
+
+  const loginWithGoogle = async (credential) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/google', {
+        token: credential
+      });
+
+      const { token: newToken, user: userData } = response.data;
+      handleAuthSuccess(newToken, userData);
+
+      return { success: true, user: userData };
+    } catch (error) {
+      console.error('Erro no login com Google:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Não foi possível autenticar com Google'
       };
     }
   };
@@ -99,6 +123,7 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
+    loginWithGoogle,
     register,
     logout,
     isAdmin,
