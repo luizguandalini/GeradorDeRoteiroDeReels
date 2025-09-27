@@ -13,9 +13,9 @@ export default function AudiosCard() {
   const carregar = async (forceUpdate = false) => {
     try {
       const { data } = await axios.get(API, {
-        params: forceUpdate ? { force: true } : {}
+        params: forceUpdate ? { force: true } : {},
       });
-      
+
       // Verificar se houve mudanças nos áudios
       const currentModified = JSON.stringify(data.audios);
       if (currentModified !== lastModified || forceUpdate) {
@@ -32,11 +32,14 @@ export default function AudiosCard() {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     // Iniciar polling apenas se há áudios ou se é a primeira verificação
-    intervalRef.current = setInterval(() => {
-      carregar();
-    }, audios.length > 0 ? 3000 : 10000); // 3s se há áudios, 10s se não há
+    intervalRef.current = setInterval(
+      () => {
+        carregar();
+      },
+      audios.length > 0 ? 3000 : 10000
+    ); // 3s se há áudios, 10s se não há
   };
 
   const stopPolling = () => {
@@ -110,10 +113,10 @@ export default function AudiosCard() {
   useEffect(() => {
     // Carregar dados iniciais
     carregar(true);
-    
+
     // Iniciar polling inteligente
     startPolling();
-    
+
     // Cleanup ao desmontar componente
     return () => {
       stopPolling();
@@ -138,10 +141,10 @@ export default function AudiosCard() {
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -174,11 +177,11 @@ export default function AudiosCard() {
       <div className="audios-actions-fixed">
         <button className="btn-danger" onClick={deletarTodos}>
           <FaTrash style={{ marginRight: 6 }} />
-          Deletar Todas
+          Deletar Todas Narrações
         </button>
         <button onClick={baixarTodos}>
           <FaDownload style={{ marginRight: 6 }} />
-          Baixar Todas
+          Baixar Todas Narrações
         </button>
       </div>
     </div>
