@@ -78,7 +78,8 @@
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background-color: #f8f9fa;
+  background-color: #faf8f8;
+  color: #6e62c3;
 }
 
 .form-group input:focus {
@@ -126,7 +127,7 @@
 }
 
 .login-button:disabled::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -160,7 +161,7 @@
     padding: 30px 20px;
     margin: 10px;
   }
-  
+
   .login-header h1 {
     font-size: 2rem;
   }
