@@ -5,7 +5,6 @@ import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
-import RoadmapSection from "./components/RoadmapSection/RoadmapSection";
 import TopicosSection from "./components/TopicosSection/TopicosSection";
 import ThemeSection from "./components/ThemeSection/ThemeSection";
 import DurationSection from "./components/DurationSection/DurationSection";
@@ -190,15 +189,6 @@ function App() {
       </header>
 
       <ToastContainer position="top-right" autoClose={3000} />
-
-      {/* Roadmap de passos */}
-      <RoadmapSection 
-        selectedTopico={selectedTopico}
-        temas={temas}
-        selectedTema={selectedTema}
-        roteiro={roteiro}
-        narracoesGeradas={narracoesGeradas}
-      />
 
       {showConfiguracoes ? (
         <ConfiguracoesSection toastConfig={toastConfig} />

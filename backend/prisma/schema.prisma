@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,13 +8,13 @@ datasource db {
 }
 
 model Topico {
-  id          Int      @id @default(autoincrement())
-  nome        String   @unique
-  descricao   String?
-  ativo       Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  temas       Tema[]
+  id        Int      @id @default(autoincrement())
+  nome      String   @unique
+  descricao String?
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  temas     Tema[]
 
   @@map("topicos")
 }
@@ -26,23 +23,35 @@ model Tema {
   id        Int      @id @default(autoincrement())
   titulo    String
   topicoId  Int
-  topico    Topico   @relation(fields: [topicoId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  topico    Topico   @relation(fields: [topicoId], references: [id], onDelete: Cascade)
 
   @@map("temas")
 }
 
 model Configuracao {
-  id          Int      @id @default(autoincrement())
-  chave       String   @unique
-  valor       String
+  id          Int                 @id @default(autoincrement())
+  chave       String              @unique
   nome        String
   descricao   String
   categoria   String
-  ativo       Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  ativo       Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  valores     ConfiguracaoValor[]
 
   @@map("configuracoes")
+}
+
+model ConfiguracaoValor {
+  id              Int          @id @default(autoincrement())
+  valor           String
+  ativo           Boolean      @default(false)
+  configuracaoId  Int          @map("configuracao_id")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @default(now()) @map("updated_at")
+  configuracao    Configuracao @relation(fields: [configuracaoId], references: [id], onDelete: Cascade)
+
+  @@map("configuracao_valores")
 }
