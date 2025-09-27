@@ -31,27 +31,15 @@ model Tema {
 }
 
 model Configuracao {
-  id          Int                 @id @default(autoincrement())
-  chave       String              @unique
+  id          Int      @id @default(autoincrement())
+  chave       String   @unique
+  valor       String
   nome        String
   descricao   String
   categoria   String
-  ativo       Boolean             @default(true)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  valores     ConfiguracaoValor[]
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("configuracoes")
-}
-
-model ConfiguracaoValor {
-  id              Int          @id @default(autoincrement())
-  valor           String
-  ativo           Boolean      @default(false)
-  configuracaoId  Int          @map("configuracao_id")
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @default(now()) @map("updated_at")
-  configuracao    Configuracao @relation(fields: [configuracaoId], references: [id], onDelete: Cascade)
-
-  @@map("configuracao_valores")
 }

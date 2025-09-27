@@ -98,13 +98,6 @@ export async function initializeDefaultConfigs() {
   try {
     const defaultConfigs = [
       {
-        chave: 'PORT',
-        valor: process.env.PORT || '3001',
-        nome: 'Porta do Servidor',
-        descricao: 'Porta em que o servidor backend será executado',
-        categoria: 'servidor'
-      },
-      {
         chave: 'OPENROUTER_API_KEY',
         valor: process.env.OPENROUTER_API_KEY || '',
         nome: 'Chave API OpenRouter',

@@ -50,11 +50,12 @@ app.get("/api/health", async (req, res) => {
 // Inicialização do servidor
 async function startServer() {
   try {
-    // Inicializa configurações padrão no banco
+    // Inicializa as configurações padrão
     await initializeDefaultConfigs();
-    
-    // Busca a porta das configurações do banco
-    const PORT = await getConfig('PORT', 'PORT') || 5000;
+    console.log('✅ Configurações padrão inicializadas');
+
+    // Usa a porta do .env diretamente
+    const PORT = process.env.PORT || 5000;
     
     app.listen(PORT, () => {
       console.log(`🚀 Servidor rodando na porta ${PORT}`);

@@ -1,37 +1,30 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
-import TopicosSection from "./components/TopicosSection/TopicosSection";
-import ThemeSection from "./components/ThemeSection/ThemeSection";
-import DurationSection from "./components/DurationSection/DurationSection";
-import ScriptSection from "./components/ScriptSection/ScriptSection";
-import NarrationSection from "./components/NarrationSection/NarrationSection";
-import ConfiguracoesSection from "./components/ConfiguracoesSection/ConfiguracoesSection";
+import Sidebar from "./components/Sidebar/Sidebar";
+import Home from "./pages/Home/Home";
+import Configuracoes from "./pages/Configuracoes/Configuracoes";
 
-// Ícones
-import {
-  FaCode,
-  FaCog,
-} from "react-icons/fa";
-
-// Logo personalizada
+// Importar logo
 import logoReels from "../reels-express.png";
 
 function App() {
+  // Estados principais
+  const [selectedTopico, setSelectedTopico] = useState("");
   const [temas, setTemas] = useState([]);
+  const [selectedTema, setSelectedTema] = useState("");
   const [roteiro, setRoteiro] = useState([]);
-  const [duracao, setDuracao] = useState("90");
+  const [duracao, setDuracao] = useState(30);
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [mockMode, setMockMode] = useState(false);
-  const [selectedTopico, setSelectedTopico] = useState(null);
-  const [selectedTema, setSelectedTema] = useState(null);
-  const [narracoesGeradas, setNarracoesGeradas] = useState(false);
-  const [showConfiguracoes, setShowConfiguracoes] = useState(false);
+  const [narracoesGeradas, setNarracoesGeradas] = useState([]);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Configuração personalizada para o toast
   const toastConfig = {
@@ -148,77 +141,57 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      {/* Toggle fixo no canto superior direito */}
-      <div className="theme-toggle-container">
-        <label className="switch">
-          <input type="checkbox" checked={darkMode} onChange={toggleTheme} />
-          <span className="slider"></span>
-        </label>
-      </div>
-
-      {/* Toggle para modo mock */}
-      <div className="mock-toggle-container">
-        <label className="switch">
-          <input type="checkbox" checked={mockMode} onChange={toggleMockMode} />
-          <span className="slider mock-slider"></span>
-        </label>
-        <span className="mock-label">
-          <FaCode style={{ marginRight: "5px" }} />
-          Modo {mockMode ? "Simulação" : "Real"}
-        </span>
-      </div>
-
-      {/* Botão para configurações */}
-      <div className="config-toggle-container">
-        <button 
-          className="config-button"
-          onClick={() => setShowConfiguracoes(!showConfiguracoes)}
-          title="Configurações do Sistema"
-        >
-          <FaCog />
-        </button>
-      </div>
-
-      <header className="app-header">
-        <img
-          src={logoReels}
-          alt="Reels Express"
-          style={{ marginRight: "12px", height: "100px" }}
+    <Router>
+      <div className={`app-container ${darkMode ? 'dark-theme' : ''}`}>
+        <Sidebar 
+          darkMode={darkMode}
+          toggleTheme={toggleTheme}
+          mockMode={mockMode}
+          toggleMockMode={toggleMockMode}
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
         />
-      </header>
 
-      <ToastContainer position="top-right" autoClose={3000} />
+        <div className={`main-content ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+          <header className="app-header">
+            <img
+              src={logoReels}
+              alt="Reels Express"
+              style={{ marginRight: "12px", height: "100px" }}
+            />
+          </header>
 
-      {showConfiguracoes ? (
-        <ConfiguracoesSection toastConfig={toastConfig} />
-      ) : (
-        <>
-          <TopicosSection 
-            selectedTopico={selectedTopico}
-            onSelectTopic={getTemas}
-            toastConfig={toastConfig}
-          />
+          <ToastContainer position="top-right" autoClose={3000} />
 
-          <ThemeSection 
-            temas={temas}
-            selectedTema={selectedTema}
-            onSelectTheme={getRoteiro}
-          />
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                <Home
+                  selectedTopico={selectedTopico}
+                  temas={temas}
+                  selectedTema={selectedTema}
+                  roteiro={roteiro}
+                  narracoesGeradas={narracoesGeradas}
+                  duracao={duracao}
+                  onSelectTopic={getTemas}
+                  onSelectTheme={getRoteiro}
+                  onDurationChange={setDuracao}
+                  onNarracoesGeradas={setNarracoesGeradas}
+                  toastConfig={toastConfig}
+                />
+              } 
+            />
+            <Route 
+              path="/configuracoes" 
+              element={<Configuracoes toastConfig={toastConfig} />} 
+            />
+          </Routes>
 
-          <DurationSection 
-            duracao={duracao}
-            onDurationChange={setDuracao}
-          />
-
-          <ScriptSection roteiro={roteiro} onNarracoesGeradas={setNarracoesGeradas} />
-
-          <NarrationSection roteiro={roteiro} />
-        </>
-      )}
-
-      {loading && <LoadingSpinner />}
-    </div>
+          {loading && <LoadingSpinner />}
+        </div>
+      </div>
+    </Router>
   );
 }
 

@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaCog, FaPlus, FaEdit, FaTrash, FaSave, FaTimes, FaCheck, FaCircle } from 'react-icons/fa';
+import { FaCog, FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './ConfiguracoesSection.css';
 
 const ConfiguracoesSection = ({ toastConfig }) => {
   const [configuracoes, setConfiguracoes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showValueForm, setShowValueForm] = useState(null);
-  const [newValue, setNewValue] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingConfig, setEditingConfig] = useState(null);
+  const [formData, setFormData] = useState({
+    chave: '',
+    valor: '',
+    nome: '',
+    descricao: '',
+    categoria: ''
+  });
 
   const categorias = ['API', 'IA', 'Prompts', 'Audio', 'Geral'];
 
@@ -22,7 +27,13 @@ const ConfiguracoesSection = ({ toastConfig }) => {
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/configuracoes');
-      setConfiguracoes(response.data);
+      // Filter out server-related configurations
+      const filteredConfigs = response.data.filter(config => 
+        !config.chave.toLowerCase().includes('server') && 
+        !config.chave.toLowerCase().includes('port') &&
+        !config.chave.toLowerCase().includes('porta')
+      );
+      setConfiguracoes(filteredConfigs);
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
       toast.error('Erro ao carregar configurações', toastConfig);
@@ -31,63 +42,93 @@ const ConfiguracoesSection = ({ toastConfig }) => {
     }
   };
 
-  const addValue = async (chave) => {
-    if (!newValue.trim()) {
-      toast.error('Valor não pode estar vazio', toastConfig);
+  const inicializarConfiguracoes = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post('http://localhost:5000/api/configuracoes/inicializar');
+      toast.success('Configurações inicializadas com sucesso!', toastConfig);
+      loadConfiguracoes();
+    } catch (error) {
+      console.error('Erro ao inicializar configurações:', error);
+      toast.error('Erro ao inicializar configurações', toastConfig);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.chave || !formData.valor || !formData.nome || !formData.descricao || !formData.categoria) {
+      toast.error('Todos os campos são obrigatórios', toastConfig);
       return;
     }
 
     try {
-      await axios.post(`http://localhost:5000/api/configuracoes/${chave}/valores`, {
-        valor: newValue,
-        ativar: false
-      });
+      setLoading(true);
       
-      toast.success('Valor adicionado com sucesso!', toastConfig);
-      setNewValue('');
-      setShowValueForm(null);
+      if (editingConfig) {
+        await axios.put(`http://localhost:5000/api/configuracoes/${editingConfig.id}`, formData);
+        toast.success('Configuração atualizada com sucesso!', toastConfig);
+      } else {
+        await axios.post('http://localhost:5000/api/configuracoes', formData);
+        toast.success('Configuração criada com sucesso!', toastConfig);
+      }
+      
+      resetForm();
       loadConfiguracoes();
     } catch (error) {
-      console.error('Erro ao adicionar valor:', error);
-      toast.error('Erro ao adicionar valor', toastConfig);
+      console.error('Erro ao salvar configuração:', error);
+      const errorMessage = error.response?.data?.error || 'Erro ao salvar configuração';
+      toast.error(errorMessage, toastConfig);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const activateValue = async (valorId) => {
-    try {
-      await axios.put(`http://localhost:5000/api/configuracoes/valores/${valorId}/ativar`);
-      toast.success('Valor ativado com sucesso!', toastConfig);
-      loadConfiguracoes();
-    } catch (error) {
-      console.error('Erro ao ativar valor:', error);
-      toast.error('Erro ao ativar valor', toastConfig);
-    }
+  const handleEdit = (config) => {
+    setEditingConfig(config);
+    setFormData({
+      chave: config.chave,
+      valor: config.valor,
+      nome: config.nome,
+      descricao: config.descricao,
+      categoria: config.categoria
+    });
+    setShowForm(true);
   };
 
-  const deleteValue = async (valorId) => {
-    if (!window.confirm('Tem certeza que deseja remover este valor?')) {
+  const handleDelete = async (id) => {
+    if (!window.confirm('Tem certeza que deseja desativar esta configuração?')) {
       return;
     }
 
     try {
-      await axios.delete(`http://localhost:5000/api/configuracoes/valores/${valorId}`);
-      toast.success('Valor removido com sucesso!', toastConfig);
+      setLoading(true);
+      await axios.delete(`http://localhost:5000/api/configuracoes/${id}`);
+      toast.success('Configuração desativada com sucesso!', toastConfig);
       loadConfiguracoes();
     } catch (error) {
-      console.error('Erro ao remover valor:', error);
-      toast.error('Erro ao remover valor', toastConfig);
+      console.error('Erro ao desativar configuração:', error);
+      toast.error('Erro ao desativar configuração', toastConfig);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filteredConfiguracoes = configuracoes.filter(config => {
-    const matchesSearch = config.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         config.chave.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         config.descricao.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || config.categoria === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const resetForm = () => {
+    setFormData({
+      chave: '',
+      valor: '',
+      nome: '',
+      descricao: '',
+      categoria: ''
+    });
+    setEditingConfig(null);
+    setShowForm(false);
+  };
 
-  const configsPorCategoria = filteredConfiguracoes.reduce((acc, config) => {
+  const configsPorCategoria = configuracoes.reduce((acc, config) => {
     if (!acc[config.categoria]) {
       acc[config.categoria] = [];
     }
@@ -96,7 +137,7 @@ const ConfiguracoesSection = ({ toastConfig }) => {
   }, {});
 
   return (
-    <div className="configuracoes-section">
+    <div className="configuracoes-section dark-theme">
       <div className="section-header">
         <div className="header-left">
           <FaCog className="section-icon" />
@@ -104,28 +145,92 @@ const ConfiguracoesSection = ({ toastConfig }) => {
         </div>
       </div>
 
-      <div className="filters-section">
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Buscar configurações..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
+      {showForm && (
+        <div className="form-overlay">
+          <div className="form-container">
+            <div className="form-header">
+              <h3>Editar Configuração</h3>
+              <button className="btn-close" onClick={resetForm}>
+                <FaTimes />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="config-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Chave *</label>
+                  <input
+                    type="text"
+                    value={formData.chave}
+                    onChange={(e) => setFormData({...formData, chave: e.target.value})}
+                    placeholder="Ex: OPENROUTER_API_KEY"
+                    disabled={editingConfig}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Categoria *</label>
+                  <select
+                    value={formData.categoria}
+                    onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+                    required
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {categorias.map(categoria => (
+                      <option key={categoria} value={categoria}>{categoria}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Nome *</label>
+                <input
+                  type="text"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({...formData, nome: e.target.value})}
+                  placeholder="Nome descritivo da configuração"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Descrição *</label>
+                <textarea
+                  value={formData.descricao}
+                  onChange={(e) => setFormData({...formData, descricao: e.target.value})}
+                  placeholder="Descrição detalhada do que esta configuração faz"
+                  rows="3"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Valor *</label>
+                <textarea
+                  value={formData.valor}
+                  onChange={(e) => setFormData({...formData, valor: e.target.value})}
+                  placeholder="Valor da configuração"
+                  rows="2"
+                  required
+                />
+              </div>
+
+              <div className="form-actions">
+                <button type="button" className="btn-secondary" onClick={resetForm}>
+                  <FaTimes />
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary" disabled={loading}>
+                  <FaSave />
+                  Atualizar
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-        
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="category-filter"
-        >
-          <option value="">Todas as categorias</option>
-          {categorias.map(categoria => (
-            <option key={categoria} value={categoria}>{categoria}</option>
-          ))}
-        </select>
-      </div>
+      )}
 
       <div className="configuracoes-content">
         {loading ? (
@@ -135,125 +240,63 @@ const ConfiguracoesSection = ({ toastConfig }) => {
           </div>
         ) : (
           <div className="configuracoes-grid">
-            {Object.keys(configsPorCategoria).length === 0 ? (
-              <div className="loading-container">
-                <p>Nenhuma configuração encontrada</p>
-              </div>
-            ) : (
-              Object.entries(configsPorCategoria).map(([categoria, configs]) => (
-                <div key={categoria} className="categoria-section">
-                  <h3 className="categoria-title">{categoria}</h3>
-                  <div className="configs-list">
-                    {configs.map(config => (
-                      <div key={config.id} className="config-card">
-                        <div className="config-header">
-                          <div className="config-info">
-                            <h4>{config.nome}</h4>
-                            <span className="config-key">{config.chave}</span>
-                          </div>
+            {Object.keys(configsPorCategoria).map(categoria => (
+              <div key={categoria} className="categoria-section">
+                <h3 className="categoria-title">{categoria}</h3>
+                <div className="configs-list">
+                  {configsPorCategoria[categoria].map(config => (
+                    <div key={config.id} className="config-card">
+                      <div className="config-header">
+                        <div className="config-info">
+                          <h4>{config.nome}</h4>
+                          <span className="config-key">{config.chave}</span>
                         </div>
-                        
-                        <div className="config-description">
-                          {config.descricao}
-                        </div>
-
-                        <div className="config-values">
-                          <div className="values-header">
-                            <label>Valores:</label>
-                            <button
-                              className="btn-add-value"
-                              onClick={() => setShowValueForm(config.chave)}
-                              title="Adicionar novo valor"
-                            >
-                              <FaPlus />
-                            </button>
-                          </div>
-
-                          {showValueForm === config.chave && (
-                            <div className="value-form">
-                              <div className="value-input-group">
-                                <input
-                                  type="text"
-                                  value={newValue}
-                                  onChange={(e) => setNewValue(e.target.value)}
-                                  placeholder="Digite o novo valor..."
-                                  className="value-input"
-                                  onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                      addValue(config.chave);
-                                    }
-                                  }}
-                                />
-                                <div className="value-actions">
-                                  <button
-                                    className="btn-save-value"
-                                    onClick={() => addValue(config.chave)}
-                                  >
-                                    <FaSave />
-                                  </button>
-                                  <button
-                                    className="btn-cancel-value"
-                                    onClick={() => {
-                                      setShowValueForm(null);
-                                      setNewValue('');
-                                    }}
-                                  >
-                                    <FaTimes />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="values-list">
-                            {config.valores && config.valores.length > 0 ? (
-                              config.valores.map(valor => (
-                                <div key={valor.id} className={`value-item ${valor.ativo ? 'active' : ''}`}>
-                                  <div className="value-content">
-                                    <div className="value-status">
-                                      {valor.ativo ? (
-                                        <FaCheck className="status-icon active" />
-                                      ) : (
-                                        <FaCircle className="status-icon inactive" />
-                                      )}
-                                    </div>
-                                    <div className="value-text">
-                                      {valor.valor}
-                                    </div>
-                                  </div>
-                                  <div className="value-actions">
-                                    {!valor.ativo && (
-                                      <button
-                                        className="btn-activate"
-                                        onClick={() => activateValue(valor.id)}
-                                        title="Ativar este valor"
-                                      >
-                                        Ativar
-                                      </button>
-                                    )}
-                                    <button
-                                      className="btn-delete-value"
-                                      onClick={() => deleteValue(valor.id)}
-                                      title="Remover valor"
-                                    >
-                                      <FaTrash />
-                                    </button>
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="no-values">
-                                Nenhum valor configurado
-                              </div>
-                            )}
-                          </div>
+                        <div className="config-actions">
+                          <button
+                            className="btn-edit"
+                            onClick={() => handleEdit(config)}
+                            title="Editar"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            className="btn-delete"
+                            onClick={() => handleDelete(config.id)}
+                            title="Desativar"
+                          >
+                            <FaTrash />
+                          </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      
+                      <p className="config-description">{config.descricao}</p>
+                      
+                      <div className="config-value">
+                        <label>Valor:</label>
+                        <div className="value-display">
+                          {config.valor && config.valor.length > 100 
+                            ? `${config.valor.substring(0, 100)}...` 
+                            : config.valor || 'Não definido'
+                          }
+                        </div>
+                      </div>
+                      
+                      <div className="config-meta">
+                        <span>Atualizado: {new Date(config.updatedAt).toLocaleDateString('pt-BR')}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))
-            )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && configuracoes.length === 0 && (
+          <div className="empty-state">
+            <FaCog className="empty-icon" />
+            <h3>Nenhuma configuração encontrada</h3>
+            <p>Não há configurações disponíveis no momento.</p>
           </div>
         )}
       </div>
