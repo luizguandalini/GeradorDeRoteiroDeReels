@@ -19,6 +19,15 @@
 
 .sidebar.dark-theme {
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+}
+
+/* Modo light - cores contrastantes */
+.sidebar:not(.dark-theme) {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #333;
+  border-right: 1px solid #dee2e6;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Header da Sidebar */
@@ -29,6 +38,11 @@
   align-items: center;
   justify-content: space-between;
   min-height: 60px;
+}
+
+/* Header no modo light */
+.sidebar:not(.dark-theme) .sidebar-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-toggle {
@@ -42,8 +56,18 @@
   transition: background-color 0.2s ease;
 }
 
+/* Toggle no modo light */
+.sidebar:not(.dark-theme) .sidebar-toggle {
+  color: #333;
+}
+
 .sidebar-toggle:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Hover no modo light */
+.sidebar:not(.dark-theme) .sidebar-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-title {
@@ -52,6 +76,11 @@
   font-weight: 600;
   opacity: 1;
   transition: opacity 0.3s ease;
+}
+
+/* Título no modo light */
+.sidebar:not(.dark-theme) .sidebar-title {
+  color: #333;
 }
 
 .sidebar.collapsed .sidebar-title {
@@ -85,13 +114,30 @@
   margin-right: 20px;
 }
 
+/* Links no modo light */
+.sidebar:not(.dark-theme) .nav-link {
+  color: #333;
+}
+
 .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
   transform: translateX(5px);
 }
 
+/* Hover no modo light */
+.sidebar:not(.dark-theme) .nav-link:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
 .nav-link.active {
   background-color: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+}
+
+/* Link ativo no modo light */
+.sidebar:not(.dark-theme) .nav-link.active {
+  background-color: rgba(102, 126, 234, 0.1);
+  color: #667eea;
   font-weight: 600;
 }
 
@@ -115,12 +161,18 @@
   justify-content: center;
   margin-right: 0;
   border-radius: 0;
+  padding: 12px;
 }
 
 /* Controles de Modo */
 .sidebar-controls {
   padding: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Controles no modo light */
+.sidebar:not(.dark-theme) .sidebar-controls {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .control-item {
@@ -145,9 +197,21 @@
   font-size: 14px;
 }
 
+/* Botões de controle no modo light */
+.sidebar:not(.dark-theme) .control-button {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: #333;
+}
+
 .control-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Hover dos botões no modo light */
+.sidebar:not(.dark-theme) .control-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.3);
 }
 
 .control-icon {
@@ -168,6 +232,7 @@
 
 .sidebar.collapsed .control-button {
   justify-content: center;
+  padding: 10px;
 }
 
 .mode-indicator {
