@@ -8,13 +8,19 @@ const RoadmapSection = ({
   roteiro = [],
   narracoesGeradas
 }) => {
+  // Definir o estado de cada etapa baseado na sequência correta
+  const step1Completed = selectedTopico;
+  const step2Completed = step1Completed && selectedTema;
+  const step3Completed = step2Completed && roteiro && roteiro.length > 0;
+  const step4Completed = step3Completed && narracoesGeradas;
+
   return (
     <div className="roadmap-container">
       <h2>Roadmap de Criação</h2>
       <div className="roadmap-steps">
         <div
           className={`roadmap-step ${
-            selectedTopico ? "completed" : "active"
+            step1Completed ? "completed" : "active"
           }`}
         >
           <span className="roadmap-number">1</span>
@@ -24,9 +30,9 @@ const RoadmapSection = ({
 
         <div
           className={`roadmap-step ${
-            selectedTema
+            step2Completed
               ? "completed"
-              : selectedTopico && temas && temas.length > 0
+              : step1Completed && temas && temas.length > 0
               ? "active"
               : ""
           }`}
@@ -38,7 +44,7 @@ const RoadmapSection = ({
 
         <div
           className={`roadmap-step ${
-            roteiro && roteiro.length > 0 ? "completed" : selectedTema ? "active" : ""
+            step3Completed ? "completed" : step2Completed ? "active" : ""
           }`}
         >
           <span className="roadmap-number">3</span>
@@ -46,7 +52,9 @@ const RoadmapSection = ({
         </div>
         <div className="roadmap-arrow"></div>
 
-        <div className={`roadmap-step ${narracoesGeradas ? "completed" : roteiro && roteiro.length > 0 ? "active" : ""}`}>
+        <div className={`roadmap-step ${
+          step4Completed ? "completed" : step3Completed ? "active" : ""
+        }`}>
           <span className="roadmap-number">4</span>
           <span className="roadmap-text">Gerar Narrações</span>
         </div>
