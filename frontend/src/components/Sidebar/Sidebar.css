@@ -87,6 +87,26 @@
   opacity: 0;
 }
 
+.sidebar-greeting {
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: inherit;
+}
+
+.sidebar-greeting .greeting-text {
+  display: block;
+}
+
+.sidebar.collapsed .sidebar-greeting {
+  display: none;
+}
+
+.sidebar:not(.dark-theme) .sidebar-greeting {
+  color: #333;
+}
+
 /* Navegação */
 .sidebar-nav {
   flex: 1;
