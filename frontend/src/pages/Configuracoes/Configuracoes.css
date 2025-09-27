@@ -4,28 +4,6 @@
   margin: 0 auto;
 }
 
-.page-header {
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.page-description {
-  font-size: 1.1rem;
-  color: #666;
-  margin: 0;
-}
-
 .page-content {
   background: white;
   border-radius: 12px;
@@ -34,16 +12,8 @@
 }
 
 /* Dark theme styles */
-.dark-theme .page-title {
-  color: #fff;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.dark-theme .page-description {
-  color: #ccc;
+.dark-theme .configuracoes-page {
+  background: transparent;
 }
 
 .dark-theme .page-content {
@@ -56,26 +26,10 @@
   .configuracoes-page {
     padding: 15px;
   }
-  
-  .page-title {
-    font-size: 2rem;
-  }
-  
-  .page-description {
-    font-size: 1rem;
-  }
 }
 
 @media (max-width: 480px) {
   .configuracoes-page {
     padding: 10px;
-  }
-  
-  .page-title {
-    font-size: 1.8rem;
-  }
-  
-  .page-header {
-    margin-bottom: 20px;
   }
 }

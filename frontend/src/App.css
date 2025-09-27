@@ -349,7 +349,7 @@ li {
 
 li:hover {
   background-color: rgba(193, 53, 132, 0.1);
-  transform: translateX(4px);
+  transform: none;
 }
 
 li.selected {
