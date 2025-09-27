@@ -1,8 +1,7 @@
 .app-header {
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
+  /* Removida a posição fixa para que o cabeçalho role com a página */
   z-index: 100;
 }
 
