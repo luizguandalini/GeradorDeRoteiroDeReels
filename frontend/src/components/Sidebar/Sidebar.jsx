@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   FaHome, 
   FaCog, 
@@ -11,6 +11,7 @@ import {
   FaChevronLeft,
   FaChevronRight
 } from 'react-icons/fa';
+import { FiLogOut } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
 
@@ -23,7 +24,13 @@ const Sidebar = ({
   setIsCollapsed 
 }) => {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const { isAdmin, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -90,6 +97,20 @@ const Sidebar = ({
 
       {/* Controles de Modo */}
       <div className="sidebar-controls">
+        {/* Logout Button */}
+        <div className="control-item">
+          <button 
+            className="control-button logout-control"
+            onClick={handleLogout}
+            title="Sair"
+          >
+            <FiLogOut className="control-icon" />
+            {!isCollapsed && (
+              <span className="control-label">Sair</span>
+            )}
+          </button>
+        </div>
+
         {/* Toggle Dark/Light Mode */}
         <div className="control-item">
           <button 

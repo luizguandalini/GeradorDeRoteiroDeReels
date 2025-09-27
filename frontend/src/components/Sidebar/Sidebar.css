@@ -205,6 +205,28 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+/* Logout button specific styling */
+.logout-control {
+  border-color: rgba(220, 53, 69, 0.3) !important;
+  color: #dc3545 !important;
+}
+
+.logout-control:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  border-color: rgba(220, 53, 69, 0.5) !important;
+}
+
+/* Logout button no modo light */
+.sidebar:not(.dark-theme) .logout-control {
+  border-color: rgba(220, 53, 69, 0.4) !important;
+  color: #dc3545 !important;
+}
+
+.sidebar:not(.dark-theme) .logout-control:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  border-color: rgba(220, 53, 69, 0.6) !important;
+}
+
 /* Hover dos botões no modo light */
 .sidebar:not(.dark-theme) .control-button:hover {
   background-color: rgba(0, 0, 0, 0.1);

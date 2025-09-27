@@ -9,14 +9,14 @@
 
 .header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 1rem 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.header-left .app-title {
+.header-center .app-title {
   font-size: 1.8rem;
   font-weight: 700;
   margin: 0;
