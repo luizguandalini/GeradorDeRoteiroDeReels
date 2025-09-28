@@ -1,6 +1,7 @@
 import express from "express";
 import axios from "axios";
 import dotenv from "dotenv";
+import chalk from "chalk";
 import { getMockMode } from "../config/mockConfig.js";
 import { temasMock, temasMockEn } from "../config/mockData.js";
 import prisma from "../config/database.js";
@@ -83,6 +84,8 @@ router.post("/", async (req, res) => {
     const systemMessage =
       SYSTEM_MESSAGES[language] || SYSTEM_MESSAGES[DEFAULT_LANGUAGE];
 
+    const userPrompt = `${promptTemas} ${topico.nome}`;
+
     const body = {
       model: modelName,
       response_format: {
@@ -100,9 +103,19 @@ router.post("/", async (req, res) => {
       },
       messages: [
         { role: "system", content: systemMessage },
-        { role: "user", content: `${promptTemas} ${topico.nome}` },
+        { role: "user", content: userPrompt },
       ],
     };
+
+    // Log colorido do prompt enviado para OpenRouter
+    console.log(chalk.cyan.bold("\n🚀 OPENROUTER REQUEST - TEMAS"));
+    console.log(chalk.yellow("📋 System Message:"));
+    console.log(chalk.white(systemMessage));
+    console.log(chalk.yellow("💬 User Prompt:"));
+    console.log(chalk.white(userPrompt));
+    console.log(chalk.blue("🌐 Language:"), chalk.green(language));
+    console.log(chalk.blue("🤖 Model:"), chalk.green(modelName));
+    console.log(chalk.cyan("─".repeat(60)));
 
     console.log("Enviando requisição para OpenRouter...");
     const response = await axios.post(

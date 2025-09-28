@@ -57,7 +57,7 @@ function App() {
 }
 
 function AppContent() {
-  const { t, setLanguage } = useTranslation();
+  const { t, setLanguage, language } = useTranslation();
   const { user } = useAuth();
   const [selectedTopico, setSelectedTopico] = useState("");
   const [temas, setTemas] = useState([]);
@@ -158,6 +158,7 @@ function AppContent() {
 
       const res = await axios.post("/api/temas", {
         topicoId: topico.id,
+        language: language,
       });
       setTemas(res.data.temas);
     } catch {
@@ -187,6 +188,7 @@ function AppContent() {
       const res = await axios.post("/api/roteiro", {
         tema,
         duracao,
+        language: language,
       });
       setRoteiro(res.data.roteiro);
     } catch {

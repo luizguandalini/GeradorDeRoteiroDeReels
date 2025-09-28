@@ -1,6 +1,7 @@
 import express from "express";
 import axios from "axios";
 import dotenv from "dotenv";
+import chalk from "chalk";
 import { getMockMode } from "../config/mockConfig.js";
 import { roteiroMock, roteiroMockEn } from "../config/mockData.js";
 import { getConfig } from "../config/configManager.js";
@@ -116,6 +117,18 @@ router.post("/", async (req, res) => {
         { role: "user", content: prompt },
       ],
     };
+
+    // Log colorido do prompt enviado para OpenRouter
+    console.log(chalk.cyan.bold("\n🚀 OPENROUTER REQUEST - ROTEIRO"));
+    console.log(chalk.yellow("📋 System Message:"));
+    console.log(chalk.white(systemMessage));
+    console.log(chalk.yellow("💬 User Prompt:"));
+    console.log(chalk.white(prompt));
+    console.log(chalk.blue("🌐 Language:"), chalk.green(effectiveLanguage));
+    console.log(chalk.blue("🤖 Model:"), chalk.green(modelName));
+    console.log(chalk.blue("🎬 Tema:"), chalk.green(tema));
+    console.log(chalk.blue("⏱️ Duração:"), chalk.green(duracao + "s"));
+    console.log(chalk.cyan("─".repeat(60)));
 
     console.log("Enviando requisição para OpenRouter...");
     let response;
