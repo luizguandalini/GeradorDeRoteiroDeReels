@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -296,7 +296,7 @@ const Login = () => {
         </div>
 
         <div className="login-footer">
-          <p>Não tem uma conta? Entre em contato com o administrador.</p>
+          <p>Seu roteiro em segundos ⏱️</p>
         </div>
       </div>
     </div>
@@ -304,3 +304,4 @@ const Login = () => {
 };
 
 export default Login;
+

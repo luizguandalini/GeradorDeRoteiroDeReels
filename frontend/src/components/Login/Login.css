@@ -81,34 +81,37 @@
   transition: all 0.3s ease;
   background-color: #faf8f8;
   color: #6e62c3;
+  box-sizing: border-box;
 }
 
 .password-input-container {
   position: relative;
-  display: flex;
-  align-items: center;
   width: 100%;
 }
 
 .password-input-container input {
-  padding-right: 50px;
   width: 100%;
-  flex: 1;
+  padding-right: 48px;
+  box-sizing: border-box;
 }
 
 .password-toggle-btn {
   position: absolute;
+  top: 0;
   right: 12px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: none;
   background: none;
   border: none;
   cursor: pointer;
   padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 4px;
   transition: all 0.2s ease;
   outline: none;
+  z-index: 1;
 }
 
 .password-toggle-btn:focus {
@@ -305,3 +308,5 @@
     font-size: 2rem;
   }
 }
+
+
