@@ -1,14 +1,14 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { FcGoogle } from 'react-icons/fc';
-import './Login.css';
+﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { FcGoogle } from "react-icons/fc";
+import "./Login.css";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -20,44 +20,50 @@ const Login = () => {
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  const handleGoogleCredential = useCallback(async (response) => {
-    if (!response?.credential) {
-      toast.error('Não foi possível obter as credenciais do Google. Tente novamente.', {
-        style: {
-          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-          color: '#ffffff',
-          fontWeight: '500',
-        }
-      });
-      return;
-    }
+  const handleGoogleCredential = useCallback(
+    async (response) => {
+      if (!response?.credential) {
+        toast.error(
+          "Não foi possível obter as credenciais do Google. Tente novamente.",
+          {
+            style: {
+              background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+              color: "#ffffff",
+              fontWeight: "500",
+            },
+          }
+        );
+        return;
+      }
 
-    setIsLoading(true);
+      setIsLoading(true);
 
-    const result = await loginWithGoogle(response.credential);
+      const result = await loginWithGoogle(response.credential);
 
-    if (result.success) {
-      toast.success('Login com Google realizado com sucesso!', {
-        style: {
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-          color: '#ffffff',
-          fontWeight: '500',
-        }
-      });
-      navigate('/');
-    } else {
-      setErrors({ general: result.error });
-      toast.error(result.error, {
-        style: {
-          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-          color: '#ffffff',
-          fontWeight: '500',
-        }
-      });
-    }
+      if (result.success) {
+        toast.success("Login com Google realizado com sucesso!", {
+          style: {
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            color: "#ffffff",
+            fontWeight: "500",
+          },
+        });
+        navigate("/");
+      } else {
+        setErrors({ general: result.error });
+        toast.error(result.error, {
+          style: {
+            background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+            color: "#ffffff",
+            fontWeight: "500",
+          },
+        });
+      }
 
-    setIsLoading(false);
-  }, [loginWithGoogle, navigate]);
+      setIsLoading(false);
+    },
+    [loginWithGoogle, navigate]
+  );
 
   useEffect(() => {
     if (!googleClientId || googleReady) {
@@ -70,18 +76,18 @@ const Login = () => {
 
     const tryInitialize = () => {
       if (window.google?.accounts?.id && googleButtonRef.current) {
-        googleButtonRef.current.innerHTML = '';
+        googleButtonRef.current.innerHTML = "";
         window.google.accounts.id.initialize({
           client_id: googleClientId,
           callback: handleGoogleCredential,
-          ux_mode: 'popup'
+          ux_mode: "popup",
         });
 
         window.google.accounts.id.renderButton(googleButtonRef.current, {
-          theme: 'outline',
-          size: 'large',
-          type: 'standard',
-          width: 320
+          theme: "outline",
+          size: "large",
+          type: "standard",
+          width: 320,
         });
 
         setGoogleReady(true);
@@ -97,8 +103,8 @@ const Login = () => {
           clearInterval(intervalId);
         } else if (attempts >= maxAttempts) {
           clearInterval(intervalId);
-          console.error('Google Sign-In script não inicializou.');
-          toast.error('Não foi possível carregar o botão do Google.');
+          console.error("Google Sign-In script não inicializou.");
+          toast.error("Não foi possível carregar o botão do Google.");
         }
       }, 200);
     }
@@ -112,16 +118,16 @@ const Login = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Limpar erro do campo quando o usuário começar a digitar
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
@@ -134,13 +140,13 @@ const Login = () => {
     // Validação básica
     const newErrors = {};
     if (!formData.email.trim()) {
-      newErrors.email = 'Email é obrigatório';
+      newErrors.email = "Email é obrigatório";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
+      newErrors.email = "Email inválido";
     }
-    
+
     if (!formData.password.trim()) {
-      newErrors.password = 'Senha é obrigatória';
+      newErrors.password = "Senha é obrigatória";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -151,44 +157,47 @@ const Login = () => {
 
     try {
       const result = await login(formData.email, formData.password);
-      
+
       if (result.success) {
-        toast.success('Login realizado com sucesso!', {
+        toast.success("Login realizado com sucesso!", {
           style: {
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: '#ffffff',
-            fontWeight: '500',
-          }
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            color: "#ffffff",
+            fontWeight: "500",
+          },
         });
-        navigate('/');
+        navigate("/");
       } else {
         // Definir erros específicos baseados na resposta
-        if (result.error && result.error.includes('email')) {
+        if (result.error && result.error.includes("email")) {
           setErrors({ email: result.error });
-        } else if (result.error && result.error.includes('senha')) {
+        } else if (result.error && result.error.includes("senha")) {
           setErrors({ password: result.error });
         } else {
-          setErrors({ general: result.error || 'Credenciais inválidas' });
+          setErrors({ general: result.error || "Credenciais inválidas" });
         }
-        
-        toast.error(result.error || 'Credenciais inválidas', {
+
+        toast.error(result.error || "Credenciais inválidas", {
           style: {
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-            color: '#ffffff',
-            fontWeight: '500',
-          }
+            background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+            color: "#ffffff",
+            fontWeight: "500",
+          },
         });
       }
     } catch (error) {
-      console.error('Erro no login:', error);
-      setErrors({ general: 'Erro de conexão' });
-      toast.error('Erro de conexão. Verifique sua internet e tente novamente.', {
-        style: {
-          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-          color: '#ffffff',
-          fontWeight: '500',
+      console.error("Erro no login:", error);
+      setErrors({ general: "Erro de conexão" });
+      toast.error(
+        "Erro de conexão. Verifique sua internet e tente novamente.",
+        {
+          style: {
+            background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+            color: "#ffffff",
+            fontWeight: "500",
+          },
         }
-      });
+      );
     } finally {
       setIsLoading(false);
     }
@@ -206,12 +215,16 @@ const Login = () => {
           {errors.general && (
             <div className="error-message">
               <svg className="error-icon" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               {errors.general}
             </div>
           )}
-          
+
           <div className="form-group">
             <input
               type="email"
@@ -219,13 +232,17 @@ const Login = () => {
               placeholder="Email"
               value={formData.email}
               onChange={handleChange}
-              className={errors.email ? 'error' : ''}
+              className={errors.email ? "error" : ""}
               required
             />
             {errors.email && (
               <div className="error-message">
                 <svg className="error-icon" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 {errors.email}
               </div>
@@ -240,7 +257,7 @@ const Login = () => {
                 placeholder="Senha"
                 value={formData.password}
                 onChange={handleChange}
-                className={errors.password ? 'error' : ''}
+                className={errors.password ? "error" : ""}
                 required
               />
               <button
@@ -250,14 +267,52 @@ const Login = () => {
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
                 {showPassword ? (
-                  <svg className="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M1 1l22 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg
+                    className="eye-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M1 1l22 22"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 ) : (
-                  <svg className="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg
+                    className="eye-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <path
+                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </button>
@@ -265,19 +320,19 @@ const Login = () => {
             {errors.password && (
               <div className="error-message">
                 <svg className="error-icon" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 {errors.password}
               </div>
             )}
           </div>
 
-          <button 
-            type="submit" 
-            className="login-button"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Entrando...' : 'Entrar'}
+          <button type="submit" className="login-button" disabled={isLoading}>
+            {isLoading ? "Entrando..." : "Entrar"}
           </button>
         </form>
 
@@ -291,12 +346,23 @@ const Login = () => {
 
         <div className="social-login">
           {googleClientId && (
-            <div className="google-button" ref={googleButtonRef} aria-disabled={!googleReady}></div>
+            <div
+              className="google-button"
+              ref={googleButtonRef}
+              aria-disabled={!googleReady}
+            ></div>
           )}
         </div>
 
         <div className="login-footer">
           <p>Seu roteiro em segundos ⏱️</p>
+          <a
+            href="https://www.linkedin.com/in/luizguandalini/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Desenvolvido por Luiz Guandalini 👨🏻‍💻
+          </a>
         </div>
       </div>
     </div>
@@ -304,4 +370,3 @@ const Login = () => {
 };
 
 export default Login;
-

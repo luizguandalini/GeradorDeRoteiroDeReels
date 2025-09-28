@@ -298,6 +298,19 @@
   margin: 0;
 }
 
+.login-footer a {
+  display: inline-block;
+  margin-top: 8px;
+  color: #667eea;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-footer a:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
 @media (max-width: 480px) {
   .login-card {
     padding: 30px 20px;
@@ -308,5 +321,7 @@
     font-size: 2rem;
   }
 }
+
+
 
 
