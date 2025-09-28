@@ -1,38 +1,122 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import axios from "axios";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FcGoogle } from "react-icons/fc";
+import LanguageSwitch from "../LanguageSwitch/LanguageSwitch";
+import { useTranslation } from "../../contexts/LanguageContext";
 import "./Login.css";
 
+const toastStyles = {
+  success: {
+    style: {
+      background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+      color: "#ffffff",
+      fontWeight: "500",
+    },
+  },
+  error: {
+    style: {
+      background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+      color: "#ffffff",
+      fontWeight: "500",
+    },
+  },
+};
+
+const normalizeMessage = (message) => {
+  if (!message) {
+    return "";
+  }
+  return typeof message === "string" ? message : String(message);
+};
+
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const { t, language, setLanguage } = useTranslation();
+  const { login, loginWithGoogle, updateUser } = useAuth();
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const { login, loginWithGoogle } = useAuth();
-  const navigate = useNavigate();
+  const [hasLanguageOverride, setHasLanguageOverride] = useState(false);
   const googleButtonRef = useRef(null);
   const [googleReady, setGoogleReady] = useState(false);
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+  const showSuccessToast = useCallback(
+    (message) => {
+      toast.success(message, toastStyles.success);
+    },
+    []
+  );
+
+  const showErrorToast = useCallback(
+    (message) => {
+      toast.error(message, toastStyles.error);
+    },
+    []
+  );
+
+  const handleLanguageSelect = useCallback(
+    (nextLanguage) => {
+      if (nextLanguage === language) {
+        return;
+      }
+
+      setHasLanguageOverride(true);
+      setLanguage(nextLanguage);
+    },
+    [language, setLanguage]
+  );
+
+  const persistLanguagePreference = useCallback(async (targetLanguage) => {
+    const response = await axios.patch("/api/users/language", { language: targetLanguage });
+    return response?.data?.user;
+  }, []);
+
+  const finalizeLanguagePreference = useCallback(
+    async (userData) => {
+      try {
+        if (hasLanguageOverride || !userData?.language) {
+          const desiredLanguage = language;
+
+          if (userData?.language !== desiredLanguage) {
+            const updatedUser = await persistLanguagePreference(desiredLanguage);
+            if (updatedUser) {
+              updateUser(updatedUser);
+            } else if (userData) {
+              updateUser((current) => (current ? { ...current, language: desiredLanguage } : current));
+            }
+          } else {
+            updateUser((current) => (current ? { ...current, language: desiredLanguage } : current));
+          }
+
+          setLanguage(desiredLanguage);
+        } else if (userData?.language) {
+          setLanguage(userData.language);
+          updateUser(userData);
+        }
+      } catch (error) {
+        console.error("Erro ao persistir preferencia de idioma:", error);
+        if (userData?.language) {
+          setLanguage(userData.language);
+          updateUser(userData);
+        }
+        showErrorToast(t("common.messages.languageUpdateError"));
+      } finally {
+        setHasLanguageOverride(false);
+      }
+    },
+    [hasLanguageOverride, language, persistLanguagePreference, setLanguage, updateUser, showErrorToast, t]
+  );
+
   const handleGoogleCredential = useCallback(
     async (response) => {
       if (!response?.credential) {
-        toast.error(
-          "Não foi possível obter as credenciais do Google. Tente novamente.",
-          {
-            style: {
-              background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-              color: "#ffffff",
-              fontWeight: "500",
-            },
-          }
-        );
+        showErrorToast(t("login.feedback.googleCredentialMissing"));
         return;
       }
 
@@ -41,28 +125,18 @@ const Login = () => {
       const result = await loginWithGoogle(response.credential);
 
       if (result.success) {
-        toast.success("Login com Google realizado com sucesso!", {
-          style: {
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            color: "#ffffff",
-            fontWeight: "500",
-          },
-        });
+        await finalizeLanguagePreference(result.user);
+        showSuccessToast(t("login.feedback.googleLoginSuccess"));
         navigate("/");
       } else {
-        setErrors({ general: result.error });
-        toast.error(result.error, {
-          style: {
-            background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-            color: "#ffffff",
-            fontWeight: "500",
-          },
-        });
+        const message = normalizeMessage(result.error) || t("login.feedback.invalidCredentials");
+        setErrors({ general: message });
+        showErrorToast(message);
       }
 
       setIsLoading(false);
     },
-    [loginWithGoogle, navigate]
+    [finalizeLanguagePreference, loginWithGoogle, navigate, showErrorToast, showSuccessToast, t]
   );
 
   useEffect(() => {
@@ -103,8 +177,8 @@ const Login = () => {
           clearInterval(intervalId);
         } else if (attempts >= maxAttempts) {
           clearInterval(intervalId);
-          console.error("Google Sign-In script não inicializou.");
-          toast.error("Não foi possível carregar o botão do Google.");
+          console.error("Google Sign-In script did not initialize.");
+          showErrorToast(t("login.feedback.googleLoadError"));
         }
       }, 200);
     }
@@ -114,43 +188,51 @@ const Login = () => {
         clearInterval(intervalId);
       }
     };
-  }, [googleClientId, googleReady, handleGoogleCredential]);
+  }, [googleClientId, googleReady, handleGoogleCredential, showErrorToast, t]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
 
-    // Limpar erro do campo quando o usuário começar a digitar
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+
+    if (errors.general) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.general;
+        return next;
+      });
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setIsLoading(true);
     setErrors({});
 
-    // Validação básica
-    const newErrors = {};
+    const validationErrors = {};
+
     if (!formData.email.trim()) {
-      newErrors.email = "Email é obrigatório";
+      validationErrors.email = t("login.validation.emailRequired");
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email inválido";
+      validationErrors.email = t("login.validation.emailInvalid");
     }
 
     if (!formData.password.trim()) {
-      newErrors.password = "Senha é obrigatória";
+      validationErrors.password = t("login.validation.passwordRequired");
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       setIsLoading(false);
       return;
     }
@@ -159,45 +241,32 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
-        toast.success("Login realizado com sucesso!", {
-          style: {
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            color: "#ffffff",
-            fontWeight: "500",
-          },
-        });
+        await finalizeLanguagePreference(result.user);
+        showSuccessToast(t("login.feedback.loginSuccess"));
         navigate("/");
       } else {
-        // Definir erros específicos baseados na resposta
-        if (result.error && result.error.includes("email")) {
-          setErrors({ email: result.error });
-        } else if (result.error && result.error.includes("senha")) {
-          setErrors({ password: result.error });
-        } else {
-          setErrors({ general: result.error || "Credenciais inválidas" });
-        }
+        const rawMessage = normalizeMessage(result.error);
+        const normalized = rawMessage.toLowerCase();
 
-        toast.error(result.error || "Credenciais inválidas", {
-          style: {
-            background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-            color: "#ffffff",
-            fontWeight: "500",
-          },
-        });
+        if (normalized.includes("email")) {
+          const message = t("login.feedback.emailNotFound");
+          setErrors({ email: message });
+          showErrorToast(message);
+        } else if (normalized.includes("senha") || normalized.includes("password")) {
+          const message = t("login.feedback.passwordIncorrect");
+          setErrors({ password: message });
+          showErrorToast(message);
+        } else {
+          const message = rawMessage || t("login.feedback.invalidCredentials");
+          setErrors({ general: message });
+          showErrorToast(message);
+        }
       }
     } catch (error) {
-      console.error("Erro no login:", error);
-      setErrors({ general: "Erro de conexão" });
-      toast.error(
-        "Erro de conexão. Verifique sua internet e tente novamente.",
-        {
-          style: {
-            background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-            color: "#ffffff",
-            fontWeight: "500",
-          },
-        }
-      );
+      console.error("Login error:", error);
+      const message = t("login.feedback.connectionErrorDetailed");
+      setErrors({ general: message });
+      showErrorToast(message);
     } finally {
       setIsLoading(false);
     }
@@ -206,9 +275,18 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-card">
+        <div className="login-language">
+          <LanguageSwitch
+            value={language}
+            onChange={handleLanguageSelect}
+            disabled={isLoading}
+            size="sm"
+          />
+        </div>
+
         <div className="login-header">
-          <h1>Shaka</h1>
-          <p>Faça login para continuar</p>
+          <h1>{t("login.header.title")}</h1>
+          <p>{t("login.header.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -229,11 +307,12 @@ const Login = () => {
             <input
               type="email"
               name="email"
-              placeholder="Email"
+              placeholder={t("login.fields.emailPlaceholder")}
               value={formData.email}
               onChange={handleChange}
               className={errors.email ? "error" : ""}
               required
+              autoComplete="email"
             />
             {errors.email && (
               <div className="error-message">
@@ -254,26 +333,21 @@ const Login = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
-                placeholder="Senha"
+                placeholder={t("login.fields.passwordPlaceholder")}
                 value={formData.password}
                 onChange={handleChange}
                 className={errors.password ? "error" : ""}
                 required
+                autoComplete="current-password"
               />
               <button
                 type="button"
                 className="password-toggle-btn"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? t("login.aria.hidePassword") : t("login.aria.showPassword")}
               >
                 {showPassword ? (
-                  <svg
-                    className="eye-icon"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
+                  <svg className="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
                       stroke="currentColor"
@@ -290,13 +364,7 @@ const Login = () => {
                     />
                   </svg>
                 ) : (
-                  <svg
-                    className="eye-icon"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
+                  <svg className="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
                       stroke="currentColor"
@@ -332,14 +400,14 @@ const Login = () => {
           </div>
 
           <button type="submit" className="login-button" disabled={isLoading}>
-            {isLoading ? "Entrando..." : "Entrar"}
+            {isLoading ? t("login.actions.submitting") : t("login.actions.submit")}
           </button>
         </form>
 
         {googleClientId && (
           <div className="divider">
             <span></span>
-            <p>Ou continue com</p>
+            <p>{t("login.actions.continueWith")}</p>
             <span></span>
           </div>
         )}
@@ -355,13 +423,13 @@ const Login = () => {
         </div>
 
         <div className="login-footer">
-          <p>Seu roteiro em segundos ⏱️</p>
+          <p>{t("login.footer.tagline")}</p>
           <a
             href="https://www.linkedin.com/in/luizguandalini/"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Desenvolvido por Luiz Guandalini 👨🏻‍💻
+            {t("login.footer.credit")}
           </a>
         </div>
       </div>

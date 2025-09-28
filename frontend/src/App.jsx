@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
-import { AuthProvider } from "./contexts/AuthContext";
+import { LanguageProvider, useTranslation } from "./contexts/LanguageContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import Login from "./components/Login/Login";
 import Header from "./components/Header/Header";
@@ -14,53 +15,50 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import Home from "./pages/Home/Home";
 import Configuracoes from "./pages/Configuracoes/Configuracoes";
 
-// Importar logo
-import logoReels from "../shaka.png";
-
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <AppContent />
-              </ProtectedRoute>
-            }
+    <LanguageProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <AppContent />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            closeOnClick
+            pauseOnHover
+            draggable
+            theme="colored"
+            toastStyle={{
+              backgroundColor: "#ffffff",
+              color: "#262626",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              border: "1px solid #e6e6e6",
+            }}
+            progressStyle={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
           />
-        </Routes>
-        <ToastContainer 
-          position="top-right" 
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
-          toastStyle={{
-            backgroundColor: "#ffffff",
-            color: "#262626",
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-            border: "1px solid #e6e6e6",
-          }}
-          progressStyle={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          }}
-        />
-      </Router>
-    </AuthProvider>
+        </Router>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 
 function AppContent() {
-  // Estados principais
+  const { t, setLanguage } = useTranslation();
+  const { user } = useAuth();
   const [selectedTopico, setSelectedTopico] = useState("");
   const [temas, setTemas] = useState([]);
   const [selectedTema, setSelectedTema] = useState("");
@@ -72,7 +70,6 @@ function AppContent() {
   const [narracoesGeradas, setNarracoesGeradas] = useState([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Configuração personalizada para o toast
   const toastConfig = {
     position: "top-right",
     autoClose: 3000,
@@ -105,9 +102,14 @@ function AppContent() {
       document.body.classList.add("dark");
     }
 
-    // Verificar o estado atual do modo mock
     checkMockMode();
   }, []);
+
+  useEffect(() => {
+    if (user?.language) {
+      setLanguage(user.language);
+    }
+  }, [user?.language, setLanguage]);
 
   const toggleTheme = () => {
     if (darkMode) {
@@ -128,11 +130,11 @@ function AppContent() {
       });
       setMockMode(newMockMode);
       toast.info(
-        `Modo ${newMockMode ? "simulação" : "real"} ativado`,
+        t(newMockMode ? "app.notifications.mockModeEnabled" : "app.notifications.mockModeDisabled"),
         toastConfig
       );
     } catch (error) {
-      toast.error("Erro ao alterar o modo de operação", toastConfig);
+      toast.error(t("app.errors.mockModeChange"), toastConfig);
       console.error(error);
     }
   };
@@ -159,36 +161,36 @@ function AppContent() {
       });
       setTemas(res.data.temas);
     } catch {
-      toast.error("Erro ao carregar temas da IA", toastConfig);
+      toast.error(t("app.errors.loadTopics"), toastConfig);
     } finally {
       setLoading(false);
     }
   };
 
   const getRoteiro = async (tema) => {
-    const duracaoInt = parseInt(duracao);
+    const duracaoInt = parseInt(duracao, 10);
 
     if (!duracao || duracaoInt <= 0) {
-      toast.warn("Informe a duração do vídeo em segundos", toastConfig);
+      toast.warn(t("app.errors.durationRequired"), toastConfig);
       return;
     }
 
     if (duracaoInt < 30) {
-      toast.warn("A duração mínima é de 30 segundos", toastConfig);
+      toast.warn(t("app.errors.durationTooShort"), toastConfig);
       return;
     }
 
     try {
       setLoading(true);
       setSelectedTema(tema);
-      setNarracoesGeradas(false); // Reset narrações quando seleciona novo tema
+      setNarracoesGeradas(false);
       const res = await axios.post("/api/roteiro", {
         tema,
         duracao,
       });
       setRoteiro(res.data.roteiro);
     } catch {
-      toast.error("Erro ao gerar roteiro", toastConfig);
+      toast.error(t("app.errors.generateScript"), toastConfig);
     } finally {
       setLoading(false);
     }

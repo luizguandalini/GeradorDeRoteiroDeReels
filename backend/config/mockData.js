@@ -33,6 +33,15 @@ export const temasMock = {
   ]
 };
 
+export const temasMockEn = {
+  temas: [
+    "How to organize your daily routine",
+    "Essential productivity apps",
+    "Pomodoro technique explained",
+    "Tips for effective meetings",
+    "How to avoid procrastination"
+  ]
+};
 // Mock para a API de roteiro
 export const roteiroMock = {
   roteiro: [
@@ -63,6 +72,34 @@ export const roteiroMock = {
   ]
 };
 
+export const roteiroMockEn = {
+  roteiro: [
+    {
+      narracao: "Have you ever felt overwhelmed by too many tasks? In this video we show how to organize your routine effectively.",
+      imagem: "Person stressed with sticky notes and pending tasks."
+    },
+    {
+      narracao: "Start by listing everything you need to do in one place. It can be an app or a notebook.",
+      imagem: "Hand writing in a notebook or using a to-do app on the phone."
+    },
+    {
+      narracao: "Then prioritize your activities. What must be done today? What can wait until tomorrow?",
+      imagem: "Task list with color codes indicating priority levels."
+    },
+    {
+      narracao: "Block specific time slots for important tasks. This keeps focus and avoids distractions.",
+      imagem: "Calendar with colored time blocks for different activities."
+    },
+    {
+      narracao: "Do not forget to schedule breaks. They are essential to maintain productivity throughout the day.",
+      imagem: "Person relaxing with coffee or stretching briefly."
+    },
+    {
+      narracao: "Review your routine regularly and adjust when needed. What works today might not work tomorrow.",
+      imagem: "Person reviewing a calendar or task list and making adjustments."
+    }
+  ]
+};
 // Mock para a API de narrações (retorna caminhos de arquivos de áudio)
 export const narracoesMock = {
   caminhos: [
@@ -98,3 +135,8 @@ export const audiosMock = {
     }
   ]
 };
+
+
+
+
+

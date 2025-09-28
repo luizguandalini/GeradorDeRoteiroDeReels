@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
@@ -9,6 +9,7 @@ import audiosRoutes from "./routes/audios.js";
 import topicosRoutes from "./routes/topicos.js";
 import configuracoesRoutes from "./routes/configuracoes.js";
 import authRoutes from "./routes/auth.js";
+import usersRoutes from "./routes/users.js";
 import { authenticateToken, requireAdmin } from "./middleware/auth.js";
 import { getMockMode, setMockMode } from "./config/mockConfig.js";
 import prisma from "./config/database.js";
@@ -38,7 +39,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Rotas de autenticação (públicas)
+// Rotas de autenticaÃ§Ã£o (pÃºblicas)
 app.use("/api/auth", authRoutes);
 
 // Rota para controlar o modo mock (apenas admin)
@@ -52,17 +53,18 @@ app.post("/api/config/mock", authenticateToken, requireAdmin, (req, res) => {
   res.json({ mockMode: getMockMode() });
 });
 
-// Rotas protegidas (requerem autenticação)
+// Rotas protegidas (requerem autenticaÃ§Ã£o)
 app.use("/api/temas", authenticateToken, temasRoutes);
 app.use("/api/roteiro", authenticateToken, roteiroRoutes);
 app.use("/api/narracoes", authenticateToken, narracoesRoutes);
 app.use("/api/audios", authenticateToken, audiosRoutes);
+app.use("/api/users", authenticateToken, usersRoutes);
 app.use("/api/topicos", authenticateToken, topicosRoutes);
 
-// Rotas de configurações (apenas admin)
+// Rotas de configuraÃ§Ãµes (apenas admin)
 app.use("/api/configuracoes", authenticateToken, requireAdmin, configuracoesRoutes);
 
-// Teste de conexão com o banco
+// Teste de conexÃ£o com o banco
 app.get("/api/health", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -72,37 +74,39 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-// Inicialização do servidor
+// InicializaÃ§Ã£o do servidor
 async function startServer() {
   try {
-    // Inicializa as configurações padrão
+    // Inicializa as configuraÃ§Ãµes padrÃ£o
     await initializeDefaultConfigs();
-    console.log('✅ Configurações padrão inicializadas');
+    console.log('âœ… ConfiguraÃ§Ãµes padrÃ£o inicializadas');
 
     // Usa a porta do .env diretamente
     const PORT = process.env.PORT || 5000;
     
     app.listen(PORT, () => {
-      console.log(`🚀 Servidor rodando na porta ${PORT}`);
-      console.log(`📊 Modo mock: ${getMockMode() ? 'Ativado' : 'Desativado'}`);
+      console.log(`ðŸš€ Servidor rodando na porta ${PORT}`);
+      console.log(`ðŸ“Š Modo mock: ${getMockMode() ? 'Ativado' : 'Desativado'}`);
     });
   } catch (error) {
-    console.error('❌ Erro ao inicializar servidor:', error);
+    console.error('âŒ Erro ao inicializar servidor:', error);
     process.exit(1);
   }
 }
 
-// Inicia o servidor quando não estiver em modo de teste
+// Inicia o servidor quando nÃ£o estiver em modo de teste
 if (process.env.NODE_ENV !== 'test') {
   startServer();
 }
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('🔄 Desconectando do banco de dados...');
+  console.log('ðŸ”„ Desconectando do banco de dados...');
   await prisma.$disconnect();
   process.exit(0);
 });
 
 export { app, startServer };
 export default app;
+
+

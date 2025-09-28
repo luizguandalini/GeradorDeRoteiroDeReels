@@ -12,6 +12,7 @@
 }
 
 .login-card {
+  position: relative;
   background: white;
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -311,6 +312,23 @@
   text-decoration: underline;
 }
 
+.login-language {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.login-language .language-switch {
+  backdrop-filter: blur(6px);
+}
+
+.login-language .language-option {
+  font-size: 0.8rem;
+}
+
+.login-language .flag-icon {
+  box-shadow: none;
+}
 @media (max-width: 480px) {
   .login-card {
     padding: 30px 20px;
@@ -321,6 +339,7 @@
     font-size: 2rem;
   }
 }
+
 
 
 

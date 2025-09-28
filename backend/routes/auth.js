@@ -30,7 +30,8 @@ const buildUserResponse = (user) => ({
   email: user.email,
   name: user.name,
   role: user.role,
-  provider: user.provider
+  provider: user.provider,
+  language: user.language
 });
 
 const generateUserToken = (user) => jwt.sign(
@@ -134,6 +135,7 @@ const authUserSelect = {
   name: true,
   role: true,
   provider: true,
+  language: true,
   active: true
 };
 
@@ -240,6 +242,7 @@ router.post('/register', async (req, res) => {
         name: true,
         role: true,
         provider: true,
+        language: true,
         createdAt: true
       }
     });
@@ -401,7 +404,8 @@ router.get('/verify', async (req, res) => {
         name: true,
         role: true,
         active: true,
-        provider: true
+        provider: true,
+        language: true
       }
     });
 
@@ -438,3 +442,12 @@ router.post('/logout', async (req, res) => {
 });
 
 export default router;
+
+
+
+
+
+
+
+
+

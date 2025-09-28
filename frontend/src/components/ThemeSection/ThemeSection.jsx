@@ -1,27 +1,30 @@
-import React from 'react';
+﻿import React from 'react';
 import { FaLightbulb, FaRobot } from 'react-icons/fa';
+import { useTranslation } from '../../contexts/LanguageContext';
 import './ThemeSection.css';
 
-const ThemeSection = ({ 
-  temas, 
-  selectedTema, 
-  onSelectTheme 
+const ThemeSection = ({
+  temas,
+  selectedTema,
+  onSelectTheme
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="card scrollable">
       <h2>
         <FaLightbulb style={{ marginRight: "8px", color: "#fbc531" }} />
         <FaRobot style={{ marginRight: "8px", color: "#00a8ff" }} />
-        Sugestões da IA
+        {t('theme.title')}
       </h2>
       <ul>
-        {temas.map((t, i) => (
+        {temas.map((tTema, index) => (
           <li
-            key={i}
-            onClick={() => onSelectTheme(t)}
-            className={selectedTema === t ? "selected" : ""}
+            key={index}
+            onClick={() => onSelectTheme(tTema)}
+            className={selectedTema === tTema ? "selected" : ""}
           >
-            {t}
+            {tTema}
           </li>
         ))}
       </ul>

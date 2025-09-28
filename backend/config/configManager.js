@@ -126,6 +126,20 @@ export async function initializeDefaultConfigs() {
         categoria: 'prompts'
       },
       {
+        chave: 'PROMPT_TEMAS_EN',
+        valor: process.env.PROMPT_TEMAS_EN || 'Generate 5 engaging topics about the provided subject.',
+        nome: 'Prompt for Topics (English)',
+        descricao: 'Prompt used to generate topics in English based on a subject',
+        categoria: 'prompts'
+      },
+      {
+        chave: 'PROMPT_ROTEIRO_EN',
+        valor: process.env.PROMPT_ROTEIRO_EN || 'Create a detailed script in English for the provided theme. Duration: {duracao} seconds. Theme: {tema}. Return an array under the "roteiro" key with narration and imagery suggestions.',
+        nome: 'Prompt for Script (English)',
+        descricao: 'Prompt used to generate scripts in English based on a theme',
+        categoria: 'prompts'
+      },
+      {
         chave: 'ELEVEN_API_KEY',
         valor: process.env.ELEVEN_API_KEY || '',
         nome: 'Chave API ElevenLabs',
@@ -173,3 +187,9 @@ export default {
   clearConfigCache,
   initializeDefaultConfigs
 };
+
+
+
+
+
+

@@ -238,6 +238,27 @@ export const AuthProvider = ({ children }) => {
     }
   }, [clearSession]);
 
+  const updateUser = useCallback((updater) => {
+    setUser((prevUser) => {
+      if (typeof updater === "function") {
+        return updater(prevUser);
+      }
+
+      if (!prevUser) {
+        return updater ?? null;
+      }
+
+      if (!updater) {
+        return prevUser;
+      }
+
+      return {
+        ...prevUser,
+        ...updater,
+      };
+    });
+  }, []);
+
   const isAdmin = useCallback(() => user?.role === 'ADMIN', [user]);
 
   const isAuthenticated = useCallback(() => Boolean(user && token), [user, token]);
@@ -252,8 +273,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAdmin,
     isAuthenticated,
-    refreshAccessToken
-  }), [user, token, loading, login, loginWithGoogle, register, logout, isAdmin, isAuthenticated, refreshAccessToken]);
+    refreshAccessToken,
+    updateUser
+  }), [user, token, loading, login, loginWithGoogle, register, logout, isAdmin, isAuthenticated, refreshAccessToken, updateUser]);
 
   return (
     <AuthContext.Provider value={value}>
@@ -261,3 +283,6 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+
+

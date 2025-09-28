@@ -1,58 +1,99 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  FaHome, 
-  FaCog, 
-  FaCode, 
-  FaMoon, 
-  FaSun, 
-  FaBars,
-  FaTimes,
+﻿import React, { useState, useCallback } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  FaHome,
+  FaCog,
+  FaCode,
+  FaMoon,
+  FaSun,
   FaChevronLeft,
-  FaChevronRight
-} from 'react-icons/fa';
-import { FiLogOut } from 'react-icons/fi';
-import { useAuth } from '../../contexts/AuthContext';
-import './Sidebar.css';
+  FaChevronRight,
+} from "react-icons/fa";
+import { FiLogOut } from "react-icons/fi";
+import axios from "axios";
+import { toast } from "react-toastify";
+import LanguageSwitch from "../LanguageSwitch/LanguageSwitch";
+import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "../../contexts/LanguageContext";
+import "./Sidebar.css";
 
-const Sidebar = ({ 
-  darkMode, 
-  toggleTheme, 
-  mockMode, 
+const Sidebar = ({
+  darkMode,
+  toggleTheme,
+  mockMode,
   toggleMockMode,
   isCollapsed,
-  setIsCollapsed 
+  setIsCollapsed,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, logout } = useAuth();
+  const { t, language, setLanguage } = useTranslation();
+  const { user, isAdmin, logout, updateUser } = useAuth();
+  const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+
+  const handleLanguageChange = useCallback(
+    async (nextLanguage) => {
+      if (nextLanguage === language || isUpdatingLanguage) {
+        return;
+      }
+
+      const previousLanguage = language;
+      setLanguage(nextLanguage);
+      setIsUpdatingLanguage(true);
+
+      try {
+        const response = await axios.patch("/api/users/language", {
+          language: nextLanguage,
+        });
+        if (response?.data?.user) {
+          updateUser(response.data.user);
+        } else {
+          updateUser((current) =>
+            current ? { ...current, language: nextLanguage } : current
+          );
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar idioma:", error);
+        setLanguage(previousLanguage);
+        updateUser((current) =>
+          current ? { ...current, language: previousLanguage } : current
+        );
+        toast.error(t("common.messages.languageUpdateError"));
+      } finally {
+        setIsUpdatingLanguage(false);
+      }
+    },
+    [isUpdatingLanguage, language, setLanguage, updateUser, t]
+  );
 
   const getGreetingDetails = () => {
     const hour = new Date().getHours();
 
     if (hour >= 5 && hour < 12) {
-      return { salutation: 'Bom dia', emoji: '🌞' };
+      return { salutationKey: "sidebar.greetings.morning", emoji: "" };
     }
 
     if (hour >= 12 && hour < 18) {
-      return { salutation: 'Boa tarde', emoji: '🌇' };
+      return { salutationKey: "sidebar.greetings.afternoon", emoji: "" };
     }
 
     if (hour >= 18 && hour < 24) {
-      return { salutation: 'Boa noite', emoji: '🌙' };
+      return { salutationKey: "sidebar.greetings.evening", emoji: "" };
     }
 
-    return { salutation: 'Boa madrugada', emoji: '🌌' };
+    return { salutationKey: "sidebar.greetings.night", emoji: "" };
   };
 
-  const { salutation, emoji } = getGreetingDetails();
+  const { salutationKey, emoji } = getGreetingDetails();
   const admin = isAdmin();
-  const displayName = admin ? 'Patrão' : user?.name || 'Usuário';
-  const greetingMessage = `${salutation} ${displayName} ${emoji}`;
+  const displayName = admin
+    ? t("sidebar.titles.adminNickname")
+    : user?.name || t("sidebar.titles.defaultUser");
+  const greetingMessage = `${t(salutationKey)} ${displayName} ${emoji}`;
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const toggleSidebar = () => {
@@ -61,120 +102,153 @@ const Sidebar = ({
 
   const menuItems = [
     {
-      path: '/',
+      path: "/",
       icon: FaHome,
-      label: 'Página Inicial',
-      id: 'home'
+      labelKey: "sidebar.menu.home",
+      id: "home",
     },
     {
-      path: '/configuracoes',
+      path: "/configuracoes",
       icon: FaCog,
-      label: 'Configurações do Sistema',
-      id: 'config',
-      adminOnly: true
-    }
+      labelKey: "sidebar.menu.settings",
+      id: "config",
+      adminOnly: true,
+    },
   ];
 
   return (
-    <div className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${darkMode ? 'dark-theme' : ''}`}>
-      {/* Header da Sidebar */}
+    <div
+      className={`sidebar ${isCollapsed ? "collapsed" : ""} ${
+        darkMode ? "dark-theme" : ""
+      }`}
+    >
       <div className="sidebar-header">
-        <button 
+        <button
           className="sidebar-toggle"
           onClick={toggleSidebar}
-          title={isCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
+          title={
+            isCollapsed
+              ? t("sidebar.actions.expand")
+              : t("sidebar.actions.collapse")
+          }
         >
           {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
         </button>
         {!isCollapsed && (
-          <h3 className="sidebar-title">Menu</h3>
+          <h3 className="sidebar-title">{t("sidebar.header.menu")}</h3>
         )}
       </div>
 
-      {/* Navegação */}
       <nav className="sidebar-nav">
         <ul className="nav-list">
           {menuItems
-            .filter(item => !item.adminOnly || admin)
+            .filter((item) => !item.adminOnly || admin)
             .map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <li key={item.id} className="nav-item">
-                <Link 
-                  to={item.path}
-                  className={`nav-link ${isActive ? 'active' : ''}`}
-                  title={isCollapsed ? item.label : ''}
-                >
-                  <Icon className="nav-icon" />
-                  {!isCollapsed && (
-                    <span className="nav-label">{item.label}</span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+
+              return (
+                <li key={item.id} className="nav-item">
+                  <Link
+                    to={item.path}
+                    className={`nav-link ${isActive ? "active" : ""}`}
+                    title={isCollapsed ? t(item.labelKey) : ""}
+                  >
+                    <Icon className="nav-icon" />
+                    {!isCollapsed && (
+                      <span className="nav-label">{t(item.labelKey)}</span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
         </ul>
       </nav>
 
-      {/* Controles de Modo */}
       <div className="sidebar-controls">
+        <div className="control-item language-control">
+          <LanguageSwitch
+            value={language}
+            onChange={handleLanguageChange}
+            disabled={isUpdatingLanguage}
+            showLabels={!isCollapsed}
+            size={isCollapsed ? "sm" : "md"}
+            className="sidebar-language-switch"
+          />
+        </div>
+
         {!isCollapsed && (
           <div className="sidebar-greeting">
             <span className="greeting-text">{greetingMessage}</span>
           </div>
         )}
 
-        {/* Logout Button */}
         <div className="control-item">
-          <button 
+          <button
             className="control-button logout-control"
             onClick={handleLogout}
-            title="Sair"
+            title={t("sidebar.actions.logout")}
           >
             <FiLogOut className="control-icon" />
             {!isCollapsed && (
-              <span className="control-label">Sair</span>
-            )}
-          </button>
-        </div>
-
-        {/* Toggle Dark/Light Mode */}
-        <div className="control-item">
-          <button 
-            className="control-button"
-            onClick={toggleTheme}
-            title={darkMode ? 'Modo Claro' : 'Modo Escuro'}
-          >
-            {darkMode ? <FaSun className="control-icon" /> : <FaMoon className="control-icon" />}
-            {!isCollapsed && (
               <span className="control-label">
-                {darkMode ? 'Modo Claro' : 'Modo Escuro'}
+                {t("sidebar.actions.logout")}
               </span>
             )}
           </button>
         </div>
 
-        {/* Toggle Mock/Real Mode - Only for Admins */}
+        <div className="control-item">
+          <button
+            className="control-button"
+            onClick={toggleTheme}
+            title={
+              darkMode
+                ? t("sidebar.actions.switchToLight")
+                : t("sidebar.actions.switchToDark")
+            }
+          >
+            {darkMode ? (
+              <FaSun className="control-icon" />
+            ) : (
+              <FaMoon className="control-icon" />
+            )}
+            {!isCollapsed && (
+              <span className="control-label">
+                {darkMode
+                  ? t("sidebar.actions.lightMode")
+                  : t("sidebar.actions.darkMode")}
+              </span>
+            )}
+          </button>
+        </div>
+
         {isAdmin() && (
           <div className="control-item">
-            <button 
+            <button
               className="control-button"
               onClick={toggleMockMode}
-              title={mockMode ? 'Modo Real' : 'Modo Simulação'}
+              title={
+                mockMode
+                  ? t("sidebar.actions.enableRealMode")
+                  : t("sidebar.actions.enableMockMode")
+              }
             >
               <FaCode className="control-icon" />
               {!isCollapsed && (
                 <span className="control-label">
-                  {mockMode ? 'Modo Real' : 'Modo Simulação'}
+                  {mockMode
+                    ? t("sidebar.actions.realMode")
+                    : t("sidebar.actions.mockMode")}
                 </span>
               )}
             </button>
             {!isCollapsed && (
               <div className="mode-indicator">
-                <span className={`mode-badge ${mockMode ? 'mock' : 'real'}`}>
-                  {mockMode ? 'SIMULAÇÃO' : 'REAL'}
+                <span className={`mode-badge ${mockMode ? "mock" : "real"}`}>
+                  {mockMode
+                    ? t("sidebar.status.simulation")
+                    : t("sidebar.status.real")}
                 </span>
               </div>
             )}

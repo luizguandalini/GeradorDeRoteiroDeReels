@@ -1,4 +1,4 @@
-.sidebar {
+﻿.sidebar {
   position: fixed;
   left: 0;
   top: 0;
@@ -78,7 +78,7 @@
   transition: opacity 0.3s ease;
 }
 
-/* Título no modo light */
+/* TÃ­tulo no modo light */
 .sidebar:not(.dark-theme) .sidebar-title {
   color: #333;
 }
@@ -107,7 +107,7 @@
   color: #333;
 }
 
-/* Navegação */
+/* NavegaÃ§Ã£o */
 .sidebar-nav {
   flex: 1;
   padding: 20px 0;
@@ -214,7 +214,7 @@
   font-size: 14px;
 }
 
-/* Botões de controle no modo light */
+/* BotÃµes de controle no modo light */
 .sidebar:not(.dark-theme) .control-button {
   border: 1px solid rgba(0, 0, 0, 0.2);
   color: #333;
@@ -247,7 +247,7 @@
   border-color: rgba(220, 53, 69, 0.6) !important;
 }
 
-/* Hover dos botões no modo light */
+/* Hover dos botÃµes no modo light */
 .sidebar:not(.dark-theme) .control-button:hover {
   background-color: rgba(0, 0, 0, 0.1);
   border-color: rgba(0, 0, 0, 0.3);
@@ -321,7 +321,7 @@
   }
 }
 
-/* Animações */
+/* AnimaÃ§Ãµes */
 @keyframes slideIn {
   from {
     transform: translateX(-100%);
@@ -351,4 +351,29 @@
 
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.5);
+}
+.language-control {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.language-control .language-switch {
+  width: 100%;
+}
+
+.sidebar.collapsed .language-control {
+  margin-bottom: 8px;
+}
+
+.sidebar.collapsed .language-control .language-switch {
+  justify-content: center;
+}
+
+.sidebar-language-switch.language-switch {
+  justify-content: space-between;
+}
+
+.sidebar-language-switch.language-switch.compact {
+  justify-content: center;
 }

@@ -2,37 +2,84 @@ import express from "express";
 import axios from "axios";
 import dotenv from "dotenv";
 import { getMockMode } from "../config/mockConfig.js";
-import { roteiroMock } from "../config/mockData.js";
+import { roteiroMock, roteiroMockEn } from "../config/mockData.js";
 import { getConfig } from "../config/configManager.js";
+import {
+  normalizeLanguage,
+  SUPPORTED_LANGUAGES,
+  DEFAULT_LANGUAGE,
+} from "../config/language.js";
 
 dotenv.config();
 const router = express.Router();
 
+const LANGUAGE_PROMPT_KEYS = {
+  en: "PROMPT_ROTEIRO_EN",
+  "pt-BR": "PROMPT_ROTEIRO",
+};
+
+const SYSTEM_MESSAGES = {
+  en: "Respond in pure JSON. Do not use markdown or code blocks.",
+  "pt-BR":
+    "Responda em JSON puro válido. Não use markdown ou blocos de código.",
+};
+
 router.post("/", async (req, res) => {
   try {
-    // Verificar se está no modo mock
     if (getMockMode()) {
-      console.log("🔶 Usando dados mock para roteiro");
-      return res.json(roteiroMock);
+      console.log("Usando dados mock para roteiro");
+      const languageForMock = normalizeLanguage(
+        req.body.language || req.user?.language
+      );
+      return res.json(languageForMock === "en" ? roteiroMockEn : roteiroMock);
     }
-    
-    const { tema, duracao } = req.body;
-    console.log("📩 Requisição recebida com dados:", { tema, duracao });
 
-    // Buscar configurações do banco
-    const modelName = await getConfig('MODEL_NAME', 'MODEL_NAME');
-    const promptRoteiro = await getConfig('PROMPT_ROTEIRO', 'PROMPT_ROTEIRO');
-    const openrouterApiKey = await getConfig('OPENROUTER_API_KEY', 'OPENROUTER_API_KEY');
+    const { tema, duracao, language: languageFromBody } = req.body;
+    const requestedLanguage =
+      typeof languageFromBody === "string" ? languageFromBody.trim() : null;
+    const effectiveLanguage = SUPPORTED_LANGUAGES.includes(requestedLanguage)
+      ? requestedLanguage
+      : normalizeLanguage(req.user?.language);
+
+    console.log("Requisição recebida com dados:", {
+      tema,
+      duracao,
+      language: effectiveLanguage,
+    });
+
+    const modelName = await getConfig("MODEL_NAME", "MODEL_NAME");
+    const promptKey =
+      LANGUAGE_PROMPT_KEYS[effectiveLanguage] ||
+      LANGUAGE_PROMPT_KEYS[DEFAULT_LANGUAGE];
+    let promptRoteiro = await getConfig(promptKey, promptKey);
+
+    if (!promptRoteiro && effectiveLanguage !== DEFAULT_LANGUAGE) {
+      const fallbackKey = LANGUAGE_PROMPT_KEYS[DEFAULT_LANGUAGE];
+      promptRoteiro = await getConfig(fallbackKey, fallbackKey);
+    }
+
+    if (!promptRoteiro) {
+      return res.status(500).json({ error: "Prompt não configurado" });
+    }
+
+    const openrouterApiKey = await getConfig(
+      "OPENROUTER_API_KEY",
+      "OPENROUTER_API_KEY"
+    );
 
     if (!openrouterApiKey) {
-      return res.status(500).json({ error: "Chave da API OpenRouter não configurada" });
+      return res
+        .status(500)
+        .json({ error: "Chave da API OpenRouter não configurada" });
     }
 
-    const prompt = promptRoteiro.replace(
-      "{duracao}",
-      duracao
-    ).replace("{tema}", tema);
-    console.log("📝 Prompt gerado:", prompt);
+    const prompt = promptRoteiro
+      .replace("{duracao}", duracao)
+      .replace("{tema}", tema);
+    console.log("Prompt gerado:", prompt);
+
+    const systemMessage =
+      SYSTEM_MESSAGES[effectiveLanguage] || SYSTEM_MESSAGES[DEFAULT_LANGUAGE];
 
     let body = {
       model: modelName,
@@ -64,14 +111,13 @@ router.post("/", async (req, res) => {
       messages: [
         {
           role: "system",
-          content:
-            "Responda em JSON puro válido. Não use markdown ou blocos de código.",
+          content: systemMessage,
         },
         { role: "user", content: prompt },
       ],
     };
 
-    console.log("📤 Enviando requisição para OpenRouter...");
+    console.log("Enviando requisição para OpenRouter...");
     let response;
     try {
       response = await axios.post(
@@ -85,14 +131,14 @@ router.post("/", async (req, res) => {
       );
     } catch (err) {
       if (err.response) {
-        console.error("❌ Erro na rota / (primeira tentativa):", {
+        console.error("Erro na rota /roteiro (primeira tentativa):", {
           status: err.response.status,
           data: err.response.data,
           metadata: err.response.data?.error?.metadata,
         });
       }
 
-      console.log("⚠️ Tentando fallback com response_format: 'json'...");
+      console.log("entando fallback com response_format: 'json'...");
       body = {
         ...body,
         response_format: "json",
@@ -108,9 +154,9 @@ router.post("/", async (req, res) => {
       );
     }
 
-    console.log("✅ Resposta recebida do OpenRouter");
+    console.log("Resposta recebida do OpenRouter");
     let conteudo = response.data.choices[0].message.content;
-    console.log("📦 Conteúdo retornado:", conteudo);
+    console.log("Conteúdo retornado:", conteudo);
 
     conteudo = conteudo
       .replace(/```json/g, "")
@@ -120,10 +166,10 @@ router.post("/", async (req, res) => {
     let parsed;
     try {
       parsed = JSON.parse(conteudo);
-      console.log("📑 Conteúdo parseado:", parsed);
-      res.json(parsed);
+      console.log("Conteúdo parseado:", parsed);
+      res.json({ ...parsed, language: effectiveLanguage });
     } catch (parseError) {
-      console.error("❌ Erro ao fazer parse do JSON:", parseError.message);
+      console.error("? Erro ao fazer parse do JSON:", parseError.message);
       res.status(500).json({
         error: "Falha ao interpretar resposta do modelo",
         raw: conteudo,
@@ -131,16 +177,16 @@ router.post("/", async (req, res) => {
     }
   } catch (error) {
     if (error.response) {
-      console.error("❌ Erro final na rota /:", {
+      console.error("? Erro final na rota /roteiro:", {
         status: error.response.status,
         headers: error.response.headers,
         data: error.response.data,
         metadata: error.response.data?.error?.metadata,
       });
     } else if (error.request) {
-      console.error("❌ Nenhuma resposta recebida:", error.request);
+      console.error("Nenhuma resposta recebida:", error.request);
     } else {
-      console.error("❌ Erro na configuração da requisição:", error.message);
+      console.error("Erro na configuração da requisição:", error.message);
     }
     res.status(500).json({ error: error.message });
   }

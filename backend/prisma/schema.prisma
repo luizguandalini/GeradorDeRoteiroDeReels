@@ -55,6 +55,7 @@ model User {
   updatedAt  DateTime     @updatedAt
   provider   AuthProvider @default(CREDENTIALS)
   providerId String?      @unique
+  language   String      @default("pt-BR")
   refreshTokens RefreshToken[]
 
   @@map("users")
@@ -81,3 +82,4 @@ enum AuthProvider {
   CREDENTIALS
   GOOGLE
 }
+
