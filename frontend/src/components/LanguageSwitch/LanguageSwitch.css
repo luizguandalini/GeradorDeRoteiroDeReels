@@ -6,7 +6,6 @@
   padding: 4px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(103, 126, 234, 0.25);
   box-shadow: 0 4px 14px rgba(102, 126, 234, 0.12);
   transition: box-shadow 0.2s ease, border 0.2s ease;
 }
@@ -53,9 +52,11 @@
 }
 
 .language-option:hover:not(:disabled),
-.language-option:focus-visible {
+.language-option:focus-visible,
+.language-option:focus {
   background: rgba(103, 126, 234, 0.12);
   outline: none;
+  color: red;
 }
 
 .language-option.active {
