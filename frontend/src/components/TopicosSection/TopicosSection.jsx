@@ -1,22 +1,18 @@
-﻿import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FaDatabase, FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
-import { toast } from 'react-toastify';
-import { useTranslation } from '../../contexts/LanguageContext';
-import './TopicosSection.css';
+﻿import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { FaDatabase, FaPlus, FaEdit, FaTrash, FaSearch } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { useTranslation } from "../../contexts/LanguageContext";
+import "./TopicosSection.css";
 
-const TopicosSection = ({
-  selectedTopico,
-  onSelectTopic,
-  toastConfig
-}) => {
+const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
   const { t } = useTranslation();
   const [topicos, setTopicos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingTopico, setEditingTopico] = useState(null);
-  const [formData, setFormData] = useState({ nome: '' });
-  const [searchTerm, setSearchTerm] = useState('');
+  const [formData, setFormData] = useState({ nome: "" });
+  const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -30,7 +26,7 @@ const TopicosSection = ({
   const loadTopicos = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/topicos', {
+      const response = await axios.get("/api/topicos", {
         params: {
           page,
           limit: 10,
@@ -40,7 +36,7 @@ const TopicosSection = ({
       setTopicos(response.data.topicos);
       setPagination(response.data.pagination);
     } catch (error) {
-      toast.error(t('topicsSection.messages.loadError'), toastConfig);
+      toast.error(t("topicsSection.messages.loadError"), toastConfig);
       console.error(error);
     } finally {
       setLoading(false);
@@ -50,7 +46,7 @@ const TopicosSection = ({
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!formData.nome.trim()) {
-      toast.warn(t('topicsSection.messages.nameRequired'), toastConfig);
+      toast.warn(t("topicsSection.messages.nameRequired"), toastConfig);
       return;
     }
 
@@ -58,18 +54,19 @@ const TopicosSection = ({
       setLoading(true);
       if (editingTopico) {
         await axios.put(`/api/topicos/${editingTopico.id}`, formData);
-        toast.success(t('topicsSection.messages.updateSuccess'), toastConfig);
+        toast.success(t("topicsSection.messages.updateSuccess"), toastConfig);
       } else {
-        await axios.post('/api/topicos', formData);
-        toast.success(t('topicsSection.messages.createSuccess'), toastConfig);
+        await axios.post("/api/topicos", formData);
+        toast.success(t("topicsSection.messages.createSuccess"), toastConfig);
       }
 
-      setFormData({ nome: '' });
+      setFormData({ nome: "" });
       setShowForm(false);
       setEditingTopico(null);
       loadTopicos();
     } catch (error) {
-      const message = error.response?.data?.error || t('topicsSection.messages.saveError');
+      const message =
+        error.response?.data?.error || t("topicsSection.messages.saveError");
       toast.error(message, toastConfig);
     } finally {
       setLoading(false);
@@ -84,7 +81,7 @@ const TopicosSection = ({
 
   const handleDelete = async (topico) => {
     const confirmation = window.confirm(
-      t('topicsSection.messages.deleteConfirm', { name: topico.nome })
+      t("topicsSection.messages.deleteConfirm", { name: topico.nome })
     );
 
     if (!confirmation) {
@@ -94,17 +91,17 @@ const TopicosSection = ({
     try {
       setLoading(true);
       await axios.delete(`/api/topicos/${topico.id}`);
-      toast.success(t('topicsSection.messages.deleteSuccess'), toastConfig);
+      toast.success(t("topicsSection.messages.deleteSuccess"), toastConfig);
       loadTopicos();
     } catch (error) {
-      toast.error(t('topicsSection.messages.deleteError'), toastConfig);
+      toast.error(t("topicsSection.messages.deleteError"), toastConfig);
     } finally {
       setLoading(false);
     }
   };
 
   const cancelForm = () => {
-    setFormData({ nome: '' });
+    setFormData({ nome: "" });
     setShowForm(false);
     setEditingTopico(null);
   };
@@ -113,16 +110,16 @@ const TopicosSection = ({
     <div className="card scrollable">
       <div className="topicos-header">
         <h2>
-          <FaDatabase style={{ marginRight: '8px' }} />
-          {t('topicsSection.title')}
+          <FaDatabase style={{ marginRight: "8px" }} />
+          {t("topicsSection.title")}
         </h2>
         <button
           className="btn-add-topico"
           onClick={() => setShowForm(!showForm)}
           disabled={loading}
         >
-          <FaPlus style={{ marginRight: '5px' }} />
-          {t('topicsSection.actions.new')}
+          <FaPlus style={{ marginRight: "5px" }} />
+          {t("topicsSection.actions.new")}
         </button>
       </div>
 
@@ -132,19 +129,23 @@ const TopicosSection = ({
             <div className="form-group">
               <input
                 type="text"
-                placeholder={t('topicsSection.form.placeholder')}
+                placeholder={t("topicsSection.form.placeholder")}
                 value={formData.nome}
-                onChange={(event) => setFormData({ ...formData, nome: event.target.value })}
+                onChange={(event) =>
+                  setFormData({ ...formData, nome: event.target.value })
+                }
                 className="form-input"
                 required
               />
             </div>
             <div className="form-actions">
               <button type="submit" className="btn-save" disabled={loading}>
-                {editingTopico ? t('topicsSection.actions.update') : t('topicsSection.actions.create')}
+                {editingTopico
+                  ? t("topicsSection.actions.update")
+                  : t("topicsSection.actions.create")}
               </button>
               <button type="button" className="btn-cancel" onClick={cancelForm}>
-                {t('topicsSection.actions.cancel')}
+                {t("topicsSection.actions.cancel")}
               </button>
             </div>
           </form>
@@ -155,30 +156,31 @@ const TopicosSection = ({
         <div className="search-input-container">
           <input
             type="text"
-            placeholder={t('topicsSection.search.placeholder')}
+            placeholder={t("topicsSection.search.placeholder")}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             className="search-input"
           />
-          <FaSearch className="search-icon" />
         </div>
       </div>
 
       <div className="topicos-list">
         {loading ? (
-          <div className="loading-message">{t('topicsSection.state.loading')}</div>
+          <div className="loading-message">
+            {t("topicsSection.state.loading")}
+          </div>
         ) : topicos.length === 0 ? (
           <div className="empty-message">
             {searchTerm
-              ? t('topicsSection.state.emptySearch')
-              : t('topicsSection.state.emptyDefault')}
+              ? t("topicsSection.state.emptySearch")
+              : t("topicsSection.state.emptyDefault")}
           </div>
         ) : (
           <ul>
             {topicos.map((topico) => (
               <li
                 key={topico.id}
-                className={selectedTopico?.id === topico.id ? 'selected' : ''}
+                className={selectedTopico?.id === topico.id ? "selected" : ""}
               >
                 <div
                   className="topico-content"
@@ -193,7 +195,7 @@ const TopicosSection = ({
                       event.stopPropagation();
                       handleEdit(topico);
                     }}
-                    title={t('topicsSection.actions.edit')}
+                    title={t("topicsSection.actions.edit")}
                   >
                     <FaEdit />
                   </button>
@@ -203,7 +205,7 @@ const TopicosSection = ({
                       event.stopPropagation();
                       handleDelete(topico);
                     }}
-                    title={t('topicsSection.actions.delete')}
+                    title={t("topicsSection.actions.delete")}
                   >
                     <FaTrash />
                   </button>
@@ -221,10 +223,10 @@ const TopicosSection = ({
             disabled={!pagination.hasPrev || loading}
             className="btn-page"
           >
-            {t('topicsSection.pagination.previous')}
+            {t("topicsSection.pagination.previous")}
           </button>
           <span className="page-info">
-            {t('topicsSection.pagination.page', {
+            {t("topicsSection.pagination.page", {
               current: pagination.currentPage,
               total: pagination.totalPages,
             })}
@@ -234,7 +236,7 @@ const TopicosSection = ({
             disabled={!pagination.hasNext || loading}
             className="btn-page"
           >
-            {t('topicsSection.pagination.next')}
+            {t("topicsSection.pagination.next")}
           </button>
         </div>
       )}
