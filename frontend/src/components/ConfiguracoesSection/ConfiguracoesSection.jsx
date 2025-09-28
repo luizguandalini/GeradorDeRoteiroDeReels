@@ -26,7 +26,7 @@ const ConfiguracoesSection = ({ toastConfig }) => {
   const loadConfiguracoes = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/configuracoes');
+      const response = await axios.get('/api/configuracoes');
       // Filter out server-related configurations
       const filteredConfigs = response.data.filter(config => 
         !config.chave.toLowerCase().includes('server') && 
@@ -45,7 +45,7 @@ const ConfiguracoesSection = ({ toastConfig }) => {
   const inicializarConfiguracoes = async () => {
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/configuracoes/inicializar');
+      const response = await axios.post('/api/configuracoes/inicializar');
       toast.success('Configurações inicializadas com sucesso!', toastConfig);
       loadConfiguracoes();
     } catch (error) {
@@ -68,10 +68,10 @@ const ConfiguracoesSection = ({ toastConfig }) => {
       setLoading(true);
       
       if (editingConfig) {
-        await axios.put(`http://localhost:5000/api/configuracoes/${editingConfig.id}`, formData);
+        await axios.put(`/api/configuracoes/${editingConfig.id}`, formData);
         toast.success('Configuração atualizada com sucesso!', toastConfig);
       } else {
-        await axios.post('http://localhost:5000/api/configuracoes', formData);
+        await axios.post('/api/configuracoes', formData);
         toast.success('Configuração criada com sucesso!', toastConfig);
       }
       
@@ -105,7 +105,7 @@ const ConfiguracoesSection = ({ toastConfig }) => {
 
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:5000/api/configuracoes/${id}`);
+      await axios.delete(`/api/configuracoes/${id}`);
       toast.success('Configuração desativada com sucesso!', toastConfig);
       loadConfiguracoes();
     } catch (error) {

@@ -123,7 +123,7 @@ function AppContent() {
   const toggleMockMode = async () => {
     try {
       const newMockMode = !mockMode;
-      await axios.post("http://localhost:5000/api/config/mock", {
+      await axios.post("/api/config/mock", {
         mockMode: newMockMode,
       });
       setMockMode(newMockMode);
@@ -139,7 +139,7 @@ function AppContent() {
 
   const checkMockMode = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/config/mock");
+      const response = await axios.get("/api/config/mock");
       setMockMode(response.data.mockMode);
     } catch (error) {
       console.error("Erro ao verificar o modo mock:", error);
@@ -154,7 +154,7 @@ function AppContent() {
       setRoteiro([]);
       setNarracoesGeradas(false);
 
-      const res = await axios.post("http://localhost:5000/api/temas", {
+      const res = await axios.post("/api/temas", {
         topicoId: topico.id,
       });
       setTemas(res.data.temas);
@@ -182,7 +182,7 @@ function AppContent() {
       setLoading(true);
       setSelectedTema(tema);
       setNarracoesGeradas(false); // Reset narrações quando seleciona novo tema
-      const res = await axios.post("http://localhost:5000/api/roteiro", {
+      const res = await axios.post("/api/roteiro", {
         tema,
         duracao,
       });

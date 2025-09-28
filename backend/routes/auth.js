@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { PrismaClient } from '@prisma/client';
 
@@ -12,6 +13,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
+
+const parsePositiveInt = (value, fallback) => {
+  const parsed = parseInt(value, 10);
+  return Number.isNaN(parsed) || parsed <= 0 ? fallback : parsed;
+};
+
+const isProduction = process.env.NODE_ENV === 'production';
+const ACCESS_TOKEN_TTL_SECONDS = parsePositiveInt(process.env.ACCESS_TOKEN_TTL_SECONDS, 900);
+const REFRESH_TOKEN_TTL_DAYS = parsePositiveInt(process.env.REFRESH_TOKEN_TTL_DAYS, 7);
+const REFRESH_COOKIE_NAME = 'refreshToken';
+const REFRESH_TOKEN_EXPIRATION_MS = REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000;
 
 const buildUserResponse = (user) => ({
   id: user.id,
@@ -28,15 +40,91 @@ const generateUserToken = (user) => jwt.sign(
     role: user.role
   },
   JWT_SECRET,
-  { expiresIn: '24h' }
+  { expiresIn: ACCESS_TOKEN_TTL_SECONDS }
 );
 
-const sendAuthResponse = (res, user, message) => {
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
+const setRefreshTokenCookie = (res, token) => {
+  res.cookie(REFRESH_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
+    path: '/api/auth',
+    maxAge: REFRESH_TOKEN_EXPIRATION_MS
+  });
+};
+
+const clearRefreshTokenCookie = (res) => {
+  res.clearCookie(REFRESH_COOKIE_NAME, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
+    path: '/api/auth'
+  });
+};
+
+const issueRefreshToken = async (userId) => {
+  const now = new Date();
+  const rawToken = crypto.randomBytes(64).toString('hex');
+  const tokenHash = hashToken(rawToken);
+  const expiresAt = new Date(now.getTime() + REFRESH_TOKEN_EXPIRATION_MS);
+
+  await prisma.refreshToken.deleteMany({
+    where: {
+      userId,
+      expiresAt: { lt: now }
+    }
+  });
+
+  await prisma.refreshToken.updateMany({
+    where: {
+      userId,
+      revokedAt: null,
+      expiresAt: { gt: now }
+    },
+    data: { revokedAt: now }
+  });
+
+  await prisma.refreshToken.create({
+    data: {
+      userId,
+      tokenHash,
+      expiresAt
+    }
+  });
+
+  return { rawToken, expiresAt };
+};
+
+const extractRefreshToken = (req) => {
+  const cookiesHeader = req.headers.cookie;
+  if (!cookiesHeader) {
+    return null;
+  }
+
+  const cookies = cookiesHeader.split(';').map((cookie) => cookie.trim());
+  for (const cookie of cookies) {
+    const [name, ...rest] = cookie.split('=');
+    if (decodeURIComponent(name) === REFRESH_COOKIE_NAME) {
+      return decodeURIComponent(rest.join('='));
+    }
+  }
+
+  return null;
+};
+
+const sendAuthResponse = async (res, user, message) => {
   const token = generateUserToken(user);
+  const { rawToken } = await issueRefreshToken(user.id);
+
+  setRefreshTokenCookie(res, rawToken);
+
   return res.json({
     message,
     token,
-    user: buildUserResponse(user)
+    user: buildUserResponse(user),
+    expiresIn: ACCESS_TOKEN_TTL_SECONDS
   });
 };
 
@@ -191,9 +279,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
-    const sanitizedUser = buildUserResponse(user);
-
-    return sendAuthResponse(res, sanitizedUser, 'Login realizado com sucesso');
+    return sendAuthResponse(res, user, 'Login realizado com sucesso');
   } catch (error) {
     console.error('Erro no login:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -245,6 +331,56 @@ router.post('/google', async (req, res) => {
   }
 });
 
+// Renovar access token
+router.post('/refresh', async (req, res) => {
+  try {
+    const refreshToken = extractRefreshToken(req);
+
+    if (!refreshToken) {
+      return res.status(401).json({ error: 'Refresh token não fornecido' });
+    }
+
+    const tokenHash = hashToken(refreshToken);
+    const now = new Date();
+
+    const storedToken = await prisma.refreshToken.findFirst({
+      where: { tokenHash },
+      include: {
+        user: {
+          select: authUserSelect
+        }
+      }
+    });
+
+    if (!storedToken || storedToken.revokedAt || storedToken.expiresAt <= now) {
+      if (storedToken?.id && !storedToken.revokedAt) {
+        await prisma.refreshToken.update({
+          where: { id: storedToken.id },
+          data: { revokedAt: now }
+        });
+      }
+
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ error: 'Refresh token inválido' });
+    }
+
+    if (!storedToken.user || !storedToken.user.active) {
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ error: 'Usuário não encontrado ou inativo' });
+    }
+
+    await prisma.refreshToken.update({
+      where: { id: storedToken.id },
+      data: { revokedAt: now }
+    });
+
+    return sendAuthResponse(res, storedToken.user, 'Sessão renovada com sucesso');
+  } catch (error) {
+    console.error('Erro no refresh token:', error);
+    return res.status(401).json({ error: 'Não foi possível renovar o token de acesso' });
+  }
+});
+
 // Verificar token
 router.get('/verify', async (req, res) => {
   try {
@@ -280,8 +416,24 @@ router.get('/verify', async (req, res) => {
   }
 });
 
-// Logout (opcional - principalmente para limpar token no frontend)
-router.post('/logout', (req, res) => {
+// Logout (encerra sessão e revoga refresh token)
+router.post('/logout', async (req, res) => {
+  try {
+    const refreshToken = extractRefreshToken(req);
+
+    if (refreshToken) {
+      const tokenHash = hashToken(refreshToken);
+      await prisma.refreshToken.updateMany({
+        where: { tokenHash, revokedAt: null },
+        data: { revokedAt: new Date() }
+      });
+    }
+  } catch (error) {
+    console.error('Erro no logout:', error);
+  } finally {
+    clearRefreshTokenCookie(res);
+  }
+
   res.json({ message: 'Logout realizado com sucesso' });
 });
 

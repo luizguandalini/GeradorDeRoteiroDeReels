@@ -16,8 +16,26 @@ import { getConfig, initializeDefaultConfigs } from "./config/configManager.js";
 
 dotenv.config();
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
 
-app.use(cors());
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
+
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173').split(',').map((origin) => origin.trim());
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Origin not allowed by CORS'));
+  },
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Rotas de autenticação (públicas)

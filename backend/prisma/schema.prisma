@@ -55,8 +55,21 @@ model User {
   updatedAt  DateTime     @updatedAt
   provider   AuthProvider @default(CREDENTIALS)
   providerId String?      @unique
+  refreshTokens RefreshToken[]
 
   @@map("users")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@map("refresh_tokens")
 }
 
 enum UserRole {

@@ -28,7 +28,7 @@ const TopicosSection = ({
   const loadTopicos = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/topicos', {
+      const response = await axios.get('/api/topicos', {
         params: {
           page,
           limit: 10,
@@ -55,10 +55,10 @@ const TopicosSection = ({
     try {
       setLoading(true);
       if (editingTopico) {
-        await axios.put(`http://localhost:5000/api/topicos/${editingTopico.id}`, formData);
+        await axios.put(`/api/topicos/${editingTopico.id}`, formData);
         toast.success('Tópico atualizado com sucesso!', toastConfig);
       } else {
-        await axios.post('http://localhost:5000/api/topicos', formData);
+        await axios.post('/api/topicos', formData);
         toast.success('Tópico criado com sucesso!', toastConfig);
       }
       
@@ -87,7 +87,7 @@ const TopicosSection = ({
 
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:5000/api/topicos/${topico.id}`);
+      await axios.delete(`/api/topicos/${topico.id}`);
       toast.success('Tópico excluído com sucesso!', toastConfig);
       loadTopicos();
     } catch (error) {

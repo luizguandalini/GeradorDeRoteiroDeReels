@@ -8,7 +8,7 @@ export default function AudiosCard() {
   const [audios, setAudios] = useState([]);
   const [lastModified, setLastModified] = useState(null);
   const intervalRef = useRef(null);
-  const API = "http://localhost:5000/api/audios";
+  const API = "/api/audios";
 
   const carregar = async (forceUpdate = false) => {
     try {
@@ -52,7 +52,7 @@ export default function AudiosCard() {
   const deletarTodos = async () => {
     // Verificar se está no modo mock
     try {
-      const { data } = await axios.get("http://localhost:5000/api/config/mock");
+      const { data } = await axios.get("/api/config/mock");
       const isMockMode = data.mockMode;
 
       toast.info(
@@ -96,7 +96,7 @@ export default function AudiosCard() {
 
   const baixarTodos = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/config/mock");
+      const { data } = await axios.get("/api/config/mock");
       const isMockMode = data.mockMode;
 
       if (isMockMode) {

@@ -77,7 +77,7 @@ function Roteiro({ roteiro, onNarracoesGeradas }) {
       return;
     }
     try {
-      await axios.post("http://localhost:5000/api/narracoes", { narracoes });
+      await axios.post("/api/narracoes", { narracoes });
       toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
       // Marcar que as narrações foram geradas
       if (onNarracoesGeradas) {
