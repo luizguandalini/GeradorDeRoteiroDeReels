@@ -130,7 +130,11 @@ export const AuthProvider = ({ children }) => {
 
       return { token: newToken, user: userData };
     } catch (error) {
-      clearSession();
+      // Limpar a sessão apenas se o erro for de autenticação (ex: 401, 403)
+      if (error.response && [401, 403].includes(error.response.status)) {
+        clearSession();
+      }
+      // Para outros erros (ex: rede), o erro é lançado mas a sessão local é mantida
       throw error;
     }
   }, [setSession, scheduleTokenRefresh, clearSession]);

@@ -103,8 +103,10 @@ function AppContent() {
       document.body.classList.add("dark");
     }
 
-    checkMockMode();
-  }, []);
+    if (user?.role === "admin") {
+      checkMockMode();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user?.language) {
@@ -130,8 +132,17 @@ function AppContent() {
         mockMode: newMockMode,
       });
       setMockMode(newMockMode);
+      // Limpar estados relacionados ao conteúdo para forçar a recarga
+      setSelectedTopico("");
+      setTemas([]);
+      setSelectedTema("");
+      setRoteiro([]);
       toast.info(
-        t(newMockMode ? "app.notifications.mockModeEnabled" : "app.notifications.mockModeDisabled"),
+        t(
+          newMockMode
+            ? "app.notifications.mockModeEnabled"
+            : "app.notifications.mockModeDisabled"
+        ),
         toastConfig
       );
     } catch (error) {
