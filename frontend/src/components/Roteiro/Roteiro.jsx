@@ -76,14 +76,53 @@ function Roteiro({ roteiro, onNarracoesGeradas }) {
       toast.error("Nenhuma narração encontrada no roteiro.");
       return;
     }
+
     try {
-      await axios.post("/api/narracoes", { narracoes });
-      toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
-      // Marcar que as narrações foram geradas
-      if (onNarracoesGeradas) {
-        onNarracoesGeradas(true);
+      // Verificar se já existe uma narração ativa
+      const response = await axios.get("/api/narracoes");
+      const narracoesExistentes = response.data;
+      
+      if (narracoesExistentes && narracoesExistentes.length > 0) {
+        // Mostrar alerta se já existe narração
+        toast.info(
+          <div>
+            <p>⚠️ Você já possui uma narração existente.</p>
+            <p>É recomendado baixar o áudio atual antes de gerar um novo, pois o áudio existente será deletado.</p>
+            <div className="confirm-actions">
+              <button
+                className="btn-danger"
+                onClick={async () => {
+                  try {
+                    await axios.post("/api/narracoes", { narracoes });
+                    toast.dismiss();
+                    toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
+                    if (onNarracoesGeradas) {
+                      onNarracoesGeradas(true);
+                    }
+                  } catch {
+                    toast.error("Erro ao gerar voz");
+                  }
+                }}
+              >
+                Continuar mesmo assim
+              </button>
+              <button className="btn-secondary" onClick={() => toast.dismiss()}>
+                Cancelar
+              </button>
+            </div>
+          </div>,
+          { autoClose: false }
+        );
+      } else {
+        // Gerar diretamente se não há narração existente
+        await axios.post("/api/narracoes", { narracoes });
+        toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
+        if (onNarracoesGeradas) {
+          onNarracoesGeradas(true);
+        }
       }
-    } catch {
+    } catch (error) {
+      console.error("Erro ao verificar/gerar narração:", error);
       toast.error("Erro ao gerar voz");
     }
   };

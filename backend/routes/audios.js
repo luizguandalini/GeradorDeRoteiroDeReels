@@ -1,12 +1,16 @@
 import express from "express";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import AdmZip from "adm-zip";
 import { getMockMode } from "../config/mockConfig.js";
 import { audiosMock } from "../config/mockData.js";
 import { execSync } from "child_process";
 import { authenticateToken } from "../middleware/auth.js";
 import prisma from "../config/database.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
@@ -160,7 +164,7 @@ router.delete("/", (req, res) => {
   }
 });
 
-router.get("/download", (req, res) => {
+router.get("/download", async (req, res) => {
   try {
     // Verificar se está no modo mock
     if (getMockMode()) {
@@ -170,36 +174,37 @@ router.get("/download", (req, res) => {
       });
     }
 
-    const pastaUsuario = path.join(pastaAudios, `user_${req.user.id}`);
-
-    if (!fs.existsSync(pastaUsuario)) {
-      return res.status(404).json({ error: "Nenhum áudio encontrado" });
-    }
-
-    const files = fs.readdirSync(pastaUsuario);
-    const audioFiles = files.filter((f) => f.endsWith(".mp3"));
-
-    if (audioFiles.length === 0) {
-      return res.status(404).json({ error: "Nenhum áudio encontrado" });
-    }
-
-    const zip = new AdmZip();
-
-    audioFiles.forEach((file) => {
-      const filePath = path.join(pastaUsuario, file);
-      zip.addLocalFile(filePath);
+    // Buscar a narração ativa mais recente do usuário
+    const narracao = await prisma.userNarracao.findFirst({
+      where: {
+        userId: req.user.id,
+        ativo: true
+      },
+      orderBy: { createdAt: 'desc' }
     });
 
-    const zipBuffer = zip.toBuffer();
+    if (!narracao || !narracao.audioPath) {
+      return res.status(404).json({ error: "Nenhuma narração encontrada" });
+    }
+
+    const audioPath = path.join(__dirname, "../audios", narracao.audioPath);
+
+    if (!fs.existsSync(audioPath)) {
+      return res.status(404).json({ error: "Arquivo de áudio não encontrado" });
+    }
+
+    const audioBuffer = fs.readFileSync(audioPath);
+    const fileName = `narracao_${narracao.id}.mp3`;
 
     res.set({
-      "Content-Type": "application/zip",
-      "Content-Disposition": "attachment; filename=audios.zip",
-      "Content-Length": zipBuffer.length,
+      "Content-Type": "audio/mpeg",
+      "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Content-Length": audioBuffer.length,
     });
 
-    res.send(zipBuffer);
+    res.send(audioBuffer);
   } catch (err) {
+    console.error("❌ Erro no download:", err);
     res.status(500).json({ error: err.message });
   }
 });

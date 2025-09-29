@@ -118,6 +118,26 @@ router.post("/", async (req, res) => {
     // Criar pasta única para o usuário
     const pastaUsuario = criarPastaUsuario(req.user.id);
 
+    // Deletar áudios existentes antes de gerar novos
+    if (fs.existsSync(pastaUsuario)) {
+      const files = fs.readdirSync(pastaUsuario);
+      files.forEach((file) => {
+        if (file.endsWith('.mp3') && file !== 'silence.mp3') {
+          fs.unlinkSync(path.join(pastaUsuario, file));
+        }
+      });
+      console.log("🗑️ Áudios existentes deletados");
+    }
+
+    // Marcar narrações antigas como inativas no banco
+    await prisma.userNarracao.updateMany({
+      where: {
+        userId: req.user.id,
+        ativo: true
+      },
+      data: { ativo: false }
+    });
+
     // Buscar configurações do usuário
     const userConfigs = await prisma.userConfiguracao.findMany({
       where: {
@@ -165,6 +185,14 @@ router.post("/", async (req, res) => {
     const audioFinal = path.join(pastaUsuario, `final_${timestamp}.mp3`);
     fs.writeFileSync(audioFinal, Buffer.concat(buffers));
 
+    // Deletar arquivos temporários (manter apenas o final)
+    arquivosGerados.forEach((arquivo) => {
+      if (fs.existsSync(arquivo)) {
+        fs.unlinkSync(arquivo);
+        console.log(`🗑️ Arquivo temporário deletado: ${path.basename(arquivo)}`);
+      }
+    });
+
     // Salvar informações da narração no banco
     const narracao = await prisma.userNarracao.create({
       data: {
@@ -181,7 +209,6 @@ router.post("/", async (req, res) => {
     res.json({
       id: narracao.id,
       mensagem: "Áudios gerados com sucesso!",
-      arquivos: arquivosGerados.map((f) => path.basename(f)),
       final: path.basename(audioFinal),
       audioPath: narracao.audioPath
     });

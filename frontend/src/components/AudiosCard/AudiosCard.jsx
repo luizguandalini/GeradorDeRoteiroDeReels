@@ -98,7 +98,7 @@ export default function AudiosCard() {
       if (isMockMode) {
         toast.success(t("audios.messages.downloadSimulation"));
       } else {
-        // Fazer o download real dos arquivos
+        // Fazer o download real do arquivo MP3
         const response = await axios.get("/api/audios/download", {
           responseType: 'blob'
         });
@@ -107,7 +107,18 @@ export default function AudiosCard() {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'audios.zip');
+        
+        // Extrair nome do arquivo do header Content-Disposition se disponível
+        const contentDisposition = response.headers['content-disposition'];
+        let fileName = 'narracao.mp3';
+        if (contentDisposition) {
+          const fileNameMatch = contentDisposition.match(/filename="(.+)"/);
+          if (fileNameMatch) {
+            fileName = fileNameMatch[1];
+          }
+        }
+        
+        link.setAttribute('download', fileName);
         document.body.appendChild(link);
         link.click();
         link.remove();
