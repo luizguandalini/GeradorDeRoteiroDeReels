@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaHome,
@@ -8,6 +8,7 @@ import {
   FaSun,
   FaChevronLeft,
   FaChevronRight,
+  FaChartBar,
 } from "react-icons/fa";
 import { FiLogOut } from "react-icons/fi";
 import axios from "axios";
@@ -112,6 +113,13 @@ const Sidebar = ({
       icon: FaCog,
       labelKey: "sidebar.menu.settings",
       id: "config",
+      adminOnly: true,
+    },
+    {
+      path: "/consumo",
+      icon: FaChartBar,
+      labelKey: "sidebar.menu.consumption",
+      id: "consumption",
       adminOnly: true,
     },
   ];

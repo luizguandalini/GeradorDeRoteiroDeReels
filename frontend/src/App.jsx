@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
@@ -14,6 +14,7 @@ import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Home from "./pages/Home/Home";
 import Configuracoes from "./pages/Configuracoes/Configuracoes";
+import Consumo from "./pages/Consumo/Consumo";
 
 function App() {
   return (
@@ -236,6 +237,14 @@ function AppContent() {
             element={
               <ProtectedRoute requireAdmin={true}>
                 <Configuracoes toastConfig={toastConfig} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/consumo"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <Consumo />
               </ProtectedRoute>
             }
           />

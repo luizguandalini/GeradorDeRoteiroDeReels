@@ -1,4 +1,4 @@
-﻿export const DEFAULT_LANGUAGE = "en";
+export const DEFAULT_LANGUAGE = "en";
 export const FALLBACK_LANGUAGE = "en";
 
 const translations = {
@@ -166,6 +166,7 @@ const translations = {
       menu: {
         home: "Home",
         settings: "System Settings",
+        consumption: "Service Usage",
       },
       actions: {
         expand: "Expand sidebar",
@@ -183,6 +184,35 @@ const translations = {
       status: {
         simulation: "SIMULATION",
         real: "REAL",
+      },
+    },
+    consumption: {
+      title: "Service Usage",
+      services: {
+        openRouter: "OpenRouter",
+        elevenLabs: "ElevenLabs",
+      },
+      labels: {
+        usage: "Usage so far",
+        limit: "Total limit",
+        remaining: "Remaining",
+        plan: "Current plan",
+        characters: "Characters",
+        charactersUsed: "Characters used",
+        charactersRemaining: "Characters remaining",
+        charactersLimit: "Characters per month",
+        readable: "Readable format",
+        complete: "Complete format",
+      },
+      messages: {
+        loading: "Loading usage information...",
+        error: "Error loading usage information",
+        noLimit: "No limit associated (probably pay-as-you-go plan)",
+        payAsYouGo: "Balance works as post-paid billing",
+        keyNotConfigured: "API key not configured",
+      },
+      actions: {
+        refresh: "Refresh",
       },
     },
   },
@@ -350,6 +380,7 @@ const translations = {
       menu: {
         home: "Página Inicial",
         settings: "Configurações do Sistema",
+        consumption: "Consumo dos Serviços",
       },
       actions: {
         expand: "Expandir sidebar",
@@ -367,6 +398,35 @@ const translations = {
       status: {
         simulation: "SIMULAÇÃO",
         real: "REAL",
+      },
+    },
+    consumption: {
+      title: "Consumo dos Serviços",
+      services: {
+        openRouter: "OpenRouter",
+        elevenLabs: "ElevenLabs",
+      },
+      labels: {
+        usage: "Uso até agora",
+        limit: "Limite total",
+        remaining: "Restante",
+        plan: "Plano atual",
+        characters: "Caracteres",
+        charactersUsed: "Caracteres usados",
+        charactersRemaining: "Caracteres restantes",
+        charactersLimit: "Caracteres por mês",
+        readable: "Formato legível",
+        complete: "Formato completo",
+      },
+      messages: {
+        loading: "Carregando informações de consumo...",
+        error: "Erro ao carregar informações de consumo",
+        noLimit: "Nenhum limite associado (provavelmente plano pay-as-you-go)",
+        payAsYouGo: "Saldo funciona como cobrança pós-paga",
+        keyNotConfigured: "Chave da API não configurada",
+      },
+      actions: {
+        refresh: "Atualizar",
       },
     },
   },
