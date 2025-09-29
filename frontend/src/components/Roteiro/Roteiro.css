@@ -9,14 +9,15 @@
   background: var(--card-bg);
 }
 
-/* conteúdo editável */
-.roteiro-editor {
+/* conteúdo apenas para visualização */
+.roteiro-display {
   box-sizing: border-box;
   width: 100%;
   padding: 14px; /* sem padding extra no bottom agora */
   color: var(--text-color);
   white-space: normal;
   word-break: break-word;
+  cursor: default; /* indica que não é editável */
 }
 
 /* AÇÕES — fora do container (sem linha/borda) */

@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { useTranslation } from "../../contexts/LanguageContext";
 import "./AudiosCard.css";
 
-export default function AudiosCard() {
+export default function AudiosCard({ onAudioGenerated, onAudioDeleted }) {
   const { t } = useTranslation();
   const [audios, setAudios] = useState([]);
   const [lastModified, setLastModified] = useState(null);
@@ -22,24 +22,32 @@ export default function AudiosCard() {
       if (currentModified !== lastModified || forceUpdate) {
         setAudios(data.audios || []);
         setLastModified(currentModified);
+        
+        // Notificar quando áudio é gerado ou removido
+        if (onAudioGenerated && data.audios && data.audios.length > 0) {
+          onAudioGenerated();
+        }
+        if (onAudioDeleted && (!data.audios || data.audios.length === 0)) {
+          onAudioDeleted();
+        }
       }
     } catch (error) {
       console.error(error);
     }
-  }, [API, lastModified]);
+  }, [API, lastModified, onAudioGenerated, onAudioDeleted]);
 
   const startPolling = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
 
-    intervalRef.current = setInterval(
-      () => {
+    // Só fazer polling se há áudios sendo processados
+    if (audios.length > 0 && audios.some(audio => typeof audio === "string")) {
+      intervalRef.current = setInterval(() => {
         carregar();
-      },
-      audios.length > 0 ? 3000 : 10000
-    );
-  }, [audios.length, carregar]);
+      }, 3000);
+    }
+  }, [audios, carregar]);
 
   const stopPolling = useCallback(() => {
     if (intervalRef.current) {
@@ -70,6 +78,7 @@ export default function AudiosCard() {
                     toast.dismiss();
                     toast.success(t("audios.messages.deleteSuccess"));
                     carregar(true);
+                    if (onAudioDeleted) onAudioDeleted(); // Notificar que áudio foi deletado
                   }
                 } catch (error) {
                   toast.error(t("audios.messages.deleteError"));

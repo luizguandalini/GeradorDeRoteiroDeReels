@@ -1,11 +1,11 @@
-import React from 'react';
-import RoadmapSection from '../../components/RoadmapSection/RoadmapSection';
-import TopicosSection from '../../components/TopicosSection/TopicosSection';
-import ThemeSection from '../../components/ThemeSection/ThemeSection';
-import DurationSection from '../../components/DurationSection/DurationSection';
-import ScriptSection from '../../components/ScriptSection/ScriptSection';
-import NarrationSection from '../../components/NarrationSection/NarrationSection';
-import './Home.css';
+import React from "react";
+import RoadmapSection from "../../components/RoadmapSection/RoadmapSection";
+import TopicosSection from "../../components/TopicosSection/TopicosSection";
+import ThemeSection from "../../components/ThemeSection/ThemeSection";
+import DurationSection from "../../components/DurationSection/DurationSection";
+import ScriptSection from "../../components/ScriptSection/ScriptSection";
+import NarrationSection from "../../components/NarrationSection/NarrationSection";
+import "./Home.css";
 
 const Home = ({
   selectedTopico,
@@ -18,12 +18,12 @@ const Home = ({
   onSelectTheme,
   onDurationChange,
   onNarracoesGeradas,
-  toastConfig
+  toastConfig,
 }) => {
   return (
     <div className="home-container">
       {/* Roadmap de passos */}
-      <RoadmapSection 
+      <RoadmapSection
         selectedTopico={selectedTopico}
         temas={temas}
         selectedTema={selectedTema}
@@ -31,26 +31,23 @@ const Home = ({
         narracoesGeradas={narracoesGeradas}
       />
 
-      <TopicosSection 
+      <TopicosSection
         selectedTopico={selectedTopico}
         onSelectTopic={onSelectTopic}
         toastConfig={toastConfig}
       />
 
-      <ThemeSection 
+      <DurationSection duracao={duracao} onDurationChange={onDurationChange} />
+
+      <ThemeSection
         temas={temas}
         selectedTema={selectedTema}
         onSelectTheme={onSelectTheme}
       />
 
-      <DurationSection 
-        duracao={duracao}
-        onDurationChange={onDurationChange}
-      />
-
-      <ScriptSection 
-        roteiro={roteiro} 
-        onNarracoesGeradas={onNarracoesGeradas} 
+      <ScriptSection
+        roteiro={roteiro}
+        onNarracoesGeradas={onNarracoesGeradas}
       />
 
       <NarrationSection roteiro={roteiro} />

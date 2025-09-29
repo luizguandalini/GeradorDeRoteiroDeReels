@@ -116,11 +116,29 @@
   cursor: pointer;
   transition: all 0.2s;
   background: white;
+  position: relative;
 }
 
 .topicos-list li:hover {
   background: #f8f9fa;
   border-color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.topicos-list li:hover::before {
+  content: "👆 Clique para selecionar este tópico";
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10;
 }
 
 .topicos-list li.selected {

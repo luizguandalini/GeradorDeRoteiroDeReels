@@ -5,6 +5,7 @@ import chalk from "chalk";
 import { getMockMode } from "../config/mockConfig.js";
 import { roteiroMock, roteiroMockEn } from "../config/mockData.js";
 import { getConfig } from "../config/configManager.js";
+import prisma from "../config/database.js";
 import {
   normalizeLanguage,
   SUPPORTED_LANGUAGES,
@@ -13,6 +14,36 @@ import {
 
 dotenv.config();
 const router = express.Router();
+
+// GET - Buscar último roteiro do usuário
+router.get("/", async (req, res) => {
+  try {
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para roteiro");
+      return res.json(roteiroMock);
+    }
+
+    const ultimoRoteiro = await prisma.userRoteiro.findFirst({
+      where: {
+        userId: req.user.id,
+        ativo: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (!ultimoRoteiro) {
+      return res.json({ roteiro: [] });
+    }
+
+    const conteudo = JSON.parse(ultimoRoteiro.conteudo);
+    res.json({ ...conteudo, id: ultimoRoteiro.id });
+  } catch (error) {
+    console.error("❌ Erro ao buscar roteiro:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+// POST - Criar novo roteiro
 
 const LANGUAGE_PROMPT_KEYS = {
   en: "PROMPT_ROTEIRO_EN",
@@ -190,7 +221,30 @@ router.post("/", async (req, res) => {
     try {
       parsed = JSON.parse(conteudo);
       console.log("Conteúdo parseado:", parsed);
-      res.json({ ...parsed, language: effectiveLanguage });
+      
+      // Deletar roteiros antigos do usuário
+      await prisma.userRoteiro.updateMany({
+        where: {
+          userId: req.user.id,
+          ativo: true
+        },
+        data: { ativo: false }
+      });
+      console.log("Roteiros antigos desativados");
+
+      // Salvar novo roteiro no banco
+      const novoRoteiro = await prisma.userRoteiro.create({
+        data: {
+          tema,
+          duracao: parseInt(duracao),
+          conteudo: JSON.stringify(parsed),
+          userId: req.user.id,
+          ativo: true
+        }
+      });
+      console.log("Novo roteiro salvo no banco");
+      
+      res.json({ ...parsed, language: effectiveLanguage, id: novoRoteiro.id });
     } catch (parseError) {
       console.error("? Erro ao fazer parse do JSON:", parseError.message);
       res.status(500).json({

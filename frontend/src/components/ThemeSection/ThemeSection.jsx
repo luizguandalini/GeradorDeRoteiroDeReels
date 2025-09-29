@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { FaLightbulb, FaRobot } from 'react-icons/fa';
 import { useTranslation } from '../../contexts/LanguageContext';
 import './ThemeSection.css';
@@ -11,7 +11,7 @@ const ThemeSection = ({
   const { t } = useTranslation();
 
   return (
-    <div className="card scrollable">
+    <div className="card scrollable theme-section">
       <h2>
         <FaLightbulb style={{ marginRight: "8px", color: "#fbc531" }} />
         <FaRobot style={{ marginRight: "8px", color: "#00a8ff" }} />

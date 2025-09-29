@@ -62,6 +62,7 @@ model User {
   topicos       UserTopico[]
   configuracoes UserConfiguracao[]
   narracoes     UserNarracao[]
+  roteiros      UserRoteiro[]
 
   @@map("users")
 }
@@ -144,5 +145,19 @@ model UserNarracao {
   updatedAt   DateTime @updatedAt
 
   @@map("user_narracoes")
+}
+
+model UserRoteiro {
+  id          Int      @id @default(autoincrement())
+  tema        String
+  duracao     Int
+  conteudo    String   // JSON do roteiro
+  ativo       Boolean  @default(true)
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("user_roteiros")
 }
 

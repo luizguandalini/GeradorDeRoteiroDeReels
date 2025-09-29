@@ -15,6 +15,46 @@ import {
 dotenv.config();
 const router = express.Router();
 
+// GET - Buscar últimos temas do usuário para um tópico
+router.get("/:topicoId", async (req, res) => {
+  try {
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para temas");
+      return res.json(temasMock);
+    }
+
+    const { topicoId } = req.params;
+    
+    const topico = await prisma.userTopico.findFirst({
+      where: { 
+        id: parseInt(topicoId, 10),
+        userId: req.user.id
+      },
+    });
+
+    if (!topico) {
+      return res.status(404).json({ error: "Tópico não encontrado" });
+    }
+
+    const temas = await prisma.userTema.findMany({
+      where: {
+        userTopicoId: topico.id,
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({
+      temas: temas.map(t => t.titulo),
+      topico: topico.nome,
+    });
+  } catch (error) {
+    console.error("❌ Erro ao buscar temas:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+// POST - Criar novos temas
+
 const LANGUAGE_PROMPT_KEYS = {
   en: "PROMPT_TEMAS_EN",
   "pt-BR": "PROMPT_TEMAS",
@@ -134,6 +174,14 @@ router.post("/", async (req, res) => {
 
     const parsed = JSON.parse(conteudo);
     console.log("Conteúdo parseado:", parsed);
+
+    // Deletar todos os temas antigos do usuário para este tópico
+    await prisma.userTema.deleteMany({
+      where: {
+        userTopicoId: topico.id,
+      },
+    });
+    console.log("Temas antigos deletados");
 
     const temasCreated = await Promise.all(
       parsed.temas.map((tema) =>

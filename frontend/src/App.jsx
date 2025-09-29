@@ -134,6 +134,40 @@ function AppContent() {
     await saveDurationPreference(newDuration);
   };
 
+  // Função para carregar últimas sugestões e roteiro
+  const loadLastData = async () => {
+    try {
+      // Carregar último roteiro
+      const roteiroResponse = await axios.get('/api/roteiro');
+      if (roteiroResponse.data && roteiroResponse.data.roteiro && roteiroResponse.data.roteiro.length > 0) {
+        setRoteiro(roteiroResponse.data.roteiro);
+      }
+
+      // Carregar últimos tópicos e temas
+      try {
+        const topicosResponse = await axios.get('/api/topicos');
+        if (topicosResponse.data && topicosResponse.data.topicos && topicosResponse.data.topicos.length > 0) {
+          const ultimoTopico = topicosResponse.data.topicos[0]; // Pegar o primeiro (mais recente)
+          setSelectedTopico(ultimoTopico);
+          
+          // Carregar temas do último tópico
+          try {
+            const temasResponse = await axios.get(`/api/temas/${ultimoTopico.id}`);
+            if (temasResponse.data && temasResponse.data.temas && temasResponse.data.temas.length > 0) {
+              setTemas(temasResponse.data.temas);
+            }
+          } catch (error) {
+            console.log('Nenhum tema anterior encontrado para este tópico');
+          }
+        }
+      } catch (error) {
+        console.log('Nenhum tópico encontrado');
+      }
+    } catch (error) {
+      console.log('Nenhum roteiro anterior encontrado');
+    }
+  };
+
   const toastConfig = {
     position: "top-right",
     autoClose: 3000,
@@ -173,6 +207,7 @@ function AppContent() {
     // Carregar duração preferida do usuário
     if (user) {
       loadDurationPreference();
+      loadLastData(); // Carregar últimas sugestões e roteiro
     }
   }, [user]);
 

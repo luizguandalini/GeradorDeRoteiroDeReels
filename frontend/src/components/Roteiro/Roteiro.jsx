@@ -7,7 +7,6 @@ import "./Roteiro.css";
 
 function Roteiro({ roteiro, onNarracoesGeradas }) {
   const [texto, setTexto] = useState("");
-  const editorRef = useRef(null);
 
   useEffect(() => {
     if (Array.isArray(roteiro) && roteiro.length > 0) {
@@ -20,10 +19,6 @@ function Roteiro({ roteiro, onNarracoesGeradas }) {
       setTexto(linhas.join("\n"));
     }
   }, [roteiro]);
-
-  const handleInput = () => {
-    setTexto(editorRef.current.innerText);
-  };
 
   const copiarRoteiro = () => {
     if (!texto.trim()) return;
@@ -78,48 +73,11 @@ function Roteiro({ roteiro, onNarracoesGeradas }) {
     }
 
     try {
-      // Verificar se já existe uma narração ativa
-      const response = await axios.get("/api/narracoes");
-      const narracoesExistentes = response.data;
-      
-      if (narracoesExistentes && narracoesExistentes.length > 0) {
-        // Mostrar alerta se já existe narração
-        toast.info(
-          <div>
-            <p>⚠️ Você já possui uma narração existente.</p>
-            <p>É recomendado baixar o áudio atual antes de gerar um novo, pois o áudio existente será deletado.</p>
-            <div className="confirm-actions">
-              <button
-                className="btn-danger"
-                onClick={async () => {
-                  try {
-                    await axios.post("/api/narracoes", { narracoes });
-                    toast.dismiss();
-                    toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
-                    if (onNarracoesGeradas) {
-                      onNarracoesGeradas(true);
-                    }
-                  } catch {
-                    toast.error("Erro ao gerar voz");
-                  }
-                }}
-              >
-                Continuar mesmo assim
-              </button>
-              <button className="btn-secondary" onClick={() => toast.dismiss()}>
-                Cancelar
-              </button>
-            </div>
-          </div>,
-          { autoClose: false }
-        );
-      } else {
-        // Gerar diretamente se não há narração existente
-        await axios.post("/api/narracoes", { narracoes });
-        toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
-        if (onNarracoesGeradas) {
-          onNarracoesGeradas(true);
-        }
+      // Gerar diretamente se não há narração existente
+      await axios.post("/api/narracoes", { narracoes });
+      toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
+      if (onNarracoesGeradas) {
+        onNarracoesGeradas(true);
       }
     } catch (error) {
       console.error("Erro ao verificar/gerar narração:", error);
@@ -238,15 +196,9 @@ function Roteiro({ roteiro, onNarracoesGeradas }) {
 
   return (
     <>
-      {/* LISTA (rolável) */}
+      {/* LISTA (rolável) - Agora apenas para visualização */}
       <div className="editor-container">
-        <div
-          ref={editorRef}
-          contentEditable
-          suppressContentEditableWarning
-          className="roteiro-editor"
-          onInput={handleInput}
-        >
+        <div className="roteiro-display">
           {renderStyled()}
         </div>
       </div>
