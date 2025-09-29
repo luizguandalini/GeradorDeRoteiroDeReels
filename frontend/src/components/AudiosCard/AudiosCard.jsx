@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import { FaTrash, FaDownload } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -98,9 +98,25 @@ export default function AudiosCard() {
       if (isMockMode) {
         toast.success(t("audios.messages.downloadSimulation"));
       } else {
+        // Fazer o download real dos arquivos
+        const response = await axios.get("/api/audios/download", {
+          responseType: 'blob'
+        });
+        
+        // Criar um link temporário para download
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'audios.zip');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
         toast.success(t("audios.messages.downloadStarted"));
       }
     } catch (error) {
+      console.error('Erro no download:', error);
       toast.error(t("audios.messages.downloadError"));
     }
   };

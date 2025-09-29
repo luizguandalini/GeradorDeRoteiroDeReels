@@ -2,10 +2,14 @@ import express from "express";
 import prisma from "../config/database.js";
 import { getMockMode } from "../config/mockConfig.js";
 import { topicosMock } from "../config/mockData.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// GET /api/topicos - Listar todos os tópicos
+// Aplicar middleware de autenticação em todas as rotas
+router.use(authenticateToken);
+
+// GET /api/topicos - Listar tópicos do usuário
 router.get("/", async (req, res) => {
   try {
     // Verificar se está no modo mock
@@ -16,8 +20,14 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const topicos = await prisma.topico.findMany({
-      where: { ativo: true },
+    const topicos = await prisma.userTopico.findMany({
+      where: { 
+        userId: req.user.id,
+        ativo: true 
+      },
+      include: {
+        temas: true
+      },
       orderBy: { createdAt: 'desc' }
     });
 
@@ -30,7 +40,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/topicos/:id - Buscar tópico por ID
+// GET /api/topicos/:id - Buscar tópico por ID do usuário
 router.get("/:id", async (req, res) => {
   try {
     // Verificar se está no modo mock
@@ -47,8 +57,14 @@ router.get("/:id", async (req, res) => {
     }
 
     const { id } = req.params;
-    const topico = await prisma.topico.findUnique({
-      where: { id: parseInt(id) }
+    const topico = await prisma.userTopico.findFirst({
+      where: { 
+        id: parseInt(id),
+        userId: req.user.id
+      },
+      include: {
+        temas: true
+      }
     });
 
     if (!topico) {
@@ -62,7 +78,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// POST /api/topicos - Criar novo tópico
+// POST /api/topicos - Criar novo tópico para o usuário
 router.post("/", async (req, res) => {
   try {
     // Verificar se está no modo mock
@@ -90,10 +106,14 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Nome do tópico é obrigatório" });
     }
 
-    const topico = await prisma.topico.create({
+    const topico = await prisma.userTopico.create({
       data: {
         nome: nome.trim(),
-        descricao: descricao?.trim()
+        descricao: descricao?.trim(),
+        userId: req.user.id
+      },
+      include: {
+        temas: true
       }
     });
 
@@ -101,14 +121,14 @@ router.post("/", async (req, res) => {
     res.status(201).json(topico);
   } catch (error) {
     if (error.code === 'P2002') {
-      return res.status(400).json({ error: "Já existe um tópico com este nome" });
+      return res.status(400).json({ error: "Já existe um tópico com este nome para este usuário" });
     }
     console.error("❌ Erro ao criar tópico:", error);
     res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
 
-// PUT /api/topicos/:id - Atualizar tópico
+// PUT /api/topicos/:id - Atualizar tópico do usuário
 router.put("/:id", async (req, res) => {
   try {
     // Verificar se está no modo mock
@@ -136,12 +156,18 @@ router.put("/:id", async (req, res) => {
     const { id } = req.params;
     const { nome, descricao, ativo } = req.body;
 
-    const topico = await prisma.topico.update({
-      where: { id: parseInt(id) },
+    const topico = await prisma.userTopico.update({
+      where: { 
+        id: parseInt(id),
+        userId: req.user.id
+      },
       data: {
         ...(nome && { nome: nome.trim() }),
         ...(descricao !== undefined && { descricao: descricao?.trim() }),
         ...(ativo !== undefined && { ativo })
+      },
+      include: {
+        temas: true
       }
     });
 
@@ -152,7 +178,7 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ error: "Tópico não encontrado" });
     }
     if (error.code === 'P2002') {
-      return res.status(400).json({ error: "Já existe um tópico com este nome" });
+      return res.status(400).json({ error: "Já existe um tópico com este nome para este usuário" });
     }
     console.error("❌ Erro ao atualizar tópico:", error);
     res.status(500).json({ error: "Erro interno do servidor" });
@@ -177,9 +203,15 @@ router.delete("/:id", async (req, res) => {
     }
     const { id } = req.params;
 
-    const topico = await prisma.topico.update({
-      where: { id: parseInt(id) },
-      data: { ativo: false }
+    const topico = await prisma.userTopico.update({
+      where: { 
+        id: parseInt(id),
+        userId: req.user.id
+      },
+      data: { ativo: false },
+      include: {
+        temas: true
+      }
     });
 
     console.log("✅ Tópico desativado:", topico.nome);

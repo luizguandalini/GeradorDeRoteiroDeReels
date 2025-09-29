@@ -1,14 +1,21 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// GET - Listar todas as configurações
+// Aplicar middleware de autenticação a todas as rotas
+router.use(authenticateToken);
+
+// GET - Listar configurações do usuário
 router.get('/', async (req, res) => {
   try {
-    const configuracoes = await prisma.configuracao.findMany({
-      where: { ativo: true },
+    const configuracoes = await prisma.userConfiguracao.findMany({
+      where: { 
+        userId: req.user.id,
+        ativo: true 
+      },
       orderBy: { categoria: 'asc' }
     });
     res.json(configuracoes);
@@ -18,12 +25,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET - Buscar configuração por chave
+// GET - Buscar configuração do usuário por chave
 router.get('/:chave', async (req, res) => {
   try {
     const { chave } = req.params;
-    const configuracao = await prisma.configuracao.findUnique({
-      where: { chave }
+    const configuracao = await prisma.userConfiguracao.findFirst({
+      where: { 
+        chave,
+        userId: req.user.id
+      }
     });
     
     if (!configuracao) {
@@ -37,7 +47,7 @@ router.get('/:chave', async (req, res) => {
   }
 });
 
-// POST - Criar nova configuração
+// POST - Criar nova configuração para o usuário
 router.post('/', async (req, res) => {
   try {
     const { chave, valor, nome, descricao, categoria } = req.body;
@@ -46,34 +56,38 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
     
-    const configuracao = await prisma.configuracao.create({
+    const configuracao = await prisma.userConfiguracao.create({
       data: {
         chave,
         valor,
         nome,
         descricao,
-        categoria
+        categoria,
+        userId: req.user.id
       }
     });
     
     res.status(201).json(configuracao);
   } catch (error) {
     if (error.code === 'P2002') {
-      return res.status(400).json({ error: 'Chave já existe' });
+      return res.status(400).json({ error: 'Chave já existe para este usuário' });
     }
     console.error('Erro ao criar configuração:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
-// PUT - Atualizar configuração
+// PUT - Atualizar configuração do usuário
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { chave, valor, nome, descricao, categoria, ativo } = req.body;
     
-    const configuracao = await prisma.configuracao.update({
-      where: { id: parseInt(id) },
+    const configuracao = await prisma.userConfiguracao.update({
+      where: { 
+        id: parseInt(id),
+        userId: req.user.id
+      },
       data: {
         ...(chave && { chave }),
         ...(valor && { valor }),
@@ -90,20 +104,23 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Configuração não encontrada' });
     }
     if (error.code === 'P2002') {
-      return res.status(400).json({ error: 'Chave já existe' });
+      return res.status(400).json({ error: 'Chave já existe para este usuário' });
     }
     console.error('Erro ao atualizar configuração:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
-// DELETE - Desativar configuração (soft delete)
+// DELETE - Desativar configuração do usuário (soft delete)
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const configuracao = await prisma.configuracao.update({
-      where: { id: parseInt(id) },
+    const configuracao = await prisma.userConfiguracao.update({
+      where: { 
+        id: parseInt(id),
+        userId: req.user.id
+      },
       data: { ativo: false }
     });
     

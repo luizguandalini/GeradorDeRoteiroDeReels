@@ -32,7 +32,7 @@ function formatCurrency(value) {
  */
 async function consultarOpenRouterSaldo() {
   try {
-    const apiKey = await getConfig('OPENROUTER_API_KEY', 'OPENROUTER_API_KEY');
+    const apiKey = await getConfig('OPENROUTER_API_KEY', null, 'OPENROUTER_API_KEY');
     
     if (!apiKey) {
       return {
@@ -78,7 +78,7 @@ async function consultarOpenRouterSaldo() {
  */
 async function consultarElevenLabsSaldo() {
   try {
-    const apiKey = await getConfig('ELEVEN_API_KEY', 'ELEVEN_API_KEY');
+    const apiKey = await getConfig('ELEVEN_API_KEY', null, 'ELEVEN_API_KEY');
     
     if (!apiKey) {
       return {

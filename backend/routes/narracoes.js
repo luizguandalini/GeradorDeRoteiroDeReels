@@ -7,16 +7,31 @@ import "dotenv/config";
 import { getMockMode } from "../config/mockConfig.js";
 import { narracoesMock } from "../config/mockData.js";
 import { getConfig } from "../config/configManager.js";
+import { authenticateToken } from "../middleware/auth.js";
+import prisma from "../config/database.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Aplicar middleware de autenticação
+router.use(authenticateToken);
 
 const pastaSaida = path.join(__dirname, "../audios");
 
 if (!fs.existsSync(pastaSaida)) {
   fs.mkdirSync(pastaSaida);
   console.log("📁 Pasta 'audios' criada automaticamente.");
+}
+
+// Função para criar pasta única do usuário
+function criarPastaUsuario(userId) {
+  const pastaUsuario = path.join(pastaSaida, `user_${userId}`);
+  if (!fs.existsSync(pastaUsuario)) {
+    fs.mkdirSync(pastaUsuario, { recursive: true });
+    console.log(`📁 Pasta do usuário ${userId} criada: ${pastaUsuario}`);
+  }
+  return pastaUsuario;
 }
 
 function gerarSilencio() {
@@ -31,7 +46,7 @@ function gerarSilencio() {
   return silencePath;
 }
 
-async function gerarAudio(texto, nomeArquivo, voiceId, modelId, apiKey) {
+async function gerarAudio(texto, nomeArquivo, voiceId, modelId, apiKey, pastaDestino) {
   const URL = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
   
   const response = await axios.post(
@@ -56,11 +71,35 @@ async function gerarAudio(texto, nomeArquivo, voiceId, modelId, apiKey) {
     }
   );
 
-  const outputPath = path.join(pastaSaida, nomeArquivo);
+  const outputPath = path.join(pastaDestino, nomeArquivo);
   fs.writeFileSync(outputPath, Buffer.from(response.data));
   return outputPath;
 }
 
+// GET - Listar narrações do usuário
+router.get("/", async (req, res) => {
+  try {
+    if (getMockMode()) {
+      console.log("🔶 Usando dados mock para listar narrações");
+      return res.json(narracoesMock);
+    }
+
+    const narracoes = await prisma.userNarracao.findMany({
+      where: {
+        userId: req.user.id,
+        ativo: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(narracoes);
+  } catch (error) {
+    console.error("❌ Erro ao listar narrações:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+// POST - Criar nova narração
 router.post("/", async (req, res) => {
   try {
     // Verificar se está no modo mock
@@ -69,17 +108,34 @@ router.post("/", async (req, res) => {
       return res.json(narracoesMock);
     }
     
-    const { narracoes } = req.body;
+    const { narracoes, titulo } = req.body;
     console.log("📩 Requisição recebida:", narracoes);
 
     if (!narracoes) {
       return res.status(400).json({ error: "Campo 'narracoes' é obrigatório" });
     }
 
-    // Buscar configurações do banco
-    const elevenApiKey = await getConfig('ELEVEN_API_KEY', 'ELEVEN_API_KEY');
-    const voiceId = await getConfig('VOICE_ID', 'VOICE_ID');
-    const elevenModelId = await getConfig('ELEVEN_MODEL_ID', 'ELEVEN_MODEL_ID');
+    // Criar pasta única para o usuário
+    const pastaUsuario = criarPastaUsuario(req.user.id);
+
+    // Buscar configurações do usuário
+    const userConfigs = await prisma.userConfiguracao.findMany({
+      where: {
+        userId: req.user.id,
+        chave: {
+          in: ['ELEVEN_API_KEY', 'VOICE_ID', 'ELEVEN_MODEL_ID']
+        }
+      }
+    });
+
+    const configMap = {};
+    userConfigs.forEach(config => {
+      configMap[config.chave] = config.valor;
+    });
+
+    const elevenApiKey = configMap['ELEVEN_API_KEY'] || await getConfig('ELEVEN_API_KEY', req.user.id, 'ELEVEN_API_KEY');
+    const voiceId = configMap['VOICE_ID'] || await getConfig('VOICE_ID', req.user.id, 'VOICE_ID');
+    const elevenModelId = configMap['ELEVEN_MODEL_ID'] || await getConfig('ELEVEN_MODEL_ID', req.user.id, 'ELEVEN_MODEL_ID');
 
     if (!elevenApiKey || !voiceId || !elevenModelId) {
       return res.status(500).json({ 
@@ -89,11 +145,12 @@ router.post("/", async (req, res) => {
 
     const arquivosGerados = [];
     const buffers = [];
+    const timestamp = Date.now();
 
     for (const [nome, texto] of Object.entries(narracoes)) {
-      const nomeArquivo = `${nome.replace(/\s+/g, "_")}.mp3`;
+      const nomeArquivo = `${nome.replace(/\s+/g, "_")}_${timestamp}.mp3`;
       console.log(`🎙️ Gerando: ${nomeArquivo}`);
-      const caminho = await gerarAudio(texto, nomeArquivo, voiceId, elevenModelId, elevenApiKey);
+      const caminho = await gerarAudio(texto, nomeArquivo, voiceId, elevenModelId, elevenApiKey, pastaUsuario);
 
       const buffer = fs.readFileSync(caminho);
       buffers.push(buffer);
@@ -105,23 +162,55 @@ router.post("/", async (req, res) => {
       }
     }
 
-    const audioFinal = path.join(pastaSaida, "final.mp3");
+    const audioFinal = path.join(pastaUsuario, `final_${timestamp}.mp3`);
     fs.writeFileSync(audioFinal, Buffer.concat(buffers));
 
-    console.log("✅ Áudio final gerado:", audioFinal);
+    // Salvar informações da narração no banco
+    const narracao = await prisma.userNarracao.create({
+      data: {
+        nome: titulo || `Narração ${new Date().toLocaleString()}`,
+        texto: typeof narracoes === 'object' ? JSON.stringify(narracoes) : String(narracoes),
+        audioPath: path.relative(pastaSaida, audioFinal),
+        userId: req.user.id
+      }
+    });
 
-    // Notificar outros módulos que novos áudios foram criados
-    // Isso pode ser usado para invalidar caches ou notificar clientes
-    console.log("🔄 Novos áudios disponíveis - cache será atualizado na próxima consulta");
+    console.log("✅ Áudio final gerado:", audioFinal);
+    console.log("💾 Narração salva no banco:", narracao.id);
 
     res.json({
+      id: narracao.id,
       mensagem: "Áudios gerados com sucesso!",
       arquivos: arquivosGerados.map((f) => path.basename(f)),
       final: path.basename(audioFinal),
+      audioPath: narracao.audioPath
     });
   } catch (error) {
     console.error("❌ Erro na rota /narracoes:", error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE - Soft delete de narração
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const narracao = await prisma.userNarracao.update({
+      where: {
+        id: parseInt(id),
+        userId: req.user.id
+      },
+      data: { ativo: false }
+    });
+
+    res.json({ message: "Narração removida com sucesso" });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: "Narração não encontrada" });
+    }
+    console.error("❌ Erro ao remover narração:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
 

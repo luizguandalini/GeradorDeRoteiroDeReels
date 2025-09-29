@@ -48,15 +48,15 @@ router.post("/", async (req, res) => {
       language: effectiveLanguage,
     });
 
-    const modelName = await getConfig("MODEL_NAME", "MODEL_NAME");
+    const modelName = await getConfig("MODEL_NAME", req.user.id, "MODEL_NAME");
     const promptKey =
       LANGUAGE_PROMPT_KEYS[effectiveLanguage] ||
       LANGUAGE_PROMPT_KEYS[DEFAULT_LANGUAGE];
-    let promptRoteiro = await getConfig(promptKey, promptKey);
+    let promptRoteiro = await getConfig(promptKey, req.user.id, promptKey);
 
     if (!promptRoteiro && effectiveLanguage !== DEFAULT_LANGUAGE) {
       const fallbackKey = LANGUAGE_PROMPT_KEYS[DEFAULT_LANGUAGE];
-      promptRoteiro = await getConfig(fallbackKey, fallbackKey);
+      promptRoteiro = await getConfig(fallbackKey, req.user.id, fallbackKey);
     }
 
     if (!promptRoteiro) {
@@ -65,6 +65,7 @@ router.post("/", async (req, res) => {
 
     const openrouterApiKey = await getConfig(
       "OPENROUTER_API_KEY",
+      req.user.id,
       "OPENROUTER_API_KEY"
     );
 

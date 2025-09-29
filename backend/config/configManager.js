@@ -14,23 +14,41 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 /**
  * Busca uma configuração específica do banco de dados
  * @param {string} chave - A chave da configuração
+ * @param {number} userId - ID do usuário (opcional, para configurações globais use null)
  * @param {string} fallbackEnvKey - Chave do .env para fallback (opcional)
  * @returns {Promise<string|null>} O valor da configuração
  */
-export async function getConfig(chave, fallbackEnvKey = null) {
+export async function getConfig(chave, userId = null, fallbackEnvKey = null) {
   try {
+    const cacheKey = userId ? `${userId}:${chave}` : chave;
+    
     // Verifica se o cache ainda é válido
-    if (cacheExpiry && Date.now() < cacheExpiry && configCache.has(chave)) {
-      return configCache.get(chave);
+    if (cacheExpiry && Date.now() < cacheExpiry && configCache.has(cacheKey)) {
+      return configCache.get(cacheKey);
     }
 
-    // Busca a configuração no banco
-    const config = await prisma.configuracao.findFirst({
-      where: {
-        chave: chave,
-        ativo: true
-      }
-    });
+    let config = null;
+    
+    // Se userId for fornecido, busca configuração específica do usuário
+    if (userId) {
+      config = await prisma.userConfiguracao.findFirst({
+        where: {
+          chave: chave,
+          userId: userId,
+          ativo: true
+        }
+      });
+    }
+    
+    // Se não encontrou configuração do usuário ou userId não foi fornecido, busca configuração global
+    if (!config) {
+      config = await prisma.configuracao.findFirst({
+        where: {
+          chave: chave,
+          ativo: true
+        }
+      });
+    }
 
     let valor = null;
     
@@ -48,7 +66,7 @@ export async function getConfig(chave, fallbackEnvKey = null) {
 
     // Atualiza o cache
     if (valor !== null) {
-      configCache.set(chave, valor);
+      configCache.set(cacheKey, valor);
       cacheExpiry = Date.now() + CACHE_DURATION;
     }
 
@@ -162,6 +180,7 @@ export async function initializeDefaultConfigs() {
       }
     ];
 
+    // Primeiro, cria as configurações globais se não existirem
     for (const config of defaultConfigs) {
       const existing = await prisma.configuracao.findFirst({
         where: { chave: config.chave }
@@ -171,7 +190,33 @@ export async function initializeDefaultConfigs() {
         await prisma.configuracao.create({
           data: config
         });
-        console.log(`Configuração padrão criada: ${config.chave}`);
+        console.log(`Configuração global criada: ${config.chave}`);
+      }
+    }
+
+    // Depois, cria configurações específicas para todos os usuários existentes
+    const users = await prisma.user.findMany({
+      select: { id: true }
+    });
+
+    for (const user of users) {
+      for (const config of defaultConfigs) {
+        const existingUserConfig = await prisma.userConfiguracao.findFirst({
+          where: { 
+            chave: config.chave,
+            userId: user.id
+          }
+        });
+
+        if (!existingUserConfig) {
+          await prisma.userConfiguracao.create({
+            data: {
+              ...config,
+              userId: user.id
+            }
+          });
+          console.log(`Configuração do usuário ${user.id} criada: ${config.chave}`);
+        }
       }
     }
 

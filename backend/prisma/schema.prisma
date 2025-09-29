@@ -56,7 +56,12 @@ model User {
   provider   AuthProvider @default(CREDENTIALS)
   providerId String?      @unique
   language   String      @default("pt-BR")
+  
+  // Relacionamentos com dados do usuário
   refreshTokens RefreshToken[]
+  topicos       UserTopico[]
+  configuracoes UserConfiguracao[]
+  narracoes     UserNarracao[]
 
   @@map("users")
 }
@@ -81,5 +86,63 @@ enum UserRole {
 enum AuthProvider {
   CREDENTIALS
   GOOGLE
+}
+
+// Novos modelos para dados relacionais por usuário
+model UserTopico {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  descricao String?
+  ativo     Boolean  @default(true)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  temas     UserTema[]
+
+  @@unique([userId, nome])
+  @@map("user_topicos")
+}
+
+model UserTema {
+  id          Int        @id @default(autoincrement())
+  titulo      String
+  userTopicoId Int
+  userTopico  UserTopico @relation(fields: [userTopicoId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("user_temas")
+}
+
+model UserConfiguracao {
+  id        Int      @id @default(autoincrement())
+  chave     String
+  nome      String
+  descricao String
+  categoria String
+  valor     String
+  ativo     Boolean  @default(true)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, chave])
+  @@map("user_configuracoes")
+}
+
+model UserNarracao {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  texto       String
+  audioPath   String?  // Caminho para o arquivo de áudio
+  ativo       Boolean  @default(true)
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("user_narracoes")
 }
 
