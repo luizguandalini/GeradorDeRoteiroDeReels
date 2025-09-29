@@ -99,43 +99,6 @@
   background: #5a6268;
 }
 
-.search-container {
-  margin-bottom: 20px;
-}
-
-.search-input-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  color: #6c757d;
-  z-index: 2;
-  pointer-events: none;
-  font-size: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.search-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
 .topicos-list ul {
   list-style: none;
   padding: 0;
@@ -231,39 +194,6 @@
   font-style: italic;
 }
 
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e9ecef;
-}
-
-.btn-page {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn-page:hover:not(:disabled) {
-  background: #0056b3;
-}
-
-.btn-page:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-}
-
-.page-info {
-  font-size: 14px;
-  color: #6c757d;
-}
-
 /* Dark mode support */
 [data-theme="dark"] .topico-form {
   background: #2d3748;
@@ -271,16 +201,14 @@
 }
 
 [data-theme="dark"] .form-input,
-[data-theme="dark"] .form-textarea,
-[data-theme="dark"] .search-input {
+[data-theme="dark"] .form-textarea {
   background: #4a5568;
   border-color: #718096;
   color: white;
 }
 
 [data-theme="dark"] .form-input::placeholder,
-[data-theme="dark"] .form-textarea::placeholder,
-[data-theme="dark"] .search-input::placeholder {
+[data-theme="dark"] .form-textarea::placeholder {
   color: #a0aec0;
 }
 
@@ -308,13 +236,5 @@
 
 [data-theme="dark"] .loading-message,
 [data-theme="dark"] .empty-message {
-  color: #a0aec0;
-}
-
-[data-theme="dark"] .pagination {
-  border-color: #4a5568;
-}
-
-[data-theme="dark"] .page-info {
   color: #a0aec0;
 }

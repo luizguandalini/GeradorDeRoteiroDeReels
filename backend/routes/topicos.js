@@ -5,81 +5,24 @@ import { topicosMock } from "../config/mockData.js";
 
 const router = express.Router();
 
-// GET /api/topicos - Listar tópicos com paginação
+// GET /api/topicos - Listar todos os tópicos
 router.get("/", async (req, res) => {
   try {
     // Verificar se está no modo mock
     if (getMockMode()) {
       console.log("🔶 Usando dados mock para tópicos");
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-      const search = req.query.search || "";
-      
-      let filteredTopicos = topicosMock.topicos;
-      
-      // Aplicar filtro de busca se fornecido
-      if (search) {
-        filteredTopicos = topicosMock.topicos.filter(topico =>
-          topico.nome.toLowerCase().includes(search.toLowerCase())
-        );
-      }
-      
-      // Aplicar paginação
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedTopicos = filteredTopicos.slice(startIndex, endIndex);
-      
-      const totalPages = Math.ceil(filteredTopicos.length / limit);
-      
       return res.json({
-        topicos: paginatedTopicos,
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalItems: filteredTopicos.length,
-          itemsPerPage: limit,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
-        }
+        topicos: topicosMock.topicos
       });
     }
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search || "";
-    const skip = (page - 1) * limit;
 
-    const where = {
-      ativo: true,
-      ...(search && {
-        OR: [
-          { nome: { contains: search, mode: 'insensitive' } },
-          { descricao: { contains: search, mode: 'insensitive' } }
-        ]
-      })
-    };
-
-    const [topicos, total] = await Promise.all([
-      prisma.topico.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' }
-      }),
-      prisma.topico.count({ where })
-    ]);
-
-    const totalPages = Math.ceil(total / limit);
+    const topicos = await prisma.topico.findMany({
+      where: { ativo: true },
+      orderBy: { createdAt: 'desc' }
+    });
 
     res.json({
-      topicos,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalItems: total,
-        itemsPerPage: limit,
-        hasNext: page < totalPages,
-        hasPrev: page > 1
-      }
+      topicos
     });
   } catch (error) {
     console.error("❌ Erro ao buscar tópicos:", error);

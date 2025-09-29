@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaDatabase, FaPlus, FaEdit, FaTrash, FaSearch } from "react-icons/fa";
+import { FaDatabase, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useTranslation } from "../../contexts/LanguageContext";
 import "./TopicosSection.css";
@@ -12,29 +12,16 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingTopico, setEditingTopico] = useState(null);
   const [formData, setFormData] = useState({ nome: "" });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-  });
 
   useEffect(() => {
     loadTopicos();
-  }, [searchTerm]);
+  }, []);
 
-  const loadTopicos = async (page = 1) => {
+  const loadTopicos = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/topicos", {
-        params: {
-          page,
-          limit: 10,
-          search: searchTerm,
-        },
-      });
+      const response = await axios.get("/api/topicos");
       setTopicos(response.data.topicos);
-      setPagination(response.data.pagination);
     } catch (error) {
       toast.error(t("topicsSection.messages.loadError"), toastConfig);
       console.error(error);
@@ -46,7 +33,7 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!formData.nome.trim()) {
-      toast.warn(t("topicsSection.messages.nameRequired"), toastConfig);
+      toast.error(t("topicsSection.messages.nameRequired"), toastConfig);
       return;
     }
 
@@ -59,15 +46,11 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
         await axios.post("/api/topicos", formData);
         toast.success(t("topicsSection.messages.createSuccess"), toastConfig);
       }
-
-      setFormData({ nome: "" });
-      setShowForm(false);
-      setEditingTopico(null);
-      loadTopicos();
+      await loadTopicos();
+      cancelForm();
     } catch (error) {
-      const message =
-        error.response?.data?.error || t("topicsSection.messages.saveError");
-      toast.error(message, toastConfig);
+      toast.error(t("topicsSection.messages.saveError"), toastConfig);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -80,23 +63,25 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
   };
 
   const handleDelete = async (topico) => {
-    const confirmation = window.confirm(
-      t("topicsSection.messages.deleteConfirm", { name: topico.nome })
-    );
-
-    if (!confirmation) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await axios.delete(`/api/topicos/${topico.id}`);
-      toast.success(t("topicsSection.messages.deleteSuccess"), toastConfig);
-      loadTopicos();
-    } catch (error) {
-      toast.error(t("topicsSection.messages.deleteError"), toastConfig);
-    } finally {
-      setLoading(false);
+    if (
+      window.confirm(
+        t("topicsSection.messages.deleteConfirm", { name: topico.nome })
+      )
+    ) {
+      try {
+        setLoading(true);
+        await axios.delete(`/api/topicos/${topico.id}`);
+        toast.success(t("topicsSection.messages.deleteSuccess"), toastConfig);
+        await loadTopicos();
+        if (selectedTopico?.id === topico.id) {
+          onSelectTopic(null);
+        }
+      } catch (error) {
+        toast.error(t("topicsSection.messages.deleteError"), toastConfig);
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -116,7 +101,7 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
         <button
           className="btn-add-topico"
           onClick={() => setShowForm(!showForm)}
-          disabled={loading}
+          disabled={loading || topicos.length >= 5}
         >
           <FaPlus style={{ marginRight: "5px" }} />
           {t("topicsSection.actions.new")}
@@ -152,18 +137,6 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
         </div>
       )}
 
-      <div className="search-container">
-        <div className="search-input-container">
-          <input
-            type="text"
-            placeholder={t("topicsSection.search.placeholder")}
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            className="search-input"
-          />
-        </div>
-      </div>
-
       <div className="topicos-list">
         {loading ? (
           <div className="loading-message">
@@ -171,9 +144,7 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
           </div>
         ) : topicos.length === 0 ? (
           <div className="empty-message">
-            {searchTerm
-              ? t("topicsSection.state.emptySearch")
-              : t("topicsSection.state.emptyDefault")}
+            {t("topicsSection.state.emptyDefault")}
           </div>
         ) : (
           <ul>
@@ -215,31 +186,6 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
           </ul>
         )}
       </div>
-
-      {pagination.totalPages > 1 && (
-        <div className="pagination">
-          <button
-            onClick={() => loadTopicos(pagination.currentPage - 1)}
-            disabled={!pagination.hasPrev || loading}
-            className="btn-page"
-          >
-            {t("topicsSection.pagination.previous")}
-          </button>
-          <span className="page-info">
-            {t("topicsSection.pagination.page", {
-              current: pagination.currentPage,
-              total: pagination.totalPages,
-            })}
-          </span>
-          <button
-            onClick={() => loadTopicos(pagination.currentPage + 1)}
-            disabled={!pagination.hasNext || loading}
-            className="btn-page"
-          >
-            {t("topicsSection.pagination.next")}
-          </button>
-        </div>
-      )}
     </div>
   );
 };
