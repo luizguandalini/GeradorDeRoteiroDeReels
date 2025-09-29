@@ -1,2 +1,57 @@
-/* Estilos específicos para o DurationSection serão herdados do App.css */
-/* Este arquivo pode ser usado para estilos específicos do componente se necessário */
+/* Estilos específicos para o DurationSection */
+
+.duration-estimate-note {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+  margin: 8px 0 16px 0;
+  opacity: 0.8;
+}
+
+.duration-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.duration-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 60px;
+  justify-content: center;
+}
+
+.duration-option:hover {
+  border-color: #9c88ff;
+  background: rgba(156, 136, 255, 0.1);
+}
+
+.duration-option.selected {
+  border-color: #9c88ff;
+  background: rgba(156, 136, 255, 0.2);
+  color: #9c88ff;
+  font-weight: 600;
+}
+
+.duration-seconds {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.duration-formatted {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.duration-option.selected .duration-formatted {
+  opacity: 1;
+}

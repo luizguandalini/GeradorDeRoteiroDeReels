@@ -73,6 +73,13 @@ const translations = {
     },
     duration: {
       title: "Video Duration (seconds)",
+      estimateNote: "This is an estimate and may not be the exact duration.",
+      options: {
+        "30s": "30 seconds",
+        "60s": "1 minute", 
+        "90s": "1 min 30s",
+        "120s": "2 minutes"
+      }
     },
     theme: {
       title: "AI Suggestions",
@@ -287,6 +294,13 @@ const translations = {
     },
     duration: {
       title: "Duração do Vídeo (segundos)",
+      estimateNote: "Esta é uma estimativa e pode não ser a duração exata.",
+      options: {
+        "30s": "30 segundos",
+        "60s": "1 minuto",
+        "90s": "1 min 30s", 
+        "120s": "2 minutos"
+      }
     },
     theme: {
       title: "Sugestões da IA",

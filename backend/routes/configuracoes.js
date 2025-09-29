@@ -77,7 +77,57 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT - Atualizar configuração do usuário
+// PUT - Criar ou atualizar configuração por chave (upsert)
+router.put('/duration-preference', async (req, res) => {
+  try {
+    const { chave, valor, nome, descricao, categoria } = req.body;
+    
+    // Verificar se a configuração já existe
+    const existingConfig = await prisma.userConfiguracao.findFirst({
+      where: { 
+        chave,
+        userId: req.user.id
+      }
+    });
+    
+    let configuracao;
+    
+    if (existingConfig) {
+      // Atualizar configuração existente
+      configuracao = await prisma.userConfiguracao.update({
+        where: { 
+          id: existingConfig.id
+        },
+        data: {
+          valor,
+          ...(nome && { nome }),
+          ...(descricao && { descricao }),
+          ...(categoria && { categoria })
+        }
+      });
+    } else {
+      // Criar nova configuração
+      configuracao = await prisma.userConfiguracao.create({
+        data: {
+          chave,
+          valor,
+          nome: nome || 'Configuração',
+          descricao: descricao || '',
+          categoria: categoria || 'geral',
+          userId: req.user.id,
+          ativo: true
+        }
+      });
+    }
+    
+    res.json(configuracao);
+  } catch (error) {
+    console.error('Erro ao salvar configuração de duração:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// PUT - Atualizar configuração do usuário por ID
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;

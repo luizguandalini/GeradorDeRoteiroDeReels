@@ -41,6 +41,15 @@ router.post("/", async (req, res) => {
     const effectiveLanguage = SUPPORTED_LANGUAGES.includes(requestedLanguage)
       ? requestedLanguage
       : normalizeLanguage(req.user?.language);
+    
+    // Validar duração (deve ser um número inteiro entre 30 e 120)
+    const duracaoInt = parseInt(duracao, 10);
+    if (!duracao || isNaN(duracaoInt) || duracaoInt < 30 || duracaoInt > 120) {
+      const errorMessage = effectiveLanguage === 'en' 
+        ? 'Duration must be between 30 and 120 seconds'
+        : 'A duração deve estar entre 30 e 120 segundos';
+      return res.status(400).json({ error: errorMessage });
+    }
 
     console.log("Requisição recebida com dados:", {
       tema,
@@ -48,15 +57,15 @@ router.post("/", async (req, res) => {
       language: effectiveLanguage,
     });
 
-    const modelName = await getConfig("MODEL_NAME", req.user.id, "MODEL_NAME");
+    const modelName = await getConfig("MODEL_NAME", null, "MODEL_NAME");
     const promptKey =
       LANGUAGE_PROMPT_KEYS[effectiveLanguage] ||
       LANGUAGE_PROMPT_KEYS[DEFAULT_LANGUAGE];
-    let promptRoteiro = await getConfig(promptKey, req.user.id, promptKey);
+    let promptRoteiro = await getConfig(promptKey, null, promptKey);
 
     if (!promptRoteiro && effectiveLanguage !== DEFAULT_LANGUAGE) {
       const fallbackKey = LANGUAGE_PROMPT_KEYS[DEFAULT_LANGUAGE];
-      promptRoteiro = await getConfig(fallbackKey, req.user.id, fallbackKey);
+      promptRoteiro = await getConfig(fallbackKey, null, fallbackKey);
     }
 
     if (!promptRoteiro) {
@@ -65,7 +74,7 @@ router.post("/", async (req, res) => {
 
     const openrouterApiKey = await getConfig(
       "OPENROUTER_API_KEY",
-      req.user.id,
+      null,
       "OPENROUTER_API_KEY"
     );
 

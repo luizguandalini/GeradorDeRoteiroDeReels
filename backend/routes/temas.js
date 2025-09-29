@@ -61,21 +61,21 @@ router.post("/", async (req, res) => {
 
     const promptKey =
       LANGUAGE_PROMPT_KEYS[language] || LANGUAGE_PROMPT_KEYS[DEFAULT_LANGUAGE];
-    let promptTemas = await getConfig(promptKey, req.user.id, promptKey);
+    let promptTemas = await getConfig(promptKey, null, promptKey);
 
     if (!promptTemas && language !== DEFAULT_LANGUAGE) {
       const fallbackKey = LANGUAGE_PROMPT_KEYS[DEFAULT_LANGUAGE];
-      promptTemas = await getConfig(fallbackKey, req.user.id, fallbackKey);
+      promptTemas = await getConfig(fallbackKey, null, fallbackKey);
     }
 
     if (!promptTemas) {
       return res.status(500).json({ error: "Prompt não configurado" });
     }
 
-    const modelName = await getConfig("MODEL_NAME", req.user.id, "MODEL_NAME");
+    const modelName = await getConfig("MODEL_NAME", null, "MODEL_NAME");
     const openrouterApiKey = await getConfig(
       "OPENROUTER_API_KEY",
-      req.user.id,
+      null,
       "OPENROUTER_API_KEY"
     );
 

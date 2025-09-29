@@ -71,6 +71,69 @@ function AppContent() {
   const [narracoesGeradas, setNarracoesGeradas] = useState([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  // Função para salvar duração preferida do usuário
+  const saveDurationPreference = async (newDuration) => {
+    if (user?.role === 'admin') {
+      // Para usuários admin, salvar no banco de dados
+      try {
+        await axios.put('/api/configuracoes/duration-preference', {
+          chave: 'PREFERRED_DURATION',
+          valor: newDuration.toString(),
+          nome: 'Duração Preferida do Vídeo',
+          descricao: 'Duração preferida do usuário para geração de vídeos',
+          categoria: 'preferencias'
+        });
+      } catch (error) {
+        console.error('Erro ao salvar duração preferida:', error);
+      }
+    } else {
+      // Para usuários comuns, salvar no localStorage
+      try {
+        localStorage.setItem('preferredDuration', newDuration.toString());
+      } catch (error) {
+        console.error('Erro ao salvar duração no localStorage:', error);
+      }
+    }
+  };
+
+  // Função para carregar duração preferida do usuário
+  const loadDurationPreference = async () => {
+    if (user?.role === 'admin') {
+      // Para usuários admin, carregar do banco de dados
+      try {
+        const response = await axios.get('/api/configuracoes/PREFERRED_DURATION');
+        if (response.data && response.data.valor) {
+          const savedDuration = parseInt(response.data.valor, 10);
+          if (savedDuration >= 30 && savedDuration <= 120) {
+            setDuracao(savedDuration);
+          }
+        }
+      } catch (error) {
+        // Se não encontrar a configuração, mantém o padrão (30)
+        console.log('Duração preferida não encontrada, usando padrão');
+      }
+    } else {
+      // Para usuários comuns, carregar do localStorage
+      try {
+        const savedDuration = localStorage.getItem('preferredDuration');
+        if (savedDuration) {
+          const duration = parseInt(savedDuration, 10);
+          if (duration >= 30 && duration <= 120) {
+            setDuracao(duration);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar duração do localStorage:', error);
+      }
+    }
+  };
+
+  // Função personalizada para alterar duração que também salva a preferência
+  const handleDurationChange = async (newDuration) => {
+    setDuracao(newDuration);
+    await saveDurationPreference(newDuration);
+  };
+
   const toastConfig = {
     position: "top-right",
     autoClose: 3000,
@@ -105,6 +168,11 @@ function AppContent() {
 
     if (user?.role === "admin") {
       checkMockMode();
+    }
+
+    // Carregar duração preferida do usuário
+    if (user) {
+      loadDurationPreference();
     }
   }, [user]);
 
@@ -237,7 +305,7 @@ function AppContent() {
                 duracao={duracao}
                 onSelectTopic={getTemas}
                 onSelectTheme={getRoteiro}
-                onDurationChange={setDuracao}
+                onDurationChange={handleDurationChange}
                 onNarracoesGeradas={setNarracoesGeradas}
                 toastConfig={toastConfig}
               />

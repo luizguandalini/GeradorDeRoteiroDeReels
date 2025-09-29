@@ -153,9 +153,9 @@ router.post("/", async (req, res) => {
       configMap[config.chave] = config.valor;
     });
 
-    const elevenApiKey = configMap['ELEVEN_API_KEY'] || await getConfig('ELEVEN_API_KEY', req.user.id, 'ELEVEN_API_KEY');
-    const voiceId = configMap['VOICE_ID'] || await getConfig('VOICE_ID', req.user.id, 'VOICE_ID');
-    const elevenModelId = configMap['ELEVEN_MODEL_ID'] || await getConfig('ELEVEN_MODEL_ID', req.user.id, 'ELEVEN_MODEL_ID');
+    const elevenApiKey = configMap['ELEVEN_API_KEY'] || await getConfig('ELEVEN_API_KEY', null, 'ELEVEN_API_KEY');
+    const voiceId = configMap['VOICE_ID'] || await getConfig('VOICE_ID', null, 'VOICE_ID');
+    const elevenModelId = configMap['ELEVEN_MODEL_ID'] || await getConfig('ELEVEN_MODEL_ID', null, 'ELEVEN_MODEL_ID');
 
     if (!elevenApiKey || !voiceId || !elevenModelId) {
       return res.status(500).json({ 
