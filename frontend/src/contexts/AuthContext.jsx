@@ -17,8 +17,21 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('shaka_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [token, setToken] = useState(() => {
+    try {
+      return localStorage.getItem('shaka_token') || null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   const refreshTimerRef = useRef(null);
@@ -44,6 +57,23 @@ export const AuthProvider = ({ children }) => {
     setToken(accessToken);
     setUser(userData);
     applyAuthHeader(accessToken);
+    
+    // Persistir no localStorage
+    try {
+      if (accessToken) {
+        localStorage.setItem('shaka_token', accessToken);
+      } else {
+        localStorage.removeItem('shaka_token');
+      }
+      
+      if (userData) {
+        localStorage.setItem('shaka_user', JSON.stringify(userData));
+      } else {
+        localStorage.removeItem('shaka_user');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar dados no localStorage:', error);
+    }
   }, [applyAuthHeader]);
 
   const clearSession = useCallback(() => {
@@ -51,6 +81,14 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     applyAuthHeader(null);
+    
+    // Limpar localStorage
+    try {
+      localStorage.removeItem('shaka_token');
+      localStorage.removeItem('shaka_user');
+    } catch (error) {
+      console.error('Erro ao limpar dados do localStorage:', error);
+    }
   }, [applyAuthHeader, clearScheduledRefresh]);
 
   const scheduleTokenRefresh = useCallback((expiresInSeconds) => {
@@ -104,9 +142,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const bootstrap = async () => {
       try {
-        await refreshAccessToken();
+        // Se já temos token salvo, tentar validar/renovar
+        if (token) {
+          await refreshAccessToken();
+        }
       } catch {
-        // Sessão inexistente ou inválida; seguir sem usuário autenticado.
+        // Se falhar, limpar sessão
+        clearSession();
       } finally {
         setLoading(false);
       }
@@ -117,7 +159,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       clearScheduledRefresh();
     };
-  }, [refreshAccessToken, clearScheduledRefresh]);
+  }, [clearScheduledRefresh]);
 
   useEffect(() => {
     const requestInterceptor = axios.interceptors.request.use((config) => {
@@ -240,22 +282,32 @@ export const AuthProvider = ({ children }) => {
 
   const updateUser = useCallback((updater) => {
     setUser((prevUser) => {
+      let newUser;
       if (typeof updater === "function") {
-        return updater(prevUser);
+        newUser = updater(prevUser);
+      } else if (!prevUser) {
+        newUser = updater ?? null;
+      } else if (!updater) {
+        newUser = prevUser;
+      } else {
+        newUser = {
+          ...prevUser,
+          ...updater,
+        };
       }
-
-      if (!prevUser) {
-        return updater ?? null;
+      
+      // Persistir no localStorage
+      try {
+        if (newUser) {
+          localStorage.setItem('shaka_user', JSON.stringify(newUser));
+        } else {
+          localStorage.removeItem('shaka_user');
+        }
+      } catch (error) {
+        console.error('Erro ao salvar usuário atualizado no localStorage:', error);
       }
-
-      if (!updater) {
-        return prevUser;
-      }
-
-      return {
-        ...prevUser,
-        ...updater,
-      };
+      
+      return newUser;
     });
   }, []);
 
