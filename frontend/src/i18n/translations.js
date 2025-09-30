@@ -27,6 +27,8 @@ const translations = {
         durationRequired: "Please provide the video duration in seconds.",
         durationTooShort: "The minimum duration is 30 seconds.",
         generateScript: "Unable to generate the script.",
+        themeRequired: "Theme is required to generate the script.",
+        themeTooLong: "Theme must not exceed 500 characters.",
       },
     },
     login: {
@@ -248,6 +250,8 @@ const translations = {
         durationRequired: "Informe a duração do vídeo em segundos.",
         durationTooShort: "A duração mínima é de 30 segundos.",
         generateScript: "Não foi possível gerar o roteiro.",
+        themeRequired: "Tema é obrigatório para gerar o roteiro.",
+        themeTooLong: "O tema não pode exceder 500 caracteres.",
       },
     },
     login: {

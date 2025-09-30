@@ -73,6 +73,21 @@ router.post("/", async (req, res) => {
       ? requestedLanguage
       : normalizeLanguage(req.user?.language);
     
+    // Validar tema (deve ter no máximo 500 caracteres)
+    if (!tema || typeof tema !== 'string') {
+      const errorMessage = effectiveLanguage === 'en' 
+        ? 'Theme is required and must be a string'
+        : 'Tema é obrigatório e deve ser um texto';
+      return res.status(400).json({ error: errorMessage });
+    }
+    
+    if (tema.length > 500) {
+      const errorMessage = effectiveLanguage === 'en' 
+        ? 'Theme must not exceed 500 characters'
+        : 'O tema não pode exceder 500 caracteres';
+      return res.status(400).json({ error: errorMessage });
+    }
+    
     // Validar duração (deve ser um número inteiro entre 30 e 120)
     const duracaoInt = parseInt(duracao, 10);
     if (!duracao || isNaN(duracaoInt) || duracaoInt < 30 || duracaoInt > 120) {

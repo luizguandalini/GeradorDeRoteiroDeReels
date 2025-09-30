@@ -300,6 +300,17 @@ function AppContent() {
       return;
     }
 
+    // Validar limite de caracteres do tema (500 caracteres)
+    if (!tema || typeof tema !== 'string') {
+      toast.error(t("app.errors.themeRequired"), toastConfig);
+      return;
+    }
+
+    if (tema.length > 500) {
+      toast.error(t("app.errors.themeTooLong"), toastConfig);
+      return;
+    }
+
     try {
       setLoading(true);
       setSelectedTema(tema);
