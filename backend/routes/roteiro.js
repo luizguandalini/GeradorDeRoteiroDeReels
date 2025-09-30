@@ -67,8 +67,16 @@ router.post("/", async (req, res) => {
     }
 
     const { tema, duracao, language: languageFromBody } = req.body;
+    
+    // Validar language - deve ser exatamente 'pt-BR' ou 'en'
     const requestedLanguage =
       typeof languageFromBody === "string" ? languageFromBody.trim() : null;
+    if (requestedLanguage && !SUPPORTED_LANGUAGES.includes(requestedLanguage)) {
+      return res.status(400).json({ 
+        error: "Invalid language parameter. Only 'pt-BR' and 'en' are supported." 
+      });
+    }
+    
     const effectiveLanguage = SUPPORTED_LANGUAGES.includes(requestedLanguage)
       ? requestedLanguage
       : normalizeLanguage(req.user?.language);

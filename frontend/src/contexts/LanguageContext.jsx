@@ -5,6 +5,14 @@ const LanguageContext = createContext(null);
 
 const LOCAL_STORAGE_KEY = "preferredLanguage";
 
+// Idiomas suportados - deve corresponder ao backend
+const SUPPORTED_LANGUAGES = ["pt-BR", "en"];
+
+// Função para validar se o idioma é suportado
+const isValidLanguage = (language) => {
+  return SUPPORTED_LANGUAGES.includes(language);
+};
+
 const safeGetStoredLanguage = () => {
   if (typeof window === "undefined") {
     return null;
@@ -31,7 +39,11 @@ const safePersistLanguage = (language) => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguageState] = useState(() => safeGetStoredLanguage() || DEFAULT_LANGUAGE);
+  const [language, setLanguageState] = useState(() => {
+    const storedLanguage = safeGetStoredLanguage();
+    // Validar idioma armazenado, usar padrão se inválido
+    return isValidLanguage(storedLanguage) ? storedLanguage : DEFAULT_LANGUAGE;
+  });
   const [isBootstrapped, setIsBootstrapped] = useState(false);
 
   useEffect(() => {
@@ -41,6 +53,12 @@ export const LanguageProvider = ({ children }) => {
   }, [isBootstrapped]);
 
   const setLanguage = useCallback((nextLanguage, options = {}) => {
+    // Validar idioma antes de definir
+    if (!isValidLanguage(nextLanguage)) {
+      console.warn(`Idioma inválido: ${nextLanguage}. Usando idioma padrão: ${DEFAULT_LANGUAGE}`);
+      nextLanguage = DEFAULT_LANGUAGE;
+    }
+    
     const normalizedLanguage = nextLanguage || DEFAULT_LANGUAGE;
     setLanguageState(normalizedLanguage);
 
@@ -53,7 +71,9 @@ export const LanguageProvider = ({ children }) => {
     language,
     setLanguage,
     t: (key, variables) => translate(language, key, variables),
-    isBootstrapped
+    isBootstrapped,
+    isValidLanguage, // Exportar função de validação
+    supportedLanguages: SUPPORTED_LANGUAGES // Exportar idiomas suportados
   }), [language, setLanguage, isBootstrapped]);
 
   return (

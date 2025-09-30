@@ -69,6 +69,14 @@ router.post("/", async (req, res) => {
   try {
     const requestedLanguageRaw =
       typeof req.body.language === "string" ? req.body.language.trim() : null;
+    
+    // Validar language - deve ser exatamente 'pt-BR' ou 'en'
+    if (requestedLanguageRaw && !SUPPORTED_LANGUAGES.includes(requestedLanguageRaw)) {
+      return res.status(400).json({ 
+        error: "Invalid language parameter. Only 'pt-BR' and 'en' are supported." 
+      });
+    }
+    
     const requestedLanguage = SUPPORTED_LANGUAGES.includes(requestedLanguageRaw)
       ? requestedLanguageRaw
       : null;

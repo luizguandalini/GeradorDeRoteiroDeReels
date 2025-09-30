@@ -18,17 +18,17 @@ router.patch("/language", async (req, res) => {
   try {
     const { language } = req.body;
     const requestedLanguage = typeof language === "string" ? language.trim() : "";
-    const normalizedLanguage = SUPPORTED_LANGUAGES.includes(requestedLanguage)
-      ? requestedLanguage
-      : null;
-
-    if (!normalizedLanguage) {
-      return res.status(400).json({ error: "Idioma inválido" });
+    
+    // Validar language - deve ser exatamente 'pt-BR' ou 'en'
+    if (!requestedLanguage || !SUPPORTED_LANGUAGES.includes(requestedLanguage)) {
+      return res.status(400).json({ 
+        error: "Invalid language parameter. Only 'pt-BR' and 'en' are supported." 
+      });
     }
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
-      data: { language: normalizedLanguage },
+      data: { language: requestedLanguage },
       select: {
         id: true,
         email: true,
@@ -48,7 +48,7 @@ router.patch("/language", async (req, res) => {
       user: buildResponseUser(updatedUser)
     });
   } catch (error) {
-    console.error("Erro ao atualizar idioma do usuário:", error);
+    console.error("Erro ao atualizar idioma do usuï¿½rio:", error);
     return res.status(500).json({ error: "Erro ao atualizar idioma" });
   }
 });

@@ -15,7 +15,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import LanguageSwitch from "../LanguageSwitch/LanguageSwitch";
 import { useAuth } from "../../contexts/AuthContext";
-import { useTranslation } from "../../contexts/LanguageContext";
+import { useTranslation, useLanguage } from "../../contexts/LanguageContext";
 import "./Sidebar.css";
 
 const Sidebar = ({
@@ -26,15 +26,19 @@ const Sidebar = ({
   isCollapsed,
   setIsCollapsed,
 }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { user, updateUser, logout, isAdmin } = useAuth();
   const { t, language, setLanguage } = useTranslation();
-  const { user, isAdmin, logout, updateUser } = useAuth();
+  const { isValidLanguage } = useLanguage(); // Importar função de validação
   const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLanguageChange = useCallback(
     async (nextLanguage) => {
-      if (nextLanguage === language || isUpdatingLanguage) {
+      // Validar idioma antes de enviar para o backend
+      if (!isValidLanguage(nextLanguage)) {
+        console.error(`Idioma inválido: ${nextLanguage}`);
+        toast.error(t("common.messages.languageUpdateError"));
         return;
       }
 
@@ -64,7 +68,7 @@ const Sidebar = ({
         setIsUpdatingLanguage(false);
       }
     },
-    [isUpdatingLanguage, language, setLanguage, updateUser, t]
+    [language, setLanguage, updateUser, t, isValidLanguage]
   );
 
   const getGreetingDetails = () => {

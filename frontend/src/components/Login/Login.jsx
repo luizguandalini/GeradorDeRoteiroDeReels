@@ -1,10 +1,10 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import LanguageSwitch from "../LanguageSwitch/LanguageSwitch";
-import { useTranslation } from "../../contexts/LanguageContext";
+import { useTranslation, useLanguage } from "../../contexts/LanguageContext";
 import "./Login.css";
 
 const toastStyles = {
@@ -32,8 +32,9 @@ const normalizeMessage = (message) => {
 };
 
 const Login = () => {
-  const { t, language, setLanguage } = useTranslation();
   const { login, loginWithGoogle, updateUser } = useAuth();
+  const { t, language, setLanguage } = useTranslation();
+  const { isValidLanguage } = useLanguage(); // Importar função de validação
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -73,9 +74,15 @@ const Login = () => {
   );
 
   const persistLanguagePreference = useCallback(async (targetLanguage) => {
+    // Validar idioma antes de enviar para o backend
+    if (!isValidLanguage(targetLanguage)) {
+      console.error(`Idioma inválido: ${targetLanguage}`);
+      throw new Error("Idioma inválido");
+    }
+    
     const response = await axios.patch("/api/users/language", { language: targetLanguage });
     return response?.data?.user;
-  }, []);
+  }, [isValidLanguage]);
 
   const finalizeLanguagePreference = useCallback(
     async (userData) => {
