@@ -78,13 +78,13 @@ const translations = {
       estimateNote: "This is an estimate and may not be the exact duration.",
       options: {
         "30s": "30 seconds",
-        "60s": "1 minute", 
+        "60s": "1 minute",
         "90s": "1 min 30s",
-        "120s": "2 minutes"
-      }
+        "120s": "2 minutes",
+      },
     },
     theme: {
-      title: "AI Suggestions",
+      title: "Suggestions",
     },
     script: {
       title: "Script",
@@ -93,7 +93,7 @@ const translations = {
       title: "Narrations",
     },
     topicsSection: {
-      title: "Manage Topics",
+      title: "Topics",
       actions: {
         new: "New Topic",
         update: "Update",
@@ -302,12 +302,12 @@ const translations = {
       options: {
         "30s": "30 segundos",
         "60s": "1 minuto",
-        "90s": "1 min 30s", 
-        "120s": "2 minutos"
-      }
+        "90s": "1 min 30s",
+        "120s": "2 minutos",
+      },
     },
     theme: {
-      title: "Sugestões da IA",
+      title: "Sugestões",
     },
     script: {
       title: "Roteiro",
@@ -316,7 +316,7 @@ const translations = {
       title: "Narrações",
     },
     topicsSection: {
-      title: "Gerenciar Tópicos",
+      title: "Tópicos",
       actions: {
         new: "Novo Tópico",
         update: "Atualizar",
