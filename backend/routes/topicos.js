@@ -106,6 +106,10 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Nome do tópico é obrigatório" });
     }
 
+    if (nome.length > 500) {
+      return res.status(400).json({ error: "Nome do tópico não pode ter mais de 500 caracteres" });
+    }
+
     const topico = await prisma.userTopico.create({
       data: {
         nome: nome.trim(),
@@ -155,6 +159,11 @@ router.put("/:id", async (req, res) => {
 
     const { id } = req.params;
     const { nome, descricao, ativo } = req.body;
+
+    // Validar limite de caracteres para o nome se fornecido
+    if (nome && nome.length > 500) {
+      return res.status(400).json({ error: "Nome do tópico não pode ter mais de 500 caracteres" });
+    }
 
     const topico = await prisma.userTopico.update({
       where: { 
