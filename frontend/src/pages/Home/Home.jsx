@@ -18,6 +18,7 @@ const Home = ({
   onSelectTheme,
   onDurationChange,
   onNarracoesGeradas,
+  onSaveRoteiro,
   toastConfig,
 }) => {
   const [shouldRefreshAudio, setShouldRefreshAudio] = useState(false);
@@ -57,14 +58,13 @@ const Home = ({
 
       <ScriptSection
         roteiro={roteiro}
-        onNarracoesGeradas={onNarracoesGeradas}
-        onAudioGenerated={handleAudioGenerated}
+        onSaveRoteiro={onSaveRoteiro}
       />
-
-      <NarrationSection 
-        roteiro={roteiro} 
-        shouldRefresh={shouldRefreshAudio}
-        onRefreshComplete={handleAudioRefreshComplete}
+      <NarrationSection
+        roteiro={roteiro}
+        narracoesGeradas={narracoesGeradas}
+        onNarracoesGeradas={onNarracoesGeradas}
+        toastConfig={toastConfig}
       />
     </div>
   );

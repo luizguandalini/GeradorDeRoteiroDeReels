@@ -222,6 +222,35 @@ router.post("/", async (req, res) => {
       parsed = JSON.parse(conteudo);
       console.log("Conteúdo parseado:", parsed);
       
+      // Validar limites de caracteres
+      if (parsed.roteiro && Array.isArray(parsed.roteiro)) {
+        let totalNarracoes = 0;
+        let totalImagens = 0;
+        
+        for (const item of parsed.roteiro) {
+          if (item.narracao) {
+            totalNarracoes += item.narracao.length;
+          }
+          if (item.imagem) {
+            totalImagens += item.imagem.length;
+          }
+        }
+        
+        if (totalNarracoes > 2000) {
+          const errorMessage = effectiveLanguage === 'en' 
+            ? `Total narration characters (${totalNarracoes}) exceeds the limit of 2000 characters`
+            : `Total de caracteres das narrações (${totalNarracoes}) excede o limite de 2000 caracteres`;
+          return res.status(400).json({ error: errorMessage });
+        }
+        
+        if (totalImagens > 2000) {
+          const errorMessage = effectiveLanguage === 'en' 
+            ? `Total image/video description characters (${totalImagens}) exceeds the limit of 2000 characters`
+            : `Total de caracteres das descrições de imagem/vídeo (${totalImagens}) excede o limite de 2000 caracteres`;
+          return res.status(400).json({ error: errorMessage });
+        }
+      }
+      
       // Deletar roteiros antigos do usuário
       await prisma.userRoteiro.updateMany({
         where: {
@@ -266,6 +295,73 @@ router.post("/", async (req, res) => {
       console.error("Erro na configuração da requisição:", error.message);
     }
     res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT - Atualizar roteiro existente
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { roteiro } = req.body;
+    
+    // Verificar se o roteiro pertence ao usuário
+    const roteiroExistente = await prisma.userRoteiro.findFirst({
+      where: {
+        id: parseInt(id),
+        userId: req.user.id,
+        ativo: true
+      }
+    });
+    
+    if (!roteiroExistente) {
+      return res.status(404).json({ error: "Roteiro não encontrado" });
+    }
+    
+    // Validar limites de caracteres
+    if (roteiro && Array.isArray(roteiro)) {
+      let totalNarracoes = 0;
+      let totalImagens = 0;
+      
+      for (const item of roteiro) {
+        if (item.narracao) {
+          totalNarracoes += item.narracao.length;
+        }
+        if (item.imagem) {
+          totalImagens += item.imagem.length;
+        }
+      }
+      
+      const effectiveLanguage = normalizeLanguage(req.user?.language);
+      
+      if (totalNarracoes > 2000) {
+        const errorMessage = effectiveLanguage === 'en' 
+          ? `Total narration characters (${totalNarracoes}) exceeds the limit of 2000 characters`
+          : `Total de caracteres das narrações (${totalNarracoes}) excede o limite de 2000 caracteres`;
+        return res.status(400).json({ error: errorMessage });
+      }
+      
+      if (totalImagens > 2000) {
+        const errorMessage = effectiveLanguage === 'en' 
+          ? `Total image/video description characters (${totalImagens}) exceeds the limit of 2000 characters`
+          : `Total de caracteres das descrições de imagem/vídeo (${totalImagens}) excede o limite de 2000 caracteres`;
+        return res.status(400).json({ error: errorMessage });
+      }
+    }
+    
+    // Atualizar o roteiro no banco
+    const roteiroAtualizado = await prisma.userRoteiro.update({
+      where: { id: parseInt(id) },
+      data: {
+        conteudo: JSON.stringify({ roteiro })
+      }
+    });
+    
+    console.log("Roteiro atualizado com sucesso");
+    res.json({ roteiro, id: roteiroAtualizado.id });
+    
+  } catch (error) {
+    console.error("❌ Erro ao atualizar roteiro:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
 

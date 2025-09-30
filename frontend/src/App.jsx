@@ -141,6 +141,10 @@ function AppContent() {
       const roteiroResponse = await axios.get('/api/roteiro');
       if (roteiroResponse.data && roteiroResponse.data.roteiro && roteiroResponse.data.roteiro.length > 0) {
         setRoteiro(roteiroResponse.data.roteiro);
+        // Salvar o ID do roteiro para futuras atualizações
+        if (roteiroResponse.data.id) {
+          window.currentRoteiroId = roteiroResponse.data.id;
+        }
       }
 
       // Carregar últimos tópicos e temas
@@ -306,10 +310,44 @@ function AppContent() {
         language: language,
       });
       setRoteiro(res.data.roteiro);
+      // Salvar o ID do roteiro para futuras atualizações
+      if (res.data.id) {
+        window.currentRoteiroId = res.data.id;
+      }
     } catch {
       toast.error(t("app.errors.generateScript"), toastConfig);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Função para salvar roteiro editado
+  const saveRoteiro = async (editedRoteiro, roteiroId) => {
+    try {
+      if (!roteiroId) {
+        toast.error("ID do roteiro não encontrado", toastConfig);
+        return false;
+      }
+
+      const roteiroFormatted = editedRoteiro.map((step) => ({
+        narracao: step.nar || "",
+        imagem: step.img || ""
+      }));
+
+      await axios.put(`/api/roteiro/${roteiroId}`, {
+        roteiro: roteiroFormatted
+      });
+
+      setRoteiro(roteiroFormatted);
+      toast.success("Roteiro salvo com sucesso!", toastConfig);
+      return true;
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.error) {
+        toast.error(error.response.data.error, toastConfig);
+      } else {
+        toast.error("Erro ao salvar roteiro", toastConfig);
+      }
+      return false;
     }
   };
 
@@ -332,18 +370,19 @@ function AppContent() {
             path="/"
             element={
               <Home
-                selectedTopico={selectedTopico}
-                temas={temas}
-                selectedTema={selectedTema}
-                roteiro={roteiro}
-                narracoesGeradas={narracoesGeradas}
-                duracao={duracao}
-                onSelectTopic={getTemas}
-                onSelectTheme={getRoteiro}
-                onDurationChange={handleDurationChange}
-                onNarracoesGeradas={setNarracoesGeradas}
-                toastConfig={toastConfig}
-              />
+              selectedTopico={selectedTopico}
+              temas={temas}
+              selectedTema={selectedTema}
+              roteiro={roteiro}
+              narracoesGeradas={narracoesGeradas}
+              duracao={duracao}
+              onSelectTopic={getTemas}
+              onSelectTheme={getRoteiro}
+              onDurationChange={handleDurationChange}
+              onNarracoesGeradas={setNarracoesGeradas}
+              onSaveRoteiro={saveRoteiro}
+              toastConfig={toastConfig}
+            />
             }
           />
           <Route

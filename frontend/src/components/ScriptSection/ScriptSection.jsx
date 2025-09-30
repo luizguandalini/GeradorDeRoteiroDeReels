@@ -4,7 +4,7 @@ import Roteiro from '../Roteiro/Roteiro';
 import { useTranslation } from '../../contexts/LanguageContext';
 import './ScriptSection.css';
 
-const ScriptSection = ({ roteiro, onNarracoesGeradas, onAudioGenerated }) => {
+const ScriptSection = ({ roteiro, onSaveRoteiro }) => {
   const { t } = useTranslation();
 
   return (
@@ -13,11 +13,7 @@ const ScriptSection = ({ roteiro, onNarracoesGeradas, onAudioGenerated }) => {
         <FaFilm style={{ marginRight: "8px", color: "#e84118" }} />
         {t('script.title')}
       </h2>
-      <Roteiro 
-        roteiro={roteiro} 
-        onNarracoesGeradas={onNarracoesGeradas}
-        onAudioGenerated={onAudioGenerated}
-      />
+      <Roteiro roteiro={roteiro} onSaveRoteiro={onSaveRoteiro} />
     </div>
   );
 };
