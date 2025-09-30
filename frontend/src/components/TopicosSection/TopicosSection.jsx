@@ -37,6 +37,12 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
       return;
     }
 
+    // Validação adicional para limite de caracteres
+    if (formData.nome.length > 500) {
+      toast.error("Nome do tópico não pode ter mais de 500 caracteres", toastConfig);
+      return;
+    }
+
     try {
       setLoading(true);
       if (editingTopico) {
@@ -120,8 +126,12 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
                   setFormData({ ...formData, nome: event.target.value })
                 }
                 className="form-input"
+                maxLength={500}
                 required
               />
+              <div className="character-count">
+                {formData.nome.length}/500 caracteres
+              </div>
             </div>
             <div className="form-actions">
               <button type="submit" className="btn-save" disabled={loading}>
