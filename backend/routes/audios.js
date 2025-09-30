@@ -44,7 +44,7 @@ function getAudioInfo(userId) {
   const files = fs
     .readdirSync(pastaUsuario)
     .filter(
-      (f) => f.endsWith(".mp3") && f !== "silence.mp3"
+      (f) => f.endsWith(".mp3") && f !== "silence.mp3" && f.includes("final_")
     );
   
   // Ordenar os arquivos numericamente

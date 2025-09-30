@@ -5,56 +5,38 @@ import { toast } from "react-toastify";
 import { useTranslation } from "../../contexts/LanguageContext";
 import "./AudiosCard.css";
 
-export default function AudiosCard({ onAudioGenerated, onAudioDeleted }) {
+export default function AudiosCard({ onAudioGenerated, onAudioDeleted, shouldRefresh, onRefreshComplete }) {
   const { t } = useTranslation();
   const [audios, setAudios] = useState([]);
-  const [lastModified, setLastModified] = useState(null);
-  const intervalRef = useRef(null);
   const API = "/api/audios";
 
-  const carregar = useCallback(async (forceUpdate = false) => {
+  const carregar = useCallback(async () => {
     try {
-      const { data } = await axios.get(API, {
-        params: forceUpdate ? { force: true } : {},
-      });
-
-      const currentModified = JSON.stringify(data.audios);
-      if (currentModified !== lastModified || forceUpdate) {
-        setAudios(data.audios || []);
-        setLastModified(currentModified);
-        
-        // Notificar quando áudio é gerado ou removido
-        if (onAudioGenerated && data.audios && data.audios.length > 0) {
-          onAudioGenerated();
-        }
-        if (onAudioDeleted && (!data.audios || data.audios.length === 0)) {
-          onAudioDeleted();
-        }
+      const { data } = await axios.get(API);
+      setAudios(data.audios || []);
+      
+      // Notificar quando áudio é gerado ou removido
+      if (onAudioGenerated && data.audios && data.audios.length > 0) {
+        onAudioGenerated();
+      }
+      if (onAudioDeleted && (!data.audios || data.audios.length === 0)) {
+        onAudioDeleted();
       }
     } catch (error) {
       console.error(error);
     }
-  }, [API, lastModified, onAudioGenerated, onAudioDeleted]);
+  }, [API, onAudioGenerated, onAudioDeleted]);
 
-  const startPolling = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+  // Efeito para refresh sob demanda
+  useEffect(() => {
+    if (shouldRefresh) {
+      carregar().then(() => {
+        if (onRefreshComplete) {
+          onRefreshComplete();
+        }
+      });
     }
-
-    // Só fazer polling se há áudios sendo processados
-    if (audios.length > 0 && audios.some(audio => typeof audio === "string")) {
-      intervalRef.current = setInterval(() => {
-        carregar();
-      }, 3000);
-    }
-  }, [audios, carregar]);
-
-  const stopPolling = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
+  }, [shouldRefresh, carregar, onRefreshComplete]);
 
   const deletarTodos = async () => {
     try {
@@ -72,12 +54,12 @@ export default function AudiosCard({ onAudioGenerated, onAudioDeleted }) {
                   if (isMockMode) {
                     toast.dismiss();
                     toast.success(t("audios.messages.deleteSimulation"));
-                    carregar(true);
+                    carregar(); // Recarregar após deletar simulado
                   } else {
                     await axios.delete(API);
                     toast.dismiss();
                     toast.success(t("audios.messages.deleteSuccess"));
-                    carregar(true);
+                    carregar(); // Recarregar após deletar
                     if (onAudioDeleted) onAudioDeleted(); // Notificar que áudio foi deletado
                   }
                 } catch (error) {
@@ -142,36 +124,9 @@ export default function AudiosCard({ onAudioGenerated, onAudioDeleted }) {
   };
 
   useEffect(() => {
-    carregar(true);
-    startPolling();
-
-    return () => {
-      stopPolling();
-    };
-  }, [carregar, startPolling, stopPolling]);
-
-  useEffect(() => {
-    if (intervalRef.current) {
-      startPolling();
-    }
-  }, [audios.length, startPolling]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        stopPolling();
-      } else {
-        carregar(true);
-        startPolling();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [carregar, startPolling, stopPolling]);
+    // Carregar áudios apenas uma vez ao montar o componente
+    carregar();
+  }, [carregar]);
 
   return (
     <div className="audio-card">

@@ -4,7 +4,7 @@ import AudiosCard from '../AudiosCard/AudiosCard';
 import { useTranslation } from '../../contexts/LanguageContext';
 import './NarrationSection.css';
 
-const NarrationSection = ({ roteiro, onAudioStateChange }) => {
+const NarrationSection = ({ roteiro, onAudioStateChange, shouldRefresh, onRefreshComplete }) => {
   const { t } = useTranslation();
 
   return (
@@ -16,6 +16,8 @@ const NarrationSection = ({ roteiro, onAudioStateChange }) => {
       <AudiosCard 
         onAudioGenerated={() => onAudioStateChange && onAudioStateChange(true)}
         onAudioDeleted={() => onAudioStateChange && onAudioStateChange(false)}
+        shouldRefresh={shouldRefresh}
+        onRefreshComplete={onRefreshComplete}
       />
     </div>
   );

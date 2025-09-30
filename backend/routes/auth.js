@@ -26,11 +26,8 @@ const REFRESH_COOKIE_NAME = 'refreshToken';
 const REFRESH_TOKEN_EXPIRATION_MS = REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000;
 
 const buildUserResponse = (user) => ({
-  id: user.id,
-  email: user.email,
   name: user.name,
-  role: user.role,
-  provider: user.provider,
+  role: user.role, // Necessário para controle de acesso no frontend
   language: user.language
 });
 

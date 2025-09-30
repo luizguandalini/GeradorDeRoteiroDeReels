@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import RoadmapSection from "../../components/RoadmapSection/RoadmapSection";
 import TopicosSection from "../../components/TopicosSection/TopicosSection";
 import ThemeSection from "../../components/ThemeSection/ThemeSection";
@@ -20,6 +20,16 @@ const Home = ({
   onNarracoesGeradas,
   toastConfig,
 }) => {
+  const [shouldRefreshAudio, setShouldRefreshAudio] = useState(false);
+
+  const handleAudioGenerated = () => {
+    setShouldRefreshAudio(true);
+  };
+
+  const handleAudioRefreshComplete = () => {
+    setShouldRefreshAudio(false);
+  };
+
   return (
     <div className="home-container">
       {/* Roadmap de passos */}
@@ -48,9 +58,14 @@ const Home = ({
       <ScriptSection
         roteiro={roteiro}
         onNarracoesGeradas={onNarracoesGeradas}
+        onAudioGenerated={handleAudioGenerated}
       />
 
-      <NarrationSection roteiro={roteiro} />
+      <NarrationSection 
+        roteiro={roteiro} 
+        shouldRefresh={shouldRefreshAudio}
+        onRefreshComplete={handleAudioRefreshComplete}
+      />
     </div>
   );
 };

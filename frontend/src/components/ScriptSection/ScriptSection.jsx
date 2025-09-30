@@ -1,10 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { FaFilm } from 'react-icons/fa';
 import Roteiro from '../Roteiro/Roteiro';
 import { useTranslation } from '../../contexts/LanguageContext';
 import './ScriptSection.css';
 
-const ScriptSection = ({ roteiro, onNarracoesGeradas }) => {
+const ScriptSection = ({ roteiro, onNarracoesGeradas, onAudioGenerated }) => {
   const { t } = useTranslation();
 
   return (
@@ -13,7 +13,11 @@ const ScriptSection = ({ roteiro, onNarracoesGeradas }) => {
         <FaFilm style={{ marginRight: "8px", color: "#e84118" }} />
         {t('script.title')}
       </h2>
-      <Roteiro roteiro={roteiro} onNarracoesGeradas={onNarracoesGeradas} />
+      <Roteiro 
+        roteiro={roteiro} 
+        onNarracoesGeradas={onNarracoesGeradas}
+        onAudioGenerated={onAudioGenerated}
+      />
     </div>
   );
 };

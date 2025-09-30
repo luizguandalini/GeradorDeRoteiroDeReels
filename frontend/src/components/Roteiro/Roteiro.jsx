@@ -5,7 +5,7 @@ import jsPDF from "jspdf";
 import { toast } from "react-toastify";
 import "./Roteiro.css";
 
-function Roteiro({ roteiro, onNarracoesGeradas }) {
+function Roteiro({ roteiro, onNarracoesGeradas, onAudioGenerated }) {
   const [texto, setTexto] = useState("");
 
   useEffect(() => {
@@ -73,11 +73,16 @@ function Roteiro({ roteiro, onNarracoesGeradas }) {
     }
 
     try {
-      // Gerar diretamente se não há narração existente
+      // Gerar áudio
       await axios.post("/api/narracoes", { narracoes });
       toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
+      
+      // Notificar que áudio foi gerado
       if (onNarracoesGeradas) {
         onNarracoesGeradas(true);
+      }
+      if (onAudioGenerated) {
+        onAudioGenerated(); // Trigger refresh do AudiosCard
       }
     } catch (error) {
       console.error("Erro ao verificar/gerar narração:", error);
