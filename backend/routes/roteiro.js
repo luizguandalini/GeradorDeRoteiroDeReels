@@ -228,12 +228,23 @@ router.post("/", async (req, res) => {
         let totalImagens = 0;
         
         for (const item of parsed.roteiro) {
-          if (item.narracao) {
-            totalNarracoes += item.narracao.length;
+          // Validar que nenhum combo tenha campos vazios
+          if (!item.narracao || !item.narracao.trim()) {
+            const errorMessage = effectiveLanguage === 'en' 
+              ? 'All narration fields must be filled'
+              : 'Todos os campos de narração devem ser preenchidos';
+            return res.status(400).json({ error: errorMessage });
           }
-          if (item.imagem) {
-            totalImagens += item.imagem.length;
+          
+          if (!item.imagem || !item.imagem.trim()) {
+            const errorMessage = effectiveLanguage === 'en' 
+              ? 'All image/video description fields must be filled'
+              : 'Todos os campos de descrição de imagem/vídeo devem ser preenchidos';
+            return res.status(400).json({ error: errorMessage });
           }
+          
+          totalNarracoes += item.narracao.length;
+          totalImagens += item.imagem.length;
         }
         
         if (totalNarracoes > 2000) {
@@ -304,6 +315,9 @@ router.put("/:id", async (req, res) => {
     const { id } = req.params;
     const { roteiro } = req.body;
     
+    // Determinar idioma efetivo para mensagens de erro
+    const effectiveLanguage = normalizeLanguage(req.user?.language);
+    
     // Verificar se o roteiro pertence ao usuário
     const roteiroExistente = await prisma.userRoteiro.findFirst({
       where: {
@@ -314,7 +328,10 @@ router.put("/:id", async (req, res) => {
     });
     
     if (!roteiroExistente) {
-      return res.status(404).json({ error: "Roteiro não encontrado" });
+      const errorMessage = effectiveLanguage === 'en' 
+        ? 'Script not found'
+        : 'Roteiro não encontrado';
+      return res.status(404).json({ error: errorMessage });
     }
     
     // Validar limites de caracteres
@@ -323,15 +340,24 @@ router.put("/:id", async (req, res) => {
       let totalImagens = 0;
       
       for (const item of roteiro) {
-        if (item.narracao) {
-          totalNarracoes += item.narracao.length;
+        // Validar que nenhum combo tenha campos vazios
+        if (!item.narracao || !item.narracao.trim()) {
+          const errorMessage = effectiveLanguage === 'en' 
+            ? 'All narration fields must be filled'
+            : 'Todos os campos de narração devem ser preenchidos';
+          return res.status(400).json({ error: errorMessage });
         }
-        if (item.imagem) {
-          totalImagens += item.imagem.length;
+        
+        if (!item.imagem || !item.imagem.trim()) {
+          const errorMessage = effectiveLanguage === 'en' 
+            ? 'All image/video description fields must be filled'
+            : 'Todos os campos de descrição de imagem/vídeo devem ser preenchidos';
+          return res.status(400).json({ error: errorMessage });
         }
+        
+        totalNarracoes += item.narracao.length;
+        totalImagens += item.imagem.length;
       }
-      
-      const effectiveLanguage = normalizeLanguage(req.user?.language);
       
       if (totalNarracoes > 2000) {
         const errorMessage = effectiveLanguage === 'en' 

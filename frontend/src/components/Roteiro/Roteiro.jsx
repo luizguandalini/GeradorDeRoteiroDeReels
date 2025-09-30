@@ -12,6 +12,10 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
   const [tempValue, setTempValue] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [addPosition, setAddPosition] = useState(1);
+  const [newComboData, setNewComboData] = useState({
+    narracao: '',
+    imagem: ''
+  });
 
   useEffect(() => {
     if (Array.isArray(roteiro) && roteiro.length > 0) {
@@ -119,26 +123,38 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
 
   // Função para adicionar combo
   const addStep = async () => {
-    const position = parseInt(addPosition) - 1;
-    
-    // Verificar se adicionar um combo vazio não excederá o limite
-    const wouldExceedLimit = getTotalCharacters('nar') > 1900 || getTotalCharacters('img') > 1900;
-    if (wouldExceedLimit) {
-      toast.error("Não é possível adicionar mais combos. Limite de caracteres próximo ao máximo. Edite ou remova algum combo primeiro.");
+    // Validar se os campos obrigatórios estão preenchidos
+    if (!newComboData.narracao.trim() || !newComboData.imagem.trim()) {
+      alert("É obrigatório preencher tanto a narração quanto a descrição da imagem/vídeo.");
       return;
     }
 
-    const newStep = { nar: "", img: "" };
+    const position = parseInt(addPosition) - 1;
+    
+    const newCombo = {
+      nar: newComboData.narracao.trim(),
+      img: newComboData.imagem.trim()
+    };
+
+    // Inserir o novo combo na posição especificada
     const newSteps = [...editingSteps];
-    newSteps.splice(position, 0, newStep);
-    setEditingSteps(newSteps);
-    updateTextoFromSteps(newSteps);
+    newSteps.splice(position, 0, newCombo);
+
+    // Renumerar todos os combos
+    const renumberedSteps = newSteps.map((step, index) => ({
+      ...step,
+      numero: index + 1
+    }));
+
+    setEditingSteps(renumberedSteps);
+    updateTextoFromSteps(renumberedSteps);
     setShowAddForm(false);
     setAddPosition(1);
+    setNewComboData({ narracao: '', imagem: '' });
     
     // Salvar no backend
     if (onSaveRoteiro) {
-      await onSaveRoteiro(newSteps, window.currentRoteiroId);
+      await onSaveRoteiro(renumberedSteps, window.currentRoteiroId);
     }
     
     toast.success(`Combo adicionado na posição ${addPosition}!`);
@@ -409,11 +425,51 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
                 onChange={(e) => setAddPosition(e.target.value)}
               />
             </label>
+            
+            <label>
+              Narração: *
+              <textarea
+                value={newComboData.narracao}
+                onChange={(e) => setNewComboData(prev => ({ ...prev, narracao: e.target.value }))}
+                placeholder="Digite a narração (obrigatório)..."
+                className="add-form-textarea"
+                required
+              />
+              <div className="char-counter-small">
+                {newComboData.narracao.length}/2000 caracteres
+              </div>
+            </label>
+            
+            <label>
+              Imagem/Vídeo: *
+              <textarea
+                value={newComboData.imagem}
+                onChange={(e) => setNewComboData(prev => ({ ...prev, imagem: e.target.value }))}
+                placeholder="Digite a descrição da imagem/vídeo (obrigatório)..."
+                className="add-form-textarea"
+                required
+              />
+              <div className="char-counter-small">
+                {newComboData.imagem.length}/2000 caracteres
+              </div>
+            </label>
+            
             <div className="add-form-actions">
-              <button className="btn-save" onClick={addStep}>
+              <button 
+                className="btn-save" 
+                onClick={addStep}
+                disabled={!newComboData.narracao.trim() || !newComboData.imagem.trim()}
+              >
                 <FaPlus /> Adicionar
               </button>
-              <button className="btn-cancel" onClick={() => setShowAddForm(false)}>
+              <button 
+                className="btn-cancel" 
+                onClick={() => {
+                  setShowAddForm(false);
+                  setNewComboData({ narracao: '', imagem: '' });
+                  setAddPosition(1);
+                }}
+              >
                 <FaTimes /> Cancelar
               </button>
             </div>
