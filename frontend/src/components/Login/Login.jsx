@@ -24,6 +24,10 @@ const toastStyles = {
   },
 };
 
+// Constantes para limites de caracteres
+const MAX_EMAIL_LENGTH = 254; // RFC 5321 padrão para email
+const MAX_PASSWORD_LENGTH = 128; // Limite razoável para senhas
+
 const normalizeMessage = (message) => {
   if (!message) {
     return "";
@@ -199,9 +203,18 @@ const Login = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+    
+    // Aplicar limites de caracteres
+    let limitedValue = value;
+    if (name === 'email' && value.length > MAX_EMAIL_LENGTH) {
+      limitedValue = value.substring(0, MAX_EMAIL_LENGTH);
+    } else if (name === 'password' && value.length > MAX_PASSWORD_LENGTH) {
+      limitedValue = value.substring(0, MAX_PASSWORD_LENGTH);
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: limitedValue,
     }));
 
     if (errors[name]) {
@@ -228,13 +241,18 @@ const Login = () => {
 
     const validationErrors = {};
 
-    if (!formData.email.trim()) {
+    // Validação de limite de caracteres
+    if (formData.email.length > MAX_EMAIL_LENGTH) {
+      validationErrors.email = `Email deve ter no máximo ${MAX_EMAIL_LENGTH} caracteres`;
+    } else if (!formData.email.trim()) {
       validationErrors.email = t("login.validation.emailRequired");
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       validationErrors.email = t("login.validation.emailInvalid");
     }
 
-    if (!formData.password.trim()) {
+    if (formData.password.length > MAX_PASSWORD_LENGTH) {
+      validationErrors.password = `Senha deve ter no máximo ${MAX_PASSWORD_LENGTH} caracteres`;
+    } else if (!formData.password.trim()) {
       validationErrors.password = t("login.validation.passwordRequired");
     }
 

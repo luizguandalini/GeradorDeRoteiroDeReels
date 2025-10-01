@@ -9,8 +9,32 @@ import path from 'path';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Constantes para limites de caracteres
+const MAX_EMAIL_LENGTH = 254; // RFC 5321 padrão para email
+const MAX_PASSWORD_LENGTH = 128; // Limite razoável para senhas
+const MAX_NAME_LENGTH = 100; // Limite para nomes de usuário
+
 // Aplicar middleware de autenticação em todas as rotas
 router.use(authenticateToken);
+
+// Função para validar limites de entrada
+const validateInputLimits = (data) => {
+  const errors = [];
+  
+  if (data.email && data.email.length > MAX_EMAIL_LENGTH) {
+    errors.push(`Email deve ter no máximo ${MAX_EMAIL_LENGTH} caracteres`);
+  }
+  
+  if (data.password && data.password.length > MAX_PASSWORD_LENGTH) {
+    errors.push(`Senha deve ter no máximo ${MAX_PASSWORD_LENGTH} caracteres`);
+  }
+  
+  if (data.name && data.name.length > MAX_NAME_LENGTH) {
+    errors.push(`Nome deve ter no máximo ${MAX_NAME_LENGTH} caracteres`);
+  }
+  
+  return errors;
+};
 
 const buildResponseUser = (user) => ({
   id: user.id,
@@ -186,12 +210,86 @@ router.post("/admin/create", requireAdmin, async (req, res) => {
   }
 });
 
+// POST /api/users/admin - Criar usuário (ADMIN ONLY)
+router.post("/admin", requireAdmin, async (req, res) => {
+  try {
+    const { name, email, password, role = 'GENERAL', active = true, language = 'pt-BR' } = req.body;
+
+    // Validar limites de caracteres
+    const validationErrors = validateInputLimits({ email, password, name });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: validationErrors.join(', ') });
+    }
+
+    // Validações básicas
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "Nome, email e senha são obrigatórios" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        error: "A senha deve ter pelo menos 6 caracteres" 
+      });
+    }
+
+    // Verificar se email já existe
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ 
+        error: "Email já está em uso" 
+      });
+    }
+
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Criar usuário
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: 'GENERAL', // Sempre usuário normal
+        provider: 'CREDENTIALS'
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        provider: true,
+        language: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    res.status(201).json({
+      message: "Usuário criado com sucesso",
+      user: buildResponseUser(newUser)
+    });
+  } catch (error) {
+    console.error("Erro ao criar usuário:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
 // PUT /api/users/admin/:id - Editar usuário (ADMIN ONLY)
 router.put("/admin/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, password, role, active, language } = req.body;
     const userId = parseInt(id);
+
+    // Validar limites de caracteres
+    const validationErrors = validateInputLimits({ email, password, name });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: validationErrors.join(', ') });
+    }
 
     if (!userId) {
       return res.status(400).json({ error: "ID de usuário inválido" });

@@ -5,8 +5,42 @@ import { authenticateToken } from '../middleware/auth.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Constantes para limites de caracteres
+const MAX_CHAVE_LENGTH = 100; // Limite para chave de configuração
+const MAX_VALOR_LENGTH = 1000; // Limite para valor de configuração
+const MAX_NOME_LENGTH = 200; // Limite para nome de configuração
+const MAX_DESCRICAO_LENGTH = 500; // Limite para descrição
+const MAX_CATEGORIA_LENGTH = 100; // Limite para categoria
+
 // Aplicar middleware de autenticação a todas as rotas
 router.use(authenticateToken);
+
+// Função para validar limites de entrada
+const validateConfigInputLimits = (data) => {
+  const errors = [];
+  
+  if (data.chave && data.chave.length > MAX_CHAVE_LENGTH) {
+    errors.push(`Chave deve ter no máximo ${MAX_CHAVE_LENGTH} caracteres`);
+  }
+  
+  if (data.valor && data.valor.length > MAX_VALOR_LENGTH) {
+    errors.push(`Valor deve ter no máximo ${MAX_VALOR_LENGTH} caracteres`);
+  }
+  
+  if (data.nome && data.nome.length > MAX_NOME_LENGTH) {
+    errors.push(`Nome deve ter no máximo ${MAX_NOME_LENGTH} caracteres`);
+  }
+  
+  if (data.descricao && data.descricao.length > MAX_DESCRICAO_LENGTH) {
+    errors.push(`Descrição deve ter no máximo ${MAX_DESCRICAO_LENGTH} caracteres`);
+  }
+  
+  if (data.categoria && data.categoria.length > MAX_CATEGORIA_LENGTH) {
+    errors.push(`Categoria deve ter no máximo ${MAX_CATEGORIA_LENGTH} caracteres`);
+  }
+  
+  return errors;
+};
 
 // GET - Listar configurações do usuário
 router.get('/', async (req, res) => {
@@ -52,6 +86,12 @@ router.post('/', async (req, res) => {
   try {
     const { chave, valor, nome, descricao, categoria } = req.body;
     
+    // Validar limites de caracteres
+    const validationErrors = validateConfigInputLimits({ chave, valor, nome, descricao, categoria });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: validationErrors.join(', ') });
+    }
+    
     if (!chave || !valor || !nome || !descricao || !categoria) {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
@@ -81,6 +121,12 @@ router.post('/', async (req, res) => {
 router.put('/duration-preference', async (req, res) => {
   try {
     const { chave, valor, nome, descricao, categoria } = req.body;
+    
+    // Validar limites de caracteres
+    const validationErrors = validateConfigInputLimits({ chave, valor, nome, descricao, categoria });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: validationErrors.join(', ') });
+    }
     
     // Verificar se a configuração já existe
     const existingConfig = await prisma.userConfiguracao.findFirst({
@@ -132,6 +178,12 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { chave, valor, nome, descricao, categoria, ativo } = req.body;
+    
+    // Validar limites de caracteres
+    const validationErrors = validateConfigInputLimits({ chave, valor, nome, descricao, categoria });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: validationErrors.join(', ') });
+    }
     
     const configuracao = await prisma.userConfiguracao.update({
       where: { 

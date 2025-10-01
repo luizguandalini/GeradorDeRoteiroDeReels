@@ -8,7 +8,11 @@ import { PrismaClient } from '@prisma/client';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// JWT Secret (em produção, use uma variável de ambiente)
+// Constantes para limites de caracteres
+const MAX_EMAIL_LENGTH = 254; // RFC 5321 padrão para email
+const MAX_PASSWORD_LENGTH = 128; // Limite razoável para senhas
+const MAX_NAME_LENGTH = 100; // Limite para nomes de usuário
+
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
@@ -201,10 +205,35 @@ const upsertSocialUser = async ({ email, name, provider, providerId }) => {
   });
 };
 
+// Função para validar limites de entrada
+const validateInputLimits = (data) => {
+  const errors = [];
+  
+  if (data.email && data.email.length > MAX_EMAIL_LENGTH) {
+    errors.push(`Email deve ter no máximo ${MAX_EMAIL_LENGTH} caracteres`);
+  }
+  
+  if (data.password && data.password.length > MAX_PASSWORD_LENGTH) {
+    errors.push(`Senha deve ter no máximo ${MAX_PASSWORD_LENGTH} caracteres`);
+  }
+  
+  if (data.name && data.name.length > MAX_NAME_LENGTH) {
+    errors.push(`Nome deve ter no máximo ${MAX_NAME_LENGTH} caracteres`);
+  }
+  
+  return errors;
+};
+
 // Registro de usuário
 router.post('/register', async (req, res) => {
   try {
     const { email, password, name, role = 'GENERAL' } = req.body;
+
+    // Validar limites de caracteres
+    const validationErrors = validateInputLimits({ email, password, name });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: validationErrors.join(', ') });
+    }
 
     const normalizedEmail = email?.trim().toLowerCase();
 
@@ -258,6 +287,12 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // Validar limites de caracteres
+    const validationErrors = validateInputLimits({ email, password });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ error: validationErrors.join(', ') });
+    }
 
     // Buscar usuário
     const user = await prisma.user.findUnique({
