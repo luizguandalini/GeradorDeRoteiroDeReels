@@ -288,6 +288,14 @@ function AppContent() {
     }
   };
 
+  const handleSuggestionsGenerated = (newTemas, topico) => {
+    setTemas(newTemas);
+    setSelectedTopico(topico);
+    setSelectedTema(null);
+    setRoteiro([]);
+    setNarracoesGeradas(false);
+  };
+
   const getRoteiro = async (tema) => {
     const duracaoInt = parseInt(duracao, 10);
 
@@ -393,6 +401,7 @@ function AppContent() {
               onDurationChange={handleDurationChange}
               onNarracoesGeradas={setNarracoesGeradas}
               onSaveRoteiro={saveRoteiro}
+              onSuggestionsGenerated={handleSuggestionsGenerated}
               toastConfig={toastConfig}
             />
             }

@@ -19,6 +19,7 @@ const Home = ({
   onDurationChange,
   onNarracoesGeradas,
   onSaveRoteiro,
+  onSuggestionsGenerated,
   toastConfig,
 }) => {
   const [shouldRefreshAudio, setShouldRefreshAudio] = useState(false);
@@ -45,6 +46,7 @@ const Home = ({
       <TopicosSection
         selectedTopico={selectedTopico}
         onSelectTopic={onSelectTopic}
+        onSuggestionsGenerated={onSuggestionsGenerated}
         toastConfig={toastConfig}
       />
 
