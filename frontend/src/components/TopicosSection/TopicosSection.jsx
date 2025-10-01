@@ -38,8 +38,11 @@ const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
     }
 
     // Validação adicional para limite de caracteres
-    if (formData.nome.length > 500) {
-      toast.error("Nome do tópico não pode ter mais de 500 caracteres", toastConfig);
+    if (formData.nome.length > 200) {
+      toast.error(
+        "Nome do tópico não pode ter mais de 200 caracteres",
+        toastConfig
+      );
       return;
     }
 
