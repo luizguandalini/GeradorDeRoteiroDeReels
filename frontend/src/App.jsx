@@ -13,6 +13,7 @@ import Header from "./components/Header/Header";
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Home from "./pages/Home/Home";
+import Carrossel from "./pages/Carrossel/Carrossel";
 import Configuracoes from "./pages/Configuracoes/Configuracoes";
 import Consumo from "./pages/Consumo/Consumo";
 import GerenciamentoUsuarios from "./pages/GerenciamentoUsuarios/GerenciamentoUsuarios";
@@ -72,7 +73,68 @@ function AppContent() {
   const [narracoesGeradas, setNarracoesGeradas] = useState([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Função para salvar duração preferida do usuário
+  // Estados para carrossel
+  const [temasCarrossel, setTemasCarrossel] = useState([]);
+  const [selectedTemaCarrossel, setSelectedTemaCarrossel] = useState("");
+  const [carrossel, setCarrossel] = useState([]);
+  const [quantidade, setQuantidade] = useState(8); // Padrão 8 slides
+
+  // Função para salvar quantidade preferida do usuário
+  const saveQuantidadePreference = async (newQuantidade) => {
+    if (user?.role === 'admin') {
+      // Para usuários admin, salvar no banco de dados
+      try {
+        await axios.put('/api/configuracoes/quantidade-preference', {
+          chave: 'PREFERRED_QUANTIDADE',
+          valor: newQuantidade.toString(),
+          nome: 'Quantidade Preferida de Slides',
+          descricao: 'Quantidade preferida do usuário para geração de carrosseis',
+          categoria: 'preferencias'
+        });
+      } catch (error) {
+        console.error('Erro ao salvar quantidade preferida:', error);
+      }
+    } else {
+      // Para usuários comuns, salvar no localStorage
+      try {
+        localStorage.setItem('preferredQuantidade', newQuantidade.toString());
+      } catch (error) {
+        console.error('Erro ao salvar quantidade no localStorage:', error);
+      }
+    }
+  };
+
+  // Função para carregar quantidade preferida do usuário
+  const loadQuantidadePreference = async () => {
+    if (user?.role === 'admin') {
+      // Para usuários admin, carregar do banco de dados
+      try {
+        const response = await axios.get('/api/configuracoes/PREFERRED_QUANTIDADE');
+        if (response.data && response.data.valor) {
+          const savedQuantidade = parseInt(response.data.valor, 10);
+          if (savedQuantidade >= 2 && savedQuantidade <= 8) {
+            setQuantidade(savedQuantidade);
+          }
+        }
+      } catch (error) {
+        // Se não encontrar a configuração, mantém o padrão (8)
+        console.log('Quantidade preferida não encontrada, usando padrão');
+      }
+    } else {
+      // Para usuários comuns, carregar do localStorage
+      try {
+        const savedQuantidade = localStorage.getItem('preferredQuantidade');
+        if (savedQuantidade) {
+          const quantidade = parseInt(savedQuantidade, 10);
+          if (quantidade >= 2 && quantidade <= 8) {
+            setQuantidade(quantidade);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar quantidade do localStorage:', error);
+      }
+    }
+  };
   const saveDurationPreference = async (newDuration) => {
     if (user?.role === 'admin') {
       // Para usuários admin, salvar no banco de dados
@@ -148,6 +210,20 @@ function AppContent() {
         }
       }
 
+      // Carregar último carrossel
+      try {
+        const carrosselResponse = await axios.get('/api/carrossel');
+        if (carrosselResponse.data && carrosselResponse.data.carrossel && carrosselResponse.data.carrossel.length > 0) {
+          setCarrossel(carrosselResponse.data.carrossel);
+          // Salvar o ID do carrossel para futuras atualizações
+          if (carrosselResponse.data.id) {
+            window.currentCarrosselId = carrosselResponse.data.id;
+          }
+        }
+      } catch (error) {
+        console.log('Nenhum carrossel anterior encontrado');
+      }
+
       // Carregar últimos tópicos e temas
       try {
         const topicosResponse = await axios.get('/api/topicos');
@@ -163,6 +239,16 @@ function AppContent() {
             }
           } catch (error) {
             console.log('Nenhum tema anterior encontrado para este tópico');
+          }
+
+          // Carregar temas de carrossel do último tópico
+          try {
+            const temasCarrosselResponse = await axios.get(`/api/temas-carrossel/${ultimoTopico.id}`);
+            if (temasCarrosselResponse.data && temasCarrosselResponse.data.temas && temasCarrosselResponse.data.temas.length > 0) {
+              setTemasCarrossel(temasCarrosselResponse.data.temas);
+            }
+          } catch (error) {
+            console.log('Nenhum tema de carrossel anterior encontrado para este tópico');
           }
         }
       } catch (error) {
@@ -212,7 +298,8 @@ function AppContent() {
     // Carregar duração preferida do usuário
     if (user) {
       loadDurationPreference();
-      loadLastData(); // Carregar últimas sugestões e roteiro
+      loadQuantidadePreference();
+      loadLastData();
     }
   }, [user]);
 
@@ -371,6 +458,102 @@ function AppContent() {
     }
   };
 
+  // Funções para carrossel
+  const getTemasCarrossel = async (topico) => {
+    try {
+      setLoading(true);
+      setSelectedTopico(topico);
+      setSelectedTemaCarrossel(null);
+      setCarrossel([]);
+
+      const res = await axios.post("/api/temas-carrossel", {
+        topicoId: topico.id,
+        language: language,
+      });
+      setTemasCarrossel(res.data.temas);
+    } catch {
+      toast.error(t("app.errors.loadTopics"), toastConfig);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSuggestionsCarrosselGenerated = (newTemas, topico) => {
+    setTemasCarrossel(newTemas);
+    setSelectedTopico(topico);
+    setSelectedTemaCarrossel(null);
+    setCarrossel([]);
+  };
+
+  const getCarrossel = async (tema) => {
+    const quantidadeInt = parseInt(quantidade, 10);
+
+    if (!quantidade || quantidadeInt <= 0) {
+      toast.warn(t("app.errors.quantidadeRequired"), toastConfig);
+      return;
+    }
+
+    if (quantidadeInt < 2) {
+      toast.warn(t("app.errors.quantidadeTooShort"), toastConfig);
+      return;
+    }
+
+    if (quantidadeInt > 8) {
+      toast.warn(t("app.errors.quantidadeTooLong"), toastConfig);
+      return;
+    }
+
+    // Validar limite de caracteres do tema (500 caracteres)
+    if (!tema || typeof tema !== 'string') {
+      toast.error(t("app.errors.themeRequired"), toastConfig);
+      return;
+    }
+
+    if (tema.length > 500) {
+      toast.error(t("app.errors.themeTooLong"), toastConfig);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setSelectedTemaCarrossel(tema);
+      const res = await axios.post("/api/carrossel", {
+        tema,
+        quantidade,
+        language: language,
+      });
+      setCarrossel(res.data.carrossel);
+      // Salvar o ID do carrossel para futuras atualizações
+      if (res.data.id) {
+        window.currentCarrosselId = res.data.id;
+      }
+    } catch {
+      toast.error(t("app.errors.generateCarrossel"), toastConfig);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveCarrossel = async (novoCarrossel) => {
+    try {
+      if (window.currentCarrosselId) {
+        await axios.put(`/api/carrossel/${window.currentCarrosselId}`, {
+          carrossel: novoCarrossel,
+        });
+      }
+      setCarrossel(novoCarrossel);
+    } catch (error) {
+      console.error("Erro ao salvar carrossel:", error);
+      throw error;
+    }
+  };
+
+  // Função personalizada para alterar quantidade que também salva a preferência
+  const handleQuantidadeChange = async (newQuantidade) => {
+    setQuantidade(newQuantidade);
+    await saveQuantidadePreference(newQuantidade);
+  };
+
   return (
     <div className={`app-container ${darkMode ? "dark-theme" : ""}`}>
       <Sidebar
@@ -404,6 +587,24 @@ function AppContent() {
               onSuggestionsGenerated={handleSuggestionsGenerated}
               toastConfig={toastConfig}
             />
+            }
+          />
+          <Route
+            path="/carrossel"
+            element={
+              <Carrossel
+                selectedTopico={selectedTopico}
+                temasCarrossel={temasCarrossel}
+                selectedTemaCarrossel={selectedTemaCarrossel}
+                carrossel={carrossel}
+                quantidade={quantidade}
+                onSelectTopic={getTemasCarrossel}
+                onSelectTheme={getCarrossel}
+                onQuantidadeChange={handleQuantidadeChange}
+                onSaveCarrossel={saveCarrossel}
+                onSuggestionsGenerated={handleSuggestionsCarrosselGenerated}
+                toastConfig={toastConfig}
+              />
             }
           />
           <Route

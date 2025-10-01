@@ -29,6 +29,10 @@ const translations = {
         generateScript: "Unable to generate the script.",
         themeRequired: "Theme is required to generate the script.",
         themeTooLong: "Theme must not exceed 500 characters.",
+        quantidadeRequired: "Please provide the number of slides.",
+        quantidadeTooShort: "The minimum number of slides is 2.",
+        quantidadeTooLong: "The maximum number of slides is 8.",
+        generateCarrossel: "Unable to generate the carousel.",
       },
     },
     login: {
@@ -85,6 +89,16 @@ const translations = {
     },
     theme: {
       title: "Suggestions",
+    },
+    themeCarrossel: {
+      title: "Carousel Suggestions",
+    },
+    quantidade: {
+      title: "Number of Slides",
+      note: "Select the number of slides for your carousel (2 to 8 slides).",
+    },
+    carrossel: {
+      title: "Carousel",
     },
     script: {
       title: "Script",
@@ -174,6 +188,7 @@ const translations = {
       },
       menu: {
         home: "Home",
+        carrossel: "Carousel",
         settings: "System Settings",
         users: "User Management",
         consumption: "Service Usage",
@@ -253,6 +268,10 @@ const translations = {
         generateScript: "Não foi possível gerar o roteiro.",
         themeRequired: "Tema é obrigatório para gerar o roteiro.",
         themeTooLong: "O tema não pode exceder 500 caracteres.",
+        quantidadeRequired: "Informe a quantidade de slides.",
+        quantidadeTooShort: "A quantidade mínima é de 2 slides.",
+        quantidadeTooLong: "A quantidade máxima é de 8 slides.",
+        generateCarrossel: "Não foi possível gerar o carrossel.",
       },
     },
     login: {
@@ -309,6 +328,16 @@ const translations = {
     },
     theme: {
       title: "Sugestões",
+    },
+    themeCarrossel: {
+      title: "Sugestões de Carrossel",
+    },
+    quantidade: {
+      title: "Quantidade de Slides",
+      note: "Selecione a quantidade de slides para seu carrossel (2 a 8 slides).",
+    },
+    carrossel: {
+      title: "Carrossel",
     },
     script: {
       title: "Roteiro",
@@ -398,6 +427,7 @@ const translations = {
       },
       menu: {
         home: "Página Inicial",
+        carrossel: "Carrossel",
         settings: "Configurações do Sistema",
         users: "Gerenciamento de Usuários",
         consumption: "Consumo dos Serviços",

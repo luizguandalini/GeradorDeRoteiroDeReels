@@ -7,10 +7,12 @@ import roteiroRoutes from "./routes/roteiro.js";
 import narracoesRoutes from "./routes/narracoes.js";
 import audiosRoutes from "./routes/audios.js";
 import topicosRoutes from "./routes/topicos.js";
-import configuracoesRoutes from "./routes/configuracoes.js";
+import configuracaoRoutes from "./routes/configuracoes.js";
 import consumoRoutes from "./routes/consumo.js";
 import authRoutes from "./routes/auth.js";
 import usersRoutes from "./routes/users.js";
+import temasCarrosselRoutes from "./routes/temasCarrossel.js";
+import carrosselRoutes from "./routes/carrossel.js";
 import { authenticateToken, requireAdmin } from "./middleware/auth.js";
 import { getMockMode, setMockMode } from "./config/mockConfig.js";
 import prisma from "./config/database.js";
@@ -54,16 +56,18 @@ app.post("/api/config/mock", authenticateToken, requireAdmin, (req, res) => {
   res.json({ mockMode: getMockMode() });
 });
 
-// Rotas protegidas (requerem autenticaÃ§Ã£o)
+// Rotas protegidas (requerem autenticação)
 app.use("/api/temas", authenticateToken, temasRoutes);
 app.use("/api/roteiro", authenticateToken, roteiroRoutes);
 app.use("/api/narracoes", authenticateToken, narracoesRoutes);
 app.use("/api/audios", authenticateToken, audiosRoutes);
 app.use("/api/users", authenticateToken, usersRoutes);
 app.use("/api/topicos", authenticateToken, topicosRoutes);
+app.use("/api/temas-carrossel", authenticateToken, temasCarrosselRoutes);
+app.use("/api/carrossel", authenticateToken, carrosselRoutes);
 
-// Rotas de configuraÃ§Ãµes (apenas admin)
-app.use("/api/configuracoes", authenticateToken, requireAdmin, configuracoesRoutes);
+// Rotas de configurações (apenas admin)
+app.use("/api/configuracoes", authenticateToken, requireAdmin, configuracaoRoutes);
 
 // Rota de consumo dos serviços (apenas admin)
 app.use("/api/consumo", authenticateToken, requireAdmin, consumoRoutes);

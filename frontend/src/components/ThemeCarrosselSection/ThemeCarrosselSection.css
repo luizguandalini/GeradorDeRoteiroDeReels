@@ -1,0 +1,63 @@
+.theme-carrossel-section {
+  margin-bottom: 2rem;
+}
+
+.theme-carrossel-section h2 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.theme-carrossel-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.theme-carrossel-section li {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.theme-carrossel-section li:hover {
+  background: #e9ecef;
+  border-color: #6c757d;
+  transform: translateY(-1px);
+}
+
+.theme-carrossel-section li.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #5a67d8;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.theme-carrossel-section li.selected:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+/* Dark theme */
+.dark-theme .theme-carrossel-section h2 {
+  color: #e2e8f0;
+}
+
+.dark-theme .theme-carrossel-section li {
+  background: #374151;
+  color: #e5e7eb;
+}
+
+.dark-theme .theme-carrossel-section li:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}

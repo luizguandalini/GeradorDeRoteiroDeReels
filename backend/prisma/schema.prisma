@@ -63,6 +63,7 @@ model User {
   configuracoes UserConfiguracao[]
   narracoes     UserNarracao[]
   roteiros      UserRoteiro[]
+  carrosseis    UserCarrossel[]
 
   @@map("users")
 }
@@ -100,6 +101,7 @@ model UserTopico {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   temas     UserTema[]
+  temasCarrossel UserTemaCarrossel[]
 
   @@unique([userId, nome])
   @@map("user_topicos")
@@ -159,5 +161,30 @@ model UserRoteiro {
   updatedAt   DateTime @updatedAt
 
   @@map("user_roteiros")
+}
+
+model UserCarrossel {
+  id          Int      @id @default(autoincrement())
+  tema        String
+  quantidade  Int      // Número de slides (máximo 8)
+  conteudo    String   // JSON do carrossel
+  ativo       Boolean  @default(true)
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("user_carrosseis")
+}
+
+model UserTemaCarrossel {
+  id          Int        @id @default(autoincrement())
+  titulo      String
+  userTopicoId Int
+  userTopico  UserTopico @relation(fields: [userTopicoId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("user_temas_carrossel")
 }
 

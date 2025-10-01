@@ -1,0 +1,95 @@
+.quantidade-note {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.quantidade-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.quantidade-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  min-height: 80px;
+  justify-content: center;
+}
+
+.quantidade-option:hover {
+  background: #e9ecef;
+  border-color: #6c757d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.quantidade-option.selected {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border-color: #c0392b;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.quantidade-option.selected:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+}
+
+.quantidade-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.quantidade-formatted {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Dark theme */
+.dark-theme .quantidade-note {
+  color: #9ca3af;
+}
+
+.dark-theme .quantidade-option {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.dark-theme .quantidade-option:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .quantidade-options {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .quantidade-option {
+    padding: 0.75rem;
+    min-height: 70px;
+  }
+  
+  .quantidade-number {
+    font-size: 1.25rem;
+  }
+  
+  .quantidade-formatted {
+    font-size: 0.8rem;
+  }
+}

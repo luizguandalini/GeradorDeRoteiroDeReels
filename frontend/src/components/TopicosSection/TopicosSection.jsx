@@ -1,11 +1,17 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaDatabase, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useTranslation } from "../../contexts/LanguageContext";
 import "./TopicosSection.css";
 
-const TopicosSection = ({ selectedTopico, onSelectTopic, toastConfig }) => {
+const TopicosSection = ({ 
+  selectedTopico, 
+  onSelectTopic, 
+  onSuggestionsGenerated, 
+  toastConfig, 
+  isCarrossel = false 
+}) => {
   const { t } = useTranslation();
   const [topicos, setTopicos] = useState([]);
   const [loading, setLoading] = useState(false);

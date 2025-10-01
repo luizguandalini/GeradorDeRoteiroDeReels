@@ -10,6 +10,7 @@ import {
   FaChevronRight,
   FaChartBar,
   FaUsers,
+  FaImages,
 } from "react-icons/fa";
 import { FiLogOut } from "react-icons/fi";
 import axios from "axios";
@@ -114,6 +115,12 @@ const Sidebar = ({
       id: "home",
     },
     {
+      path: "/carrossel",
+      icon: FaImages,
+      labelKey: "sidebar.menu.carrossel",
+      id: "carrossel",
+    },
+    {
       path: "/configuracoes",
       icon: FaCog,
       labelKey: "sidebar.menu.settings",
@@ -162,7 +169,7 @@ const Sidebar = ({
       <nav className="sidebar-nav">
         <ul className="nav-list">
           {menuItems
-            .filter((item) => !item.adminOnly || admin)
+            .filter((item) => !item.adminOnly || isAdmin)
             .map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;

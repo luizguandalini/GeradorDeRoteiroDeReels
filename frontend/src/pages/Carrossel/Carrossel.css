@@ -1,0 +1,21 @@
+.carrossel-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: calc(100vh - 120px);
+}
+
+@media (max-width: 768px) {
+  .carrossel-container {
+    padding: 1rem;
+  }
+}
+
+/* Estilos específicos para carrossel podem ser adicionados aqui */
+.carrossel-container .section {
+  margin-bottom: 2rem;
+}
+
+.carrossel-container .section:last-child {
+  margin-bottom: 0;
+}
