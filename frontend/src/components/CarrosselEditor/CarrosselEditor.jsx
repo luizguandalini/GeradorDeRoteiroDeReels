@@ -4,6 +4,18 @@ import jsPDF from "jspdf";
 import { toast } from "react-toastify";
 import "./CarrosselEditor.css";
 
+const CHARACTER_LIMITS = {
+  titulo: 1000,
+  paragrafo: 3000,
+  imagem: 2000,
+};
+
+const FIELD_LABELS = {
+  titulo: 'titulos',
+  paragrafo: 'paragrafos',
+  imagem: 'descricoes de imagem',
+};
+
 function CarrosselEditor({ carrossel, onSaveCarrossel }) {
   const [texto, setTexto] = useState("");
   const [editingSlides, setEditingSlides] = useState([]); // Array de objetos com os slides editáveis
@@ -55,32 +67,23 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
     }, 0);
   };
 
-  // Função para validar limites de caracteres
+  const computeEditedTotal = (field, originalLength) => {
+    return getTotalCharacters(field) - originalLength + tempValue.length;
+  };
+
   const validateCharacterLimit = (newValue, slideIndex, field) => {
     const currentSlides = [...editingSlides];
-    const oldValue = currentSlides[slideIndex][field] || "";
     currentSlides[slideIndex][field] = newValue;
-    
-    const limits = {
-      titulo: 1000,
-      paragrafo: 3000,
-      imagem: 2000
-    };
-    
+
     const totalChars = currentSlides.reduce((total, slide) => {
       return total + (slide[field] ? slide[field].length : 0);
     }, 0);
-    
-    if (totalChars > limits[field]) {
-      const fieldNames = {
-        titulo: 'títulos',
-        paragrafo: 'parágrafos', 
-        imagem: 'descrições de imagem'
-      };
-      toast.error(`Limite de ${limits[field]} caracteres excedido para ${fieldNames[field]}. Total atual: ${totalChars}`);
+
+    if (totalChars > CHARACTER_LIMITS[field]) {
+      toast.error(`Limite de ${CHARACTER_LIMITS[field]} caracteres excedido para ${FIELD_LABELS[field]}. Total atual: ${totalChars}`);
       return false;
     }
-    
+
     return true;
   };
 
@@ -340,7 +343,7 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
             
             {/* Título */}
             <div className="field-group">
-              <label>Título ({slide.titulo.length} chars):</label>
+              <label>Título:</label>
               {editingField?.slideIndex === slideIndex && editingField?.field === 'titulo' ? (
                 <div className="edit-field">
                   <input
@@ -357,6 +360,9 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
                       <FaTimes />
                     </button>
                   </div>
+                  <div className="char-counter">
+                    {computeEditedTotal('titulo', slide.titulo.length)}/{CHARACTER_LIMITS.titulo} caracteres ({FIELD_LABELS.titulo})
+                  </div>
                 </div>
               ) : (
                 <div className="field-display" onClick={() => startEditing(slideIndex, 'titulo')}>
@@ -368,7 +374,7 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
 
             {/* Parágrafo */}
             <div className="field-group">
-              <label>Parágrafo ({slide.paragrafo.length} chars):</label>
+              <label>Parágrafo:</label>
               {editingField?.slideIndex === slideIndex && editingField?.field === 'paragrafo' ? (
                 <div className="edit-field">
                   <textarea
@@ -385,6 +391,9 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
                       <FaTimes />
                     </button>
                   </div>
+                  <div className="char-counter">
+                    {computeEditedTotal('paragrafo', slide.paragrafo.length)}/{CHARACTER_LIMITS.paragrafo} caracteres ({FIELD_LABELS.paragrafo})
+                  </div>
                 </div>
               ) : (
                 <div className="field-display" onClick={() => startEditing(slideIndex, 'paragrafo')}>
@@ -396,7 +405,7 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
 
             {/* Imagem */}
             <div className="field-group">
-              <label>Descrição da Imagem ({slide.imagem.length} chars):</label>
+              <label>Descrição da Imagem:</label>
               {editingField?.slideIndex === slideIndex && editingField?.field === 'imagem' ? (
                 <div className="edit-field">
                   <textarea
@@ -413,6 +422,9 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
                       <FaTimes />
                     </button>
                   </div>
+                  <div className="char-counter">
+                    {computeEditedTotal('imagem', slide.imagem.length)}/{CHARACTER_LIMITS.imagem} caracteres ({FIELD_LABELS.imagem})
+                  </div>
                 </div>
               ) : (
                 <div className="field-display" onClick={() => startEditing(slideIndex, 'imagem')}>
@@ -428,13 +440,13 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
       {/* Estatísticas de caracteres */}
       <div className="character-stats">
         <div className="stat-item">
-          <span>Total Títulos: {getTotalCharacters('titulo')}/1000</span>
+          <span>Total Títulos: {getTotalCharacters('titulo')}/{CHARACTER_LIMITS.titulo}</span>
         </div>
         <div className="stat-item">
-          <span>Total Parágrafos: {getTotalCharacters('paragrafo')}/3000</span>
+          <span>Total Parágrafos: {getTotalCharacters('paragrafo')}/{CHARACTER_LIMITS.paragrafo}</span>
         </div>
         <div className="stat-item">
-          <span>Total Imagens: {getTotalCharacters('imagem')}/2000</span>
+          <span>Total Imagens: {getTotalCharacters('imagem')}/{CHARACTER_LIMITS.imagem}</span>
         </div>
       </div>
     </div>

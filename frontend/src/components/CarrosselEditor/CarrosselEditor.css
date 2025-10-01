@@ -241,6 +241,13 @@
   gap: 0.5rem;
 }
 
+.char-counter {
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
 .btn-save-field,
 .btn-cancel-field {
   padding: 0.25rem 0.5rem;
@@ -364,6 +371,10 @@
 
 .dark-theme .stat-item {
   color: #e5e7eb;
+}
+
+.dark-theme .char-counter {
+  color: #d1d5db;
 }
 
 @media (max-width: 768px) {
