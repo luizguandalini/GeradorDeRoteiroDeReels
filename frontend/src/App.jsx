@@ -81,35 +81,38 @@ function AppContent() {
 
   // Função para salvar quantidade preferida do usuário
   const saveQuantidadePreference = async (newQuantidade) => {
-    if (user?.role === 'admin') {
+    if (user?.role === "admin") {
       // Para usuários admin, salvar no banco de dados
       try {
-        await axios.put('/api/configuracoes/quantidade-preference', {
-          chave: 'PREFERRED_QUANTIDADE',
+        await axios.put("/api/configuracoes/quantidade-preference", {
+          chave: "PREFERRED_QUANTIDADE",
           valor: newQuantidade.toString(),
-          nome: 'Quantidade Preferida de Slides',
-          descricao: 'Quantidade preferida do usuário para geração de carrosseis',
-          categoria: 'preferencias'
+          nome: "Quantidade Preferida de Slides",
+          descricao:
+            "Quantidade preferida do usuário para geração de carrosseis",
+          categoria: "preferencias",
         });
       } catch (error) {
-        console.error('Erro ao salvar quantidade preferida:', error);
+        console.error("Erro ao salvar quantidade preferida:", error);
       }
     } else {
       // Para usuários comuns, salvar no localStorage
       try {
-        localStorage.setItem('preferredQuantidade', newQuantidade.toString());
+        localStorage.setItem("preferredQuantidade", newQuantidade.toString());
       } catch (error) {
-        console.error('Erro ao salvar quantidade no localStorage:', error);
+        console.error("Erro ao salvar quantidade no localStorage:", error);
       }
     }
   };
 
   // Função para carregar quantidade preferida do usuário
   const loadQuantidadePreference = async () => {
-    if (user?.role === 'admin') {
+    if (user?.role === "admin") {
       // Para usuários admin, carregar do banco de dados
       try {
-        const response = await axios.get('/api/configuracoes/PREFERRED_QUANTIDADE');
+        const response = await axios.get(
+          "/api/configuracoes/PREFERRED_QUANTIDADE"
+        );
         if (response.data && response.data.valor) {
           const savedQuantidade = parseInt(response.data.valor, 10);
           if (savedQuantidade >= 2 && savedQuantidade <= 8) {
@@ -118,12 +121,12 @@ function AppContent() {
         }
       } catch (error) {
         // Se não encontrar a configuração, mantém o padrão (8)
-        console.log('Quantidade preferida não encontrada, usando padrão');
+        console.log("Quantidade preferida não encontrada, usando padrão");
       }
     } else {
       // Para usuários comuns, carregar do localStorage
       try {
-        const savedQuantidade = localStorage.getItem('preferredQuantidade');
+        const savedQuantidade = localStorage.getItem("preferredQuantidade");
         if (savedQuantidade) {
           const quantidade = parseInt(savedQuantidade, 10);
           if (quantidade >= 2 && quantidade <= 8) {
@@ -131,40 +134,42 @@ function AppContent() {
           }
         }
       } catch (error) {
-        console.error('Erro ao carregar quantidade do localStorage:', error);
+        console.error("Erro ao carregar quantidade do localStorage:", error);
       }
     }
   };
   const saveDurationPreference = async (newDuration) => {
-    if (user?.role === 'admin') {
+    if (user?.role === "admin") {
       // Para usuários admin, salvar no banco de dados
       try {
-        await axios.put('/api/configuracoes/duration-preference', {
-          chave: 'PREFERRED_DURATION',
+        await axios.put("/api/configuracoes/duration-preference", {
+          chave: "PREFERRED_DURATION",
           valor: newDuration.toString(),
-          nome: 'Duração Preferida do Vídeo',
-          descricao: 'Duração preferida do usuário para geração de vídeos',
-          categoria: 'preferencias'
+          nome: "Duração Preferida do Vídeo",
+          descricao: "Duração preferida do usuário para geração de vídeos",
+          categoria: "preferencias",
         });
       } catch (error) {
-        console.error('Erro ao salvar duração preferida:', error);
+        console.error("Erro ao salvar duração preferida:", error);
       }
     } else {
       // Para usuários comuns, salvar no localStorage
       try {
-        localStorage.setItem('preferredDuration', newDuration.toString());
+        localStorage.setItem("preferredDuration", newDuration.toString());
       } catch (error) {
-        console.error('Erro ao salvar duração no localStorage:', error);
+        console.error("Erro ao salvar duração no localStorage:", error);
       }
     }
   };
 
   // Função para carregar duração preferida do usuário
   const loadDurationPreference = async () => {
-    if (user?.role === 'admin') {
+    if (user?.role === "admin") {
       // Para usuários admin, carregar do banco de dados
       try {
-        const response = await axios.get('/api/configuracoes/PREFERRED_DURATION');
+        const response = await axios.get(
+          "/api/configuracoes/PREFERRED_DURATION"
+        );
         if (response.data && response.data.valor) {
           const savedDuration = parseInt(response.data.valor, 10);
           if (savedDuration >= 30 && savedDuration <= 120) {
@@ -173,12 +178,12 @@ function AppContent() {
         }
       } catch (error) {
         // Se não encontrar a configuração, mantém o padrão (30)
-        console.log('Duração preferida não encontrada, usando padrão');
+        console.log("Duração preferida não encontrada, usando padrão");
       }
     } else {
       // Para usuários comuns, carregar do localStorage
       try {
-        const savedDuration = localStorage.getItem('preferredDuration');
+        const savedDuration = localStorage.getItem("preferredDuration");
         if (savedDuration) {
           const duration = parseInt(savedDuration, 10);
           if (duration >= 30 && duration <= 120) {
@@ -186,7 +191,7 @@ function AppContent() {
           }
         }
       } catch (error) {
-        console.error('Erro ao carregar duração do localStorage:', error);
+        console.error("Erro ao carregar duração do localStorage:", error);
       }
     }
   };
@@ -201,8 +206,12 @@ function AppContent() {
   const loadLastData = async () => {
     try {
       // Carregar último roteiro
-      const roteiroResponse = await axios.get('/api/roteiro');
-      if (roteiroResponse.data && roteiroResponse.data.roteiro && roteiroResponse.data.roteiro.length > 0) {
+      const roteiroResponse = await axios.get("/api/roteiro");
+      if (
+        roteiroResponse.data &&
+        roteiroResponse.data.roteiro &&
+        roteiroResponse.data.roteiro.length > 0
+      ) {
         setRoteiro(roteiroResponse.data.roteiro);
         // Salvar o ID do roteiro para futuras atualizações
         if (roteiroResponse.data.id) {
@@ -212,8 +221,12 @@ function AppContent() {
 
       // Carregar último carrossel
       try {
-        const carrosselResponse = await axios.get('/api/carrossel');
-        if (carrosselResponse.data && carrosselResponse.data.carrossel && carrosselResponse.data.carrossel.length > 0) {
+        const carrosselResponse = await axios.get("/api/carrossel");
+        if (
+          carrosselResponse.data &&
+          carrosselResponse.data.carrossel &&
+          carrosselResponse.data.carrossel.length > 0
+        ) {
           setCarrossel(carrosselResponse.data.carrossel);
           // Salvar o ID do carrossel para futuras atualizações
           if (carrosselResponse.data.id) {
@@ -221,41 +234,59 @@ function AppContent() {
           }
         }
       } catch (error) {
-        console.log('Nenhum carrossel anterior encontrado');
+        console.log("Nenhum carrossel anterior encontrado");
       }
 
       // Carregar últimos tópicos e temas
       try {
-        const topicosResponse = await axios.get('/api/topicos');
-        if (topicosResponse.data && topicosResponse.data.topicos && topicosResponse.data.topicos.length > 0) {
+        const topicosResponse = await axios.get("/api/topicos");
+        if (
+          topicosResponse.data &&
+          topicosResponse.data.topicos &&
+          topicosResponse.data.topicos.length > 0
+        ) {
           const ultimoTopico = topicosResponse.data.topicos[0]; // Pegar o primeiro (mais recente)
           setSelectedTopico(ultimoTopico);
-          
+
           // Carregar temas do último tópico
           try {
-            const temasResponse = await axios.get(`/api/temas/${ultimoTopico.id}`);
-            if (temasResponse.data && temasResponse.data.temas && temasResponse.data.temas.length > 0) {
+            const temasResponse = await axios.get(
+              `/api/temas/${ultimoTopico.id}`
+            );
+            if (
+              temasResponse.data &&
+              temasResponse.data.temas &&
+              temasResponse.data.temas.length > 0
+            ) {
               setTemas(temasResponse.data.temas);
             }
           } catch (error) {
-            console.log('Nenhum tema anterior encontrado para este tópico');
+            console.log("Nenhum tema anterior encontrado para este tópico");
           }
 
           // Carregar temas de carrossel do último tópico
           try {
-            const temasCarrosselResponse = await axios.get(`/api/temas-carrossel/${ultimoTopico.id}`);
-            if (temasCarrosselResponse.data && temasCarrosselResponse.data.temas && temasCarrosselResponse.data.temas.length > 0) {
+            const temasCarrosselResponse = await axios.get(
+              `/api/temas-carrossel/${ultimoTopico.id}`
+            );
+            if (
+              temasCarrosselResponse.data &&
+              temasCarrosselResponse.data.temas &&
+              temasCarrosselResponse.data.temas.length > 0
+            ) {
               setTemasCarrossel(temasCarrosselResponse.data.temas);
             }
           } catch (error) {
-            console.log('Nenhum tema de carrossel anterior encontrado para este tópico');
+            console.log(
+              "Nenhum tema de carrossel anterior encontrado para este tópico"
+            );
           }
         }
       } catch (error) {
-        console.log('Nenhum tópico encontrado');
+        console.log("Nenhum tópico encontrado");
       }
     } catch (error) {
-      console.log('Nenhum roteiro anterior encontrado');
+      console.log("Nenhum roteiro anterior encontrado");
     }
   };
 
@@ -407,7 +438,7 @@ function AppContent() {
     }
 
     // Validar limite de caracteres do tema (500 caracteres)
-    if (!tema || typeof tema !== 'string') {
+    if (!tema || typeof tema !== "string") {
       toast.error(t("app.errors.themeRequired"), toastConfig);
       return;
     }
@@ -448,11 +479,11 @@ function AppContent() {
 
       const roteiroFormatted = editedRoteiro.map((step) => ({
         narracao: step.nar || "",
-        imagem: step.img || ""
+        imagem: step.img || "",
       }));
 
       await axios.put(`/api/roteiro/${roteiroId}`, {
-        roteiro: roteiroFormatted
+        roteiro: roteiroFormatted,
       });
 
       setRoteiro(roteiroFormatted);
@@ -475,7 +506,8 @@ function AppContent() {
       setSelectedTopico(null);
       setTemasCarrossel([]);
       setSelectedTemaCarrossel(null);
-      setCarrossel([]);
+      // Importante: não limpar o carrossel aqui para preservar os textos dos slides
+      // quando o tópico selecionado é deletado na rota de carrossel.
       return;
     }
 
@@ -523,7 +555,7 @@ function AppContent() {
     }
 
     // Validar limite de caracteres do tema (500 caracteres)
-    if (!tema || typeof tema !== 'string') {
+    if (!tema || typeof tema !== "string") {
       toast.error(t("app.errors.themeRequired"), toastConfig);
       return;
     }
@@ -592,20 +624,20 @@ function AppContent() {
             path="/"
             element={
               <Home
-              selectedTopico={selectedTopico}
-              temas={temas}
-              selectedTema={selectedTema}
-              roteiro={roteiro}
-              narracoesGeradas={narracoesGeradas}
-              duracao={duracao}
-              onSelectTopic={getTemas}
-              onSelectTheme={getRoteiro}
-              onDurationChange={handleDurationChange}
-              onNarracoesGeradas={setNarracoesGeradas}
-              onSaveRoteiro={saveRoteiro}
-              onSuggestionsGenerated={handleSuggestionsGenerated}
-              toastConfig={toastConfig}
-            />
+                selectedTopico={selectedTopico}
+                temas={temas}
+                selectedTema={selectedTema}
+                roteiro={roteiro}
+                narracoesGeradas={narracoesGeradas}
+                duracao={duracao}
+                onSelectTopic={getTemas}
+                onSelectTheme={getRoteiro}
+                onDurationChange={handleDurationChange}
+                onNarracoesGeradas={setNarracoesGeradas}
+                onSaveRoteiro={saveRoteiro}
+                onSuggestionsGenerated={handleSuggestionsGenerated}
+                toastConfig={toastConfig}
+              />
             }
           />
           <Route
