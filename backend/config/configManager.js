@@ -166,7 +166,7 @@ export async function initializeDefaultConfigs() {
       },
       {
         chave: 'PROMPT_CARROSSEL',
-        valor: process.env.PROMPT_CARROSSEL || 'Crie um carrossel de {quantidade} slides sobre o tema "{tema}". Cada slide deve conter um título chamativo e um parágrafo explicativo. Para o campo "imagem", forneça uma descrição detalhada do que deve aparecer na imagem, como se fosse uma instrução para alguém criar ou encontrar a imagem. IMPORTANTE: O texto deve estar pronto para ser usado diretamente em redes sociais, com linguagem envolvente e acessível. Use frases curtas e impactantes. Retorne um array "carrossel" onde cada item tem: "titulo", "paragrafo" e "imagem" (sendo imagem uma descrição do que mostrar).',
+        valor: process.env.PROMPT_CARROSSEL || 'Crie um carrossel de {quantidade} slides sobre o tema "{tema}". Cada slide deve conter um título chamativo e um parágrafo explicativo. Para o campo "imagem", forneça APENAS uma descrição textual detalhada do que deve aparecer na imagem, sem URLs, sem links, sem nomes de arquivos. Exemplo: "Foto de um jogador de futebol chutando a bola em direção ao gol" ou "Imagem mostrando uma pessoa estudando com livros na mesa". IMPORTANTE: O texto deve estar pronto para ser usado diretamente em redes sociais, com linguagem envolvente e acessível. Use frases curtas e impactantes. Retorne um array "carrossel" onde cada item tem: "titulo", "paragrafo" e "imagem" (sendo imagem APENAS uma descrição textual do que mostrar).',
         nome: 'Prompt para Carrossel',
         descricao: 'Prompt usado para gerar carrosseis baseados em um tema',
         categoria: 'prompts'
@@ -180,7 +180,7 @@ export async function initializeDefaultConfigs() {
       },
       {
         chave: 'PROMPT_CARROSSEL_EN',
-        valor: process.env.PROMPT_CARROSSEL_EN || 'Create a carousel of {quantidade} slides about the theme "{tema}". Each slide should contain a catchy title and an explanatory paragraph. For the "imagem" field, provide a detailed description of what should appear in the image, as if it were an instruction for someone to create or find the image. IMPORTANT: The text should be ready to be used directly on social media, with engaging and accessible language. Use short and impactful phrases. Return a "carrossel" array where each item has: "titulo", "paragrafo" and "imagem" (where imagem is a description of what to show).',
+        valor: process.env.PROMPT_CARROSSEL_EN || 'Create a carousel of {quantidade} slides about the theme "{tema}". Each slide should contain a catchy title and an explanatory paragraph. For the "imagem" field, provide ONLY a detailed textual description of what should appear in the image, without URLs, without links, without file names. Example: "Photo of a soccer player kicking the ball towards the goal" or "Image showing a person studying with books on the table". IMPORTANT: The text should be ready to be used directly on social media, with engaging and accessible language. Use short and impactful phrases. Return a "carrossel" array where each item has: "titulo", "paragrafo" and "imagem" (where imagem is ONLY a textual description of what to show).',
         nome: 'Prompt for Carousel (English)',
         descricao: 'Prompt used to generate carousels in English based on a theme',
         categoria: 'prompts'
