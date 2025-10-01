@@ -203,12 +203,6 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
   };
 
 
-  // Função para salvar carrossel
-  const handleSaveCarrossel = () => {
-    persistSlides(editingSlides);
-  };
-
-
   // Função para copiar texto
   const copyToClipboard = () => {
     navigator.clipboard.writeText(texto);
@@ -264,9 +258,6 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
         </button>
         <button onClick={generatePDF} className="btn-action">
           <FaFilePdf /> PDF
-        </button>
-        <button onClick={handleSaveCarrossel} className="btn-action btn-save">
-          <FaSave /> Salvar
         </button>
         <button 
           onClick={() => setShowAddForm(true)} 
