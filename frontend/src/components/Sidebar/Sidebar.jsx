@@ -9,6 +9,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaChartBar,
+  FaUsers,
 } from "react-icons/fa";
 import { FiLogOut } from "react-icons/fi";
 import axios from "axios";
@@ -117,6 +118,13 @@ const Sidebar = ({
       icon: FaCog,
       labelKey: "sidebar.menu.settings",
       id: "config",
+      adminOnly: true,
+    },
+    {
+      path: "/usuarios",
+      icon: FaUsers,
+      labelKey: "sidebar.menu.users",
+      id: "users",
       adminOnly: true,
     },
     {

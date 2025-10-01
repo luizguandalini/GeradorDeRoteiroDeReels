@@ -15,6 +15,7 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import Home from "./pages/Home/Home";
 import Configuracoes from "./pages/Configuracoes/Configuracoes";
 import Consumo from "./pages/Consumo/Consumo";
+import GerenciamentoUsuarios from "./pages/GerenciamentoUsuarios/GerenciamentoUsuarios";
 
 function App() {
   return (
@@ -401,6 +402,14 @@ function AppContent() {
             element={
               <ProtectedRoute requireAdmin={true}>
                 <Configuracoes toastConfig={toastConfig} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/usuarios"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <GerenciamentoUsuarios />
               </ProtectedRoute>
             }
           />

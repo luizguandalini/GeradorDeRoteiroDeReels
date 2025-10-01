@@ -175,6 +175,7 @@ const translations = {
       menu: {
         home: "Home",
         settings: "System Settings",
+        users: "User Management",
         consumption: "Service Usage",
       },
       actions: {
@@ -398,6 +399,7 @@ const translations = {
       menu: {
         home: "Página Inicial",
         settings: "Configurações do Sistema",
+        users: "Gerenciamento de Usuários",
         consumption: "Consumo dos Serviços",
       },
       actions: {
