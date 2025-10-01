@@ -169,7 +169,9 @@ const translations = {
         selectTopic: "Select Topic",
         chooseSuggestion: "Choose Suggestion",
         editScript: "Edit Script",
+        editCarrossel: "Edit Carousel",
         generateNarrations: "Generate Narrations",
+        downloadPDF: "Download PDF",
       },
     },
     sidebar: {
@@ -408,7 +410,9 @@ const translations = {
         selectTopic: "Selecionar Tópico",
         chooseSuggestion: "Escolher Sugestão",
         editScript: "Editar Roteiro",
+        editCarrossel: "Editar Carrossel",
         generateNarrations: "Gerar Narrações",
+        downloadPDF: "Baixar PDF",
       },
     },
     sidebar: {
