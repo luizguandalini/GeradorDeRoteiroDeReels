@@ -88,9 +88,12 @@ const TopicosSection = ({
         await axios.delete(`/api/topicos/${topico.id}`);
         toast.success(t("topicsSection.messages.deleteSuccess"), toastConfig);
         await loadTopicos();
+        
+        // Só limpar os estados se o tópico deletado for o selecionado
         if (selectedTopico?.id === topico.id) {
           onSelectTopic(null);
         }
+        // Se não for o tópico selecionado, manter os dados atuais
       } catch (error) {
         toast.error(t("topicsSection.messages.deleteError"), toastConfig);
         console.error(error);

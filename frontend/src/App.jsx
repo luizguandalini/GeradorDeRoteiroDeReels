@@ -356,6 +356,16 @@ function AppContent() {
   };
 
   const getTemas = async (topico) => {
+    // Se topico for null, apenas limpar os estados relacionados
+    if (!topico) {
+      setSelectedTopico(null);
+      setTemas([]);
+      setSelectedTema(null);
+      setRoteiro([]);
+      setNarracoesGeradas(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setSelectedTopico(topico);
@@ -460,6 +470,15 @@ function AppContent() {
 
   // Funções para carrossel
   const getTemasCarrossel = async (topico) => {
+    // Se topico for null, apenas limpar os estados relacionados
+    if (!topico) {
+      setSelectedTopico(null);
+      setTemasCarrossel([]);
+      setSelectedTemaCarrossel(null);
+      setCarrossel([]);
+      return;
+    }
+
     try {
       setLoading(true);
       setSelectedTopico(topico);
