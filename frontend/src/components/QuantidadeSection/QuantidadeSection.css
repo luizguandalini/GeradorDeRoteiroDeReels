@@ -25,6 +25,7 @@
   font-weight: 500;
   min-height: 80px;
   justify-content: center;
+  color: #1f2933;
 }
 
 .quantidade-option:hover {
@@ -55,7 +56,7 @@
 
 .quantidade-formatted {
   font-size: 0.85rem;
-  opacity: 0.8;
+  color: #52606d;
 }
 
 /* Dark theme */
@@ -72,6 +73,10 @@
 .dark-theme .quantidade-option:hover {
   background: #4b5563;
   border-color: #6b7280;
+}
+
+.dark-theme .quantidade-formatted {
+  color: #d1d5db;
 }
 
 @media (max-width: 768px) {

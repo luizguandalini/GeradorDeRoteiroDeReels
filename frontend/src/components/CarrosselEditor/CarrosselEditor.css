@@ -21,7 +21,13 @@
   transition: all 0.2s ease;
   font-size: 0.9rem;
   font-weight: 500;
+  color: #1f2933;
 }
+
+.btn-action svg {
+  color: inherit;
+}
+
 
 .btn-action:hover {
   background: #e9ecef;
@@ -31,6 +37,7 @@
 .btn-action:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  color: #6c757d;
 }
 
 .btn-save {
@@ -275,6 +282,25 @@
   font-size: 0.9rem;
   color: #495057;
   font-weight: 500;
+}
+
+.dark-theme .btn-action {
+  background: #2f3645;
+  border-color: #3f4a5a;
+  color: #e5e7eb;
+}
+
+.dark-theme .btn-action:hover {
+  background: #3f4a5a;
+  border-color: #556176;
+}
+
+.dark-theme .btn-action:disabled {
+  color: #9ca3af;
+}
+
+.dark-theme .btn-action svg {
+  color: inherit;
 }
 
 /* Dark theme */
