@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+﻿import React, { useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaHome,
@@ -169,7 +169,7 @@ const Sidebar = ({
       <nav className="sidebar-nav">
         <ul className="nav-list">
           {menuItems
-            .filter((item) => !item.adminOnly || isAdmin)
+            .filter((item) => !item.adminOnly || admin)
             .map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -287,3 +287,5 @@ const Sidebar = ({
 };
 
 export default Sidebar;
+
+
