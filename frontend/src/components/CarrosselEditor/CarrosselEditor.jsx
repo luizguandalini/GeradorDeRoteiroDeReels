@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { FaFilePdf, FaCopy, FaEdit, FaSave, FaTimes, FaTrash, FaPlus } from "react-icons/fa";
-import axios from "axios";
 import jsPDF from "jspdf";
 import { toast } from "react-toastify";
 import "./CarrosselEditor.css";
@@ -17,25 +16,35 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
     paragrafo: '',
     imagem: ''
   });
+  const buildTextoFromSlides = (slidesArray) => {
+    if (!Array.isArray(slidesArray) || slidesArray.length === 0) {
+      return "";
+    }
+
+    const linesText = slidesArray.flatMap((slide, index) => {
+      const items = [];
+      if (slide.titulo) items.push(`Titulo ${index + 1}: ${slide.titulo}`);
+      if (slide.paragrafo) items.push(`Paragrafo ${index + 1}: ${slide.paragrafo}`);
+      if (slide.imagem) items.push(`Imagem ${index + 1}: ${slide.imagem}`);
+      return items;
+    });
+
+    return linesText.join("\n");
+  };
+
 
   useEffect(() => {
     if (Array.isArray(carrossel) && carrossel.length > 0) {
-      const slides = carrossel.map((slide, i) => ({
+      const slides = carrossel.map((slide) => ({
         titulo: slide.titulo || "",
         paragrafo: slide.paragrafo || "",
-        imagem: slide.imagem || ""
+        imagem: slide.imagem || "",
       }));
       setEditingSlides(slides);
-      
-      // Manter compatibilidade com o texto original
-      const linhas = carrossel.flatMap((slide, i) => {
-        const out = [];
-        if (slide.titulo) out.push(`Título ${i + 1}: ${slide.titulo}`);
-        if (slide.paragrafo) out.push(`Parágrafo ${i + 1}: ${slide.paragrafo}`);
-        if (slide.imagem) out.push(`Imagem ${i + 1}: ${slide.imagem}`);
-        return out;
-      });
-      setTexto(linhas.join("\n"));
+      setTexto(buildTextoFromSlides(slides));
+    } else {
+      setEditingSlides([]);
+      setTexto("");
     }
   }, [carrossel]);
 
@@ -75,6 +84,29 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
     return true;
   };
 
+  const persistSlides = async (slidesForSave, { successMessage = "Carrossel salvo com sucesso!" } = {}) => {
+    const sanitizedSlides = slidesForSave.map((slide) => ({
+      titulo: slide.titulo || "",
+      paragrafo: slide.paragrafo || "",
+      imagem: slide.imagem || "",
+    }));
+
+    setEditingSlides(sanitizedSlides);
+    setTexto(buildTextoFromSlides(sanitizedSlides));
+
+    try {
+      await onSaveCarrossel(sanitizedSlides);
+      if (successMessage) {
+        toast.success(successMessage);
+      }
+      return true;
+    } catch (error) {
+      console.error("Erro ao salvar carrossel:", error);
+      toast.error("Erro ao salvar carrossel");
+      return false;
+    }
+  };
+
   // Função para iniciar edição
   const startEditing = (slideIndex, field) => {
     setEditingField({ slideIndex, field });
@@ -82,21 +114,33 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
   };
 
   // Função para salvar edição
-  const saveEdit = () => {
-    if (editingField) {
-      const { slideIndex, field } = editingField;
-      
-      if (!validateCharacterLimit(tempValue, slideIndex, field)) {
-        return;
-      }
-      
-      const newSlides = [...editingSlides];
-      newSlides[slideIndex][field] = tempValue;
-      setEditingSlides(newSlides);
-      setEditingField(null);
-      setTempValue("");
+  const saveEdit = async () => {
+    if (!editingField) {
+      return;
     }
+
+    const { slideIndex, field } = editingField;
+
+    if (!validateCharacterLimit(tempValue, slideIndex, field)) {
+      return;
+    }
+
+    const updatedSlides = editingSlides.map((slide, index) =>
+      index === slideIndex ? { ...slide, [field]: tempValue } : { ...slide }
+    );
+
+    const saved = await persistSlides(updatedSlides, {
+      successMessage: "Slide salvo com sucesso!",
+    });
+
+    if (!saved) {
+      return;
+    }
+
+    setEditingField(null);
+    setTempValue("");
   };
+
 
   // Função para cancelar edição
   const cancelEdit = () => {
@@ -105,53 +149,65 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
   };
 
   // Função para deletar slide
-  const deleteSlide = (slideIndex) => {
+  const deleteSlide = async (slideIndex) => {
     if (editingSlides.length <= 2) {
-      toast.error("Não é possível deletar. Mínimo de 2 slides necessário.");
+      toast.error("Nao e possivel deletar. Minimo de 2 slides necessario.");
       return;
     }
-    
-    const newSlides = editingSlides.filter((_, index) => index !== slideIndex);
-    setEditingSlides(newSlides);
+
+    const updatedSlides = editingSlides
+      .filter((_, index) => index !== slideIndex)
+      .map((slide) => ({ ...slide }));
+
+    const saved = await persistSlides(updatedSlides, {
+      successMessage: "Slide removido com sucesso!",
+    });
+
+    if (!saved) {
+      return;
+    }
+
+    if (editingField) {
+      setEditingField(null);
+      setTempValue("");
+    }
   };
 
+
   // Função para adicionar novo slide
-  const addNewSlide = () => {
+  const addNewSlide = async () => {
     if (editingSlides.length >= 8) {
-      toast.error("Máximo de 8 slides permitido.");
+      toast.error("Maximo de 8 slides permitido.");
       return;
     }
-    
+
     if (!newSlideData.titulo.trim() || !newSlideData.paragrafo.trim() || !newSlideData.imagem.trim()) {
-      toast.error("Todos os campos são obrigatórios.");
+      toast.error("Todos os campos sao obrigatorios.");
       return;
     }
-    
-    const newSlides = [...editingSlides];
+
+    const newSlides = editingSlides.map((slide) => ({ ...slide }));
     newSlides.splice(addPosition - 1, 0, { ...newSlideData });
-    setEditingSlides(newSlides);
-    
-    setNewSlideData({ titulo: '', paragrafo: '', imagem: '' });
+
+    const saved = await persistSlides(newSlides, {
+      successMessage: "Slide adicionado com sucesso!",
+    });
+
+    if (!saved) {
+      return;
+    }
+
+    setNewSlideData({ titulo: "", paragrafo: "", imagem: "" });
     setShowAddForm(false);
     setAddPosition(1);
   };
 
+
   // Função para salvar carrossel
-  const handleSaveCarrossel = async () => {
-    try {
-      const carrosselData = editingSlides.map(slide => ({
-        titulo: slide.titulo,
-        paragrafo: slide.paragrafo,
-        imagem: slide.imagem
-      }));
-      
-      await onSaveCarrossel(carrosselData);
-      toast.success("Carrossel salvo com sucesso!");
-    } catch (error) {
-      console.error("Erro ao salvar carrossel:", error);
-      toast.error("Erro ao salvar carrossel");
-    }
+  const handleSaveCarrossel = () => {
+    persistSlides(editingSlides);
   };
+
 
   // Função para copiar texto
   const copyToClipboard = () => {

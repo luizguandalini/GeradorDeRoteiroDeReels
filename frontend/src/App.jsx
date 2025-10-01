@@ -77,6 +77,7 @@ function AppContent() {
   const [temasCarrossel, setTemasCarrossel] = useState([]);
   const [selectedTemaCarrossel, setSelectedTemaCarrossel] = useState("");
   const [carrossel, setCarrossel] = useState([]);
+  const [carrosselId, setCarrosselId] = useState(null);
   const [quantidade, setQuantidade] = useState(8); // Padrão 8 slides
 
   // Função para salvar quantidade preferida do usuário
@@ -228,12 +229,13 @@ function AppContent() {
           carrosselResponse.data.carrossel.length > 0
         ) {
           setCarrossel(carrosselResponse.data.carrossel);
-          // Salvar o ID do carrossel para futuras atualizações
-          if (carrosselResponse.data.id) {
-            window.currentCarrosselId = carrosselResponse.data.id;
-          }
+          const returnedId = (carrosselResponse.data && carrosselResponse.data.id) ? carrosselResponse.data.id : null;
+          setCarrosselId(returnedId);
+        } else {
+          setCarrosselId(null);
         }
       } catch (error) {
+        setCarrosselId(null);
         console.log("Nenhum carrossel anterior encontrado");
       }
 
@@ -516,6 +518,7 @@ function AppContent() {
       setSelectedTopico(topico);
       setSelectedTemaCarrossel(null);
       setCarrossel([]);
+      setCarrosselId(null);
 
       const res = await axios.post("/api/temas-carrossel", {
         topicoId: topico.id,
@@ -534,6 +537,7 @@ function AppContent() {
     setSelectedTopico(topico);
     setSelectedTemaCarrossel(null);
     setCarrossel([]);
+    setCarrosselId(null);
   };
 
   const getCarrossel = async (tema) => {
@@ -574,10 +578,8 @@ function AppContent() {
         language: language,
       });
       setCarrossel(res.data.carrossel);
-      // Salvar o ID do carrossel para futuras atualizações
-      if (res.data.id) {
-        window.currentCarrosselId = res.data.id;
-      }
+      const retrievedId = res.data && res.data.id ? res.data.id : null;
+      setCarrosselId(retrievedId);
     } catch {
       toast.error(t("app.errors.generateCarrossel"), toastConfig);
     } finally {
@@ -586,13 +588,30 @@ function AppContent() {
   };
 
   const saveCarrossel = async (novoCarrossel) => {
+    if (!carrosselId) {
+      const error = new Error("ID do carrossel não definido");
+      console.error("Erro ao salvar carrossel: ID do carrossel não definido.");
+      throw error;
+    }
+
     try {
-      if (window.currentCarrosselId) {
-        await axios.put(`/api/carrossel/${window.currentCarrosselId}`, {
-          carrossel: novoCarrossel,
-        });
+      const response = await axios.put(`/api/carrossel/${carrosselId}`, {
+        carrossel: novoCarrossel,
+      });
+
+      const updatedCarrossel =
+        response &&
+        response.data &&
+        Array.isArray(response.data.carrossel)
+          ? response.data.carrossel
+          : novoCarrossel;
+      setCarrossel(updatedCarrossel);
+
+      if (response && response.data && response.data.id) {
+        setCarrosselId(response.data.id);
       }
-      setCarrossel(novoCarrossel);
+
+      return response && response.data ? response.data : null;
     } catch (error) {
       console.error("Erro ao salvar carrossel:", error);
       throw error;
