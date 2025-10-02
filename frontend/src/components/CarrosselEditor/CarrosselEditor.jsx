@@ -270,10 +270,10 @@ function CarrosselEditor({ carrossel, onSaveCarrossel }) {
   return (
     <div className="carrossel-editor">
       <div className="carrossel-actions">
-        <button onClick={copyToClipboard} className="btn-action">
+        <button onClick={copyToClipboard} className="btn-action btn-copy">
           <FaCopy /> Copiar Roteiro
         </button>
-        <button onClick={generatePDF} className="btn-action">
+        <button onClick={generatePDF} className="btn-action btn-download">
           <FaFilePdf /> Baixar Roteiro do Carrossel em PDF
         </button>
         <button

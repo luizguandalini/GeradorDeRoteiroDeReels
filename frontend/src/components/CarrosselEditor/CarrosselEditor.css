@@ -10,34 +10,43 @@
 }
 
 .btn-action {
+  --btn-bg: #e1306c;
+  --btn-shadow: rgba(225, 48, 108, 0.35);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #1f2933;
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--btn-bg);
+  box-shadow: 0 10px 24px -12px var(--btn-shadow);
 }
 
 .btn-action svg {
   color: inherit;
+  font-size: 1.05rem;
 }
 
+.btn-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 14px 30px -12px var(--btn-shadow);
+}
 
-.btn-action:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
+.btn-action:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .btn-action:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
-  color: #6c757d;
+  filter: grayscale(0.2);
+  box-shadow: none;
 }
 
 .btn-save {
@@ -50,14 +59,19 @@
   background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
 }
 
-.btn-add {
-  background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
-  color: white;
-  border-color: #007bff;
+.btn-copy {
+  --btn-bg: #e1306c;
+  --btn-shadow: rgba(225, 48, 108, 0.55);
 }
 
-.btn-add:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0056b3 0%, #520dc2 100%);
+.btn-download {
+  --btn-bg: #e84118;
+  --btn-shadow: rgba(232, 65, 24, 0.55);
+}
+
+.btn-add {
+  --btn-bg: #8e44ad;
+  --btn-shadow: rgba(142, 68, 173, 0.55);
 }
 
 .add-slide-form {
@@ -292,18 +306,17 @@
 }
 
 .dark-theme .btn-action {
-  background: #2f3645;
-  border-color: #3f4a5a;
-  color: #e5e7eb;
+  color: #fff;
+  box-shadow: 0 12px 28px -12px var(--btn-shadow);
 }
 
-.dark-theme .btn-action:hover {
-  background: #3f4a5a;
-  border-color: #556176;
+.dark-theme .btn-action:hover:not(:disabled) {
+  box-shadow: 0 16px 36px -12px var(--btn-shadow);
 }
 
 .dark-theme .btn-action:disabled {
-  color: #9ca3af;
+  opacity: 0.55;
+  filter: grayscale(0.3);
 }
 
 .dark-theme .btn-action svg {
