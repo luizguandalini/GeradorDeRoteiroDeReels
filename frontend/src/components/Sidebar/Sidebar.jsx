@@ -2,6 +2,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaHome,
+  FaFilm,
   FaCog,
   FaCode,
   FaMoon,
@@ -113,6 +114,12 @@ const Sidebar = ({
       icon: FaHome,
       labelKey: "sidebar.menu.home",
       id: "home",
+    },
+    {
+      path: "/roteiro-de-reels",
+      icon: FaFilm,
+      labelKey: "sidebar.menu.roteiroDeReels",
+      id: "roteiro-de-reels",
     },
     {
       path: "/carrossel",

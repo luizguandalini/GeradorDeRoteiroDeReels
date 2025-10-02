@@ -1,4 +1,4 @@
-export const DEFAULT_LANGUAGE = "en";
+﻿export const DEFAULT_LANGUAGE = "en";
 export const FALLBACK_LANGUAGE = "en";
 
 const translations = {
@@ -92,6 +92,10 @@ const translations = {
     },
     themeCarrossel: {
       title: "Carousel Suggestions",
+    },
+    landing: {
+      title: "Home Page",
+      description: "This is the home page. We'll enhance it soon.",
     },
     quantidade: {
       title: "Number of Slides",
@@ -190,7 +194,8 @@ const translations = {
       },
       menu: {
         home: "Home",
-        carrossel: "Carousel",
+        roteiroDeReels: "Reels Script",
+        carrossel: "Carousel Script",
         settings: "System Settings",
         users: "User Management",
         consumption: "Service Usage",
@@ -334,6 +339,10 @@ const translations = {
     themeCarrossel: {
       title: "Sugestões de Carrossel",
     },
+    landing: {
+      title: "Página Inicial",
+      description: "Esta é a página inicial. Em breve teremos novidades.",
+    },
     quantidade: {
       title: "Quantidade de Slides",
       note: "Selecione a quantidade de slides para seu carrossel (2 a 8 slides).",
@@ -431,7 +440,8 @@ const translations = {
       },
       menu: {
         home: "Página Inicial",
-        carrossel: "Carrossel",
+        roteiroDeReels: "Roteiro de Reels",
+        carrossel: "Roteiro de Carrossel",
         settings: "Configurações do Sistema",
         users: "Gerenciamento de Usuários",
         consumption: "Consumo dos Serviços",

@@ -12,7 +12,8 @@ import Login from "./components/Login/Login";
 import Header from "./components/Header/Header";
 import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
 import Sidebar from "./components/Sidebar/Sidebar";
-import Home from "./pages/Home/Home";
+import Landing from "./pages/Landing/Landing";
+import RoteiroDeReels from "./pages/Home/Home";
 import Carrossel from "./pages/Carrossel/Carrossel";
 import Configuracoes from "./pages/Configuracoes/Configuracoes";
 import Consumo from "./pages/Consumo/Consumo";
@@ -641,8 +642,12 @@ function AppContent() {
         <Routes>
           <Route
             path="/"
+            element={<Landing />}
+          />
+          <Route
+            path="/roteiro-de-reels"
             element={
-              <Home
+              <RoteiroDeReels
                 selectedTopico={selectedTopico}
                 temas={temas}
                 selectedTema={selectedTema}
