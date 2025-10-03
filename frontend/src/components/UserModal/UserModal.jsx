@@ -104,11 +104,49 @@ const UserModal = ({
     }
 
     // Preparar dados para envio
-    const dataToSend = { ...formData };
+    const toNum = (v) => {
+      const n = Number(v);
+      return Number.isNaN(n) ? 0 : n;
+    };
+    const dataToSend = { 
+      ...formData,
+      // Garantir que quotas sejam números
+      quotaTemas: toNum(formData.quotaTemas),
+      quotaRoteiros: toNum(formData.quotaRoteiros),
+      quotaNarracoes: toNum(formData.quotaNarracoes),
+      quotaTemasCarrossel: toNum(formData.quotaTemasCarrossel),
+      quotaCarrossel: toNum(formData.quotaCarrossel)
+    };
     
     // Se estiver editando e senha estiver vazia, não enviar senha
     if (mode === 'edit' && !dataToSend.password) {
       delete dataToSend.password;
+    }
+
+    // Detectar se houve alterações de perfil e/ou quotas (apenas no modo edição)
+    if (mode === 'edit' && user) {
+      const profileChanged = (
+        (dataToSend.name !== user.name) ||
+        (dataToSend.email !== user.email) ||
+        (dataToSend.role !== user.role) ||
+        (dataToSend.active !== user.active) ||
+        (dataToSend.language !== user.language) ||
+        (dataToSend.password && dataToSend.password.length > 0)
+      );
+      const quotasChanged = (
+        toNum(dataToSend.quotaTemas) !== toNum(user.quotaTemas ?? 0) ||
+        toNum(dataToSend.quotaRoteiros) !== toNum(user.quotaRoteiros ?? 0) ||
+        toNum(dataToSend.quotaNarracoes) !== toNum(user.quotaNarracoes ?? 0) ||
+        toNum(dataToSend.quotaTemasCarrossel) !== toNum(user.quotaTemasCarrossel ?? 0) ||
+        toNum(dataToSend.quotaCarrossel) !== toNum(user.quotaCarrossel ?? 0)
+      );
+
+      // Incluir flags para orientar o handler no envio correto
+      dataToSend.__profileChanged = profileChanged;
+      dataToSend.__quotasChanged = quotasChanged;
+      if (quotasChanged && !profileChanged) {
+        dataToSend.__quotasOnly = true;
+      }
     }
 
     onSave(dataToSend);

@@ -111,8 +111,60 @@ const GerenciamentoUsuarios = () => {
         await axios.post('/api/users/admin/create', userData);
         toast.success('Usuário criado com sucesso');
       } else {
-        await axios.put(`/api/users/admin/${selectedUser.id}`, userData);
-        toast.success('Usuário atualizado com sucesso');
+        // Separar atualização de perfil e quotas
+        const { quotaTemas, quotaRoteiros, quotaNarracoes, quotaTemasCarrossel, quotaCarrossel, name, email, password, role, active, language, __profileChanged, __quotasChanged, __quotasOnly } = userData;
+
+        const profilePayload = { name, email, role, active, language };
+        // Enviar senha apenas se fornecida
+        if (password && password.length > 0) {
+          profilePayload.password = password;
+        }
+
+        const toNum = (v) => {
+          const n = Number(v);
+          return Number.isNaN(n) ? 0 : n;
+        };
+        const quotaPayload = { 
+          quotaTemas: toNum(quotaTemas), 
+          quotaRoteiros: toNum(quotaRoteiros), 
+          quotaNarracoes: toNum(quotaNarracoes), 
+          quotaTemasCarrossel: toNum(quotaTemasCarrossel), 
+          quotaCarrossel: toNum(quotaCarrossel) 
+        };
+
+        // Detectar mudanças comparando com o usuário selecionado
+        const profileChanged = (__profileChanged !== undefined)
+          ? __profileChanged
+          : (
+            (name !== selectedUser.name) ||
+            (email !== selectedUser.email) ||
+            (role !== selectedUser.role) ||
+            (active !== selectedUser.active) ||
+            (language !== selectedUser.language) ||
+            (password && password.length > 0)
+          );
+        const quotasChanged = (__quotasChanged !== undefined)
+          ? __quotasChanged
+          : (
+            (toNum(quotaTemas) !== toNum(selectedUser.quotaTemas)) ||
+            (toNum(quotaRoteiros) !== toNum(selectedUser.quotaRoteiros)) ||
+            (toNum(quotaNarracoes) !== toNum(selectedUser.quotaNarracoes)) ||
+            (toNum(quotaTemasCarrossel) !== toNum(selectedUser.quotaTemasCarrossel)) ||
+            (toNum(quotaCarrossel) !== toNum(selectedUser.quotaCarrossel))
+          );
+
+        if (profileChanged && !__quotasOnly) {
+          await axios.put(`/api/users/admin/${selectedUser.id}`, profilePayload);
+        }
+        if (quotasChanged) {
+          await axios.patch(`/api/users/admin/${selectedUser.id}/quotas`, quotaPayload);
+        }
+
+        if (!profileChanged && !quotasChanged) {
+          toast.info('Nenhuma alteração detectada');
+        } else {
+          toast.success('Usuário atualizado com sucesso');
+        }
       }
       setShowUserModal(false);
       loadUsers(pagination.currentPage);

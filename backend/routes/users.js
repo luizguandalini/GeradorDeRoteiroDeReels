@@ -13,6 +13,7 @@ const prisma = new PrismaClient();
 const MAX_EMAIL_LENGTH = 254; // RFC 5321 padrão para email
 const MAX_PASSWORD_LENGTH = 128; // Limite razoável para senhas
 const MAX_NAME_LENGTH = 100; // Limite para nomes de usuário
+const MAX_QUOTA_DIGITS = 6; // Limite de dígitos para quotas (ex.: até 999999)
 
 // Aplicar middleware de autenticação em todas as rotas
 router.use(authenticateToken);
@@ -33,6 +34,32 @@ const validateInputLimits = (data) => {
     errors.push(`Nome deve ter no máximo ${MAX_NAME_LENGTH} caracteres`);
   }
   
+  return errors;
+};
+
+// Validar limites para quotas (número de dígitos e valores não negativos)
+const validateQuotaLimits = (data) => {
+  const errors = [];
+  const checkField = (value, label) => {
+    if (value === undefined || value === null) return;
+    const num = parseInt(value, 10);
+    if (Number.isNaN(num)) {
+      errors.push(`${label} deve ser um número inteiro`);
+      return;
+    }
+    if (num < 0) {
+      errors.push(`${label} não pode ser negativo`);
+    }
+    const digits = Math.abs(num).toString().length;
+    if (digits > MAX_QUOTA_DIGITS) {
+      errors.push(`${label} deve ter no máximo ${MAX_QUOTA_DIGITS} dígitos`);
+    }
+  };
+  checkField(data.quotaTemas, 'quotaTemas');
+  checkField(data.quotaRoteiros, 'quotaRoteiros');
+  checkField(data.quotaNarracoes, 'quotaNarracoes');
+  checkField(data.quotaTemasCarrossel, 'quotaTemasCarrossel');
+  checkField(data.quotaCarrossel, 'quotaCarrossel');
   return errors;
 };
 
@@ -160,7 +187,7 @@ router.get("/admin/list", requireAdmin, async (req, res) => {
 // POST /api/users/admin/create - Criar novo usuário (ADMIN ONLY)
 router.post("/admin/create", requireAdmin, async (req, res) => {
   try {
-    const { name, email, password, quotaTemas, quotaRoteiros, quotaNarracoes, quotaTemasCarrossel, quotaCarrossel } = req.body;
+    const { name, email, password } = req.body;
 
     // Validações
     if (!name || !email || !password) {
@@ -197,12 +224,12 @@ router.post("/admin/create", requireAdmin, async (req, res) => {
         password: hashedPassword,
         role: 'GENERAL', // Sempre usuário normal
         provider: 'CREDENTIALS',
-        // Quotas iniciam em zero salvo se admin definir valores
-        quotaTemas: typeof quotaTemas === 'number' ? quotaTemas : 0,
-        quotaRoteiros: typeof quotaRoteiros === 'number' ? quotaRoteiros : 0,
-        quotaNarracoes: typeof quotaNarracoes === 'number' ? quotaNarracoes : 0,
-        quotaTemasCarrossel: typeof quotaTemasCarrossel === 'number' ? quotaTemasCarrossel : 0,
-        quotaCarrossel: typeof quotaCarrossel === 'number' ? quotaCarrossel : 0
+        // Quotas sempre iniciam em zero
+        quotaTemas: 0,
+        quotaRoteiros: 0,
+        quotaNarracoes: 0,
+        quotaTemasCarrossel: 0,
+        quotaCarrossel: 0
       },
       select: {
         id: true,
@@ -313,6 +340,12 @@ router.put("/admin/:id", requireAdmin, async (req, res) => {
       return res.status(400).json({ error: validationErrors.join(', ') });
     }
 
+    // Validar limites de quotas
+    const quotaErrors = validateQuotaLimits({ quotaTemas, quotaRoteiros, quotaNarracoes, quotaTemasCarrossel, quotaCarrossel });
+    if (quotaErrors.length > 0) {
+      return res.status(400).json({ error: quotaErrors.join(', ') });
+    }
+
     if (!userId) {
       return res.status(400).json({ error: "ID de usuário inválido" });
     }
@@ -358,11 +391,11 @@ router.put("/admin/:id", requireAdmin, async (req, res) => {
       updateData.language = language;
     }
     // Atualizar quotas se fornecidas
-    if (quotaTemas !== undefined) updateData.quotaTemas = parseInt(quotaTemas, 10) || 0;
-    if (quotaRoteiros !== undefined) updateData.quotaRoteiros = parseInt(quotaRoteiros, 10) || 0;
-    if (quotaNarracoes !== undefined) updateData.quotaNarracoes = parseInt(quotaNarracoes, 10) || 0;
-    if (quotaTemasCarrossel !== undefined) updateData.quotaTemasCarrossel = parseInt(quotaTemasCarrossel, 10) || 0;
-    if (quotaCarrossel !== undefined) updateData.quotaCarrossel = parseInt(quotaCarrossel, 10) || 0;
+    if (quotaTemas !== undefined) updateData.quotaTemas = Math.max(0, parseInt(quotaTemas, 10) || 0);
+    if (quotaRoteiros !== undefined) updateData.quotaRoteiros = Math.max(0, parseInt(quotaRoteiros, 10) || 0);
+    if (quotaNarracoes !== undefined) updateData.quotaNarracoes = Math.max(0, parseInt(quotaNarracoes, 10) || 0);
+    if (quotaTemasCarrossel !== undefined) updateData.quotaTemasCarrossel = Math.max(0, parseInt(quotaTemasCarrossel, 10) || 0);
+    if (quotaCarrossel !== undefined) updateData.quotaCarrossel = Math.max(0, parseInt(quotaCarrossel, 10) || 0);
 
     // Atualizar usuário
     const updatedUser = await prisma.user.update({
@@ -392,6 +425,67 @@ router.put("/admin/:id", requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao atualizar usuário:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+// PATCH /api/users/admin/:id/quotas - Atualizar apenas quotas (ADMIN ONLY)
+router.patch("/admin/:id/quotas", requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(id);
+    if (!userId) {
+      return res.status(400).json({ error: "ID de usuário inválido" });
+    }
+
+    const { quotaTemas, quotaRoteiros, quotaNarracoes, quotaTemasCarrossel, quotaCarrossel } = req.body;
+
+    // Validar limites de quotas
+    const quotaErrors = validateQuotaLimits({ quotaTemas, quotaRoteiros, quotaNarracoes, quotaTemasCarrossel, quotaCarrossel });
+    if (quotaErrors.length > 0) {
+      return res.status(400).json({ error: quotaErrors.join(', ') });
+    }
+
+    // Garantir que o usuário existe
+    const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!existingUser) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    const updateData = {};
+    if (quotaTemas !== undefined) updateData.quotaTemas = Math.max(0, parseInt(quotaTemas, 10) || 0);
+    if (quotaRoteiros !== undefined) updateData.quotaRoteiros = Math.max(0, parseInt(quotaRoteiros, 10) || 0);
+    if (quotaNarracoes !== undefined) updateData.quotaNarracoes = Math.max(0, parseInt(quotaNarracoes, 10) || 0);
+    if (quotaTemasCarrossel !== undefined) updateData.quotaTemasCarrossel = Math.max(0, parseInt(quotaTemasCarrossel, 10) || 0);
+    if (quotaCarrossel !== undefined) updateData.quotaCarrossel = Math.max(0, parseInt(quotaCarrossel, 10) || 0);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        provider: true,
+        language: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true,
+        quotaTemas: true,
+        quotaRoteiros: true,
+        quotaNarracoes: true,
+        quotaTemasCarrossel: true,
+        quotaCarrossel: true
+      }
+    });
+
+    res.json({
+      message: "Quotas atualizadas com sucesso",
+      user: buildResponseUser(updatedUser)
+    });
+  } catch (error) {
+    console.error("Erro ao atualizar quotas:", error);
     res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
