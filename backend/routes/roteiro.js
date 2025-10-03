@@ -95,6 +95,25 @@ router.post("/", async (req, res) => {
     const effectiveLanguage = SUPPORTED_LANGUAGES.includes(requestedLanguage)
       ? requestedLanguage
       : normalizeLanguage(req.user?.language);
+
+    // Parse duração cedo para logging
+    const duracaoInt = parseInt(duracao, 10);
+
+    // Log estruturado de input para cálculos no backend
+    console.log(chalk.magenta.bold("\n📥 INPUT /api/roteiro"));
+    console.log({
+      userId: req.user?.id,
+      role: req.user?.role,
+      ip: req.headers['x-forwarded-for'] || req.ip,
+      temaPreview: typeof tema === 'string' ? tema.slice(0, 120) : null,
+      temaLength: typeof tema === 'string' ? tema.length : null,
+      duracaoRaw: duracao,
+      duracaoInt,
+      languageFromBody: languageFromBody ?? null,
+      requestedLanguage,
+      effectiveLanguage,
+      timestamp: new Date().toISOString(),
+    });
     
     // Validar tema (deve ter no máximo 500 caracteres)
     if (!tema || typeof tema !== 'string') {
@@ -112,7 +131,6 @@ router.post("/", async (req, res) => {
     }
     
     // Validar duração (deve ser um número inteiro entre 30 e 120)
-    const duracaoInt = parseInt(duracao, 10);
     if (!duracao || isNaN(duracaoInt) || duracaoInt < 30 || duracaoInt > 120) {
       const errorMessage = effectiveLanguage === 'en' 
         ? 'Duration must be between 30 and 120 seconds'
@@ -163,6 +181,7 @@ router.post("/", async (req, res) => {
 
     let body = {
       model: modelName,
+      usage: { include: true },
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -247,6 +266,18 @@ router.post("/", async (req, res) => {
     }
 
     console.log("Resposta recebida do OpenRouter");
+    // Log de usage para cálculos (tokens/custo) quando disponível
+    try {
+      const usage = response?.data?.usage;
+      const genId = response?.data?.id;
+      console.log(chalk.magenta.bold("\n📊 USAGE /api/roteiro"));
+      console.log({
+        generationId: genId ?? null,
+        usage: usage ?? null,
+      });
+    } catch (usageErr) {
+      console.log("Não foi possível obter usage da resposta:", usageErr?.message);
+    }
     let conteudo = response.data.choices[0].message.content;
     console.log("Conteúdo retornado:", conteudo);
 
