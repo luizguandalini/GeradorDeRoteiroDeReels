@@ -203,6 +203,22 @@ router.post("/", async (req, res) => {
     const parsed = JSON.parse(conteudo);
     console.log("Conteúdo parseado:", parsed);
 
+    // Validar estrutura e tamanho dos temas de carrossel
+    if (!parsed || !Array.isArray(parsed.temas)) {
+      return res.status(500).json({ error: "Resposta inválida do modelo" });
+    }
+
+    const temasSanitizados = parsed.temas
+      .map((t) => (typeof t === "string" ? t.trim() : ""))
+      .filter((t) => t.length > 0);
+
+    // Impor limite de 500 caracteres por tema
+    if (temasSanitizados.some((t) => t.length > 500)) {
+      return res
+        .status(400)
+        .json({ error: "Tema não pode ter mais de 500 caracteres" });
+    }
+
     // Deletar todos os temas de carrossel antigos do usuário para este tópico
     await prisma.userTemaCarrossel.deleteMany({
       where: {
@@ -212,7 +228,7 @@ router.post("/", async (req, res) => {
     console.log("Temas de carrossel antigos deletados");
 
     const temasCreated = await Promise.all(
-      parsed.temas.map((tema) =>
+      temasSanitizados.map((tema) =>
         prisma.userTemaCarrossel.create({
           data: {
             titulo: tema,

@@ -107,10 +107,22 @@ router.post("/", async (req, res) => {
       language
     );
 
+    // Validar se topicoId foi fornecido
+    if (!topicoId) {
+      return res.status(400).json({ error: "ID do tópico é obrigatório" });
+    }
+
+    const topicoIdInt = parseInt(topicoId, 10);
+    if (isNaN(topicoIdInt)) {
+      return res
+        .status(400)
+        .json({ error: "ID do tópico deve ser um número válido" });
+    }
+
     const topico = await prisma.userTopico.findFirst({
-      where: { 
-        id: parseInt(topicoId, 10),
-        userId: req.user.id
+      where: {
+        id: topicoIdInt,
+        userId: req.user.id,
       },
     });
 
@@ -194,6 +206,22 @@ router.post("/", async (req, res) => {
     const parsed = JSON.parse(conteudo);
     console.log("Conteúdo parseado:", parsed);
 
+    // Validar estrutura e tamanho dos temas
+    if (!parsed || !Array.isArray(parsed.temas)) {
+      return res.status(500).json({ error: "Resposta inválida do modelo" });
+    }
+
+    const temasSanitizados = parsed.temas
+      .map((t) => (typeof t === "string" ? t.trim() : ""))
+      .filter((t) => t.length > 0);
+
+    // Impor limite de 500 caracteres por tema
+    if (temasSanitizados.some((t) => t.length > 500)) {
+      return res
+        .status(400)
+        .json({ error: "Tema não pode ter mais de 500 caracteres" });
+    }
+
     // Deletar todos os temas antigos do usuário para este tópico
     await prisma.userTema.deleteMany({
       where: {
@@ -203,7 +231,7 @@ router.post("/", async (req, res) => {
     console.log("Temas antigos deletados");
 
     const temasCreated = await Promise.all(
-      parsed.temas.map((tema) =>
+      temasSanitizados.map((tema) =>
         prisma.userTema.create({
           data: {
             titulo: tema,
