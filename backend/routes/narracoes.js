@@ -46,9 +46,16 @@ function gerarSilencio() {
   return silencePath;
 }
 
-async function gerarAudio(texto, nomeArquivo, voiceId, modelId, apiKey, pastaDestino) {
+async function gerarAudio(
+  texto,
+  nomeArquivo,
+  voiceId,
+  modelId,
+  apiKey,
+  pastaDestino
+) {
   const URL = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
-  
+
   const response = await axios.post(
     URL,
     {
@@ -87,9 +94,9 @@ router.get("/", async (req, res) => {
     const narracoes = await prisma.userNarracao.findMany({
       where: {
         userId: req.user.id,
-        ativo: true
+        ativo: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     res.json(narracoes);
@@ -103,14 +110,16 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     // Admin tem acesso irrestrito; usuários comuns precisam ter créditos de narração
-    const isAdmin = req.user?.role === 'ADMIN';
+    const isAdmin = req.user?.role === "ADMIN";
     if (!getMockMode() && !isAdmin) {
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
-        select: { quotaNarracoes: true }
+        select: { quotaNarracoes: true },
       });
       if (!user || user.quotaNarracoes <= 0) {
-        return res.status(403).json({ error: "Limite de geração de narrações atingido" });
+        return res
+          .status(403)
+          .json({ error: "Limite de geração de narrações atingido" });
       }
     }
     // Verificar se está no modo mock
@@ -118,7 +127,7 @@ router.post("/", async (req, res) => {
       console.log("🔶 Usando dados mock para narrações");
       return res.json(narracoesMock);
     }
-    
+
     const { narracoes, titulo } = req.body;
     console.log("📩 Requisição recebida:", narracoes);
 
@@ -133,7 +142,7 @@ router.post("/", async (req, res) => {
     if (fs.existsSync(pastaUsuario)) {
       const files = fs.readdirSync(pastaUsuario);
       files.forEach((file) => {
-        if (file.endsWith('.mp3') && file !== 'silence.mp3') {
+        if (file.endsWith(".mp3") && file !== "silence.mp3") {
           fs.unlinkSync(path.join(pastaUsuario, file));
         }
       });
@@ -144,9 +153,9 @@ router.post("/", async (req, res) => {
     await prisma.userNarracao.updateMany({
       where: {
         userId: req.user.id,
-        ativo: true
+        ativo: true,
       },
-      data: { ativo: false }
+      data: { ativo: false },
     });
 
     // Buscar configurações do usuário
@@ -154,23 +163,29 @@ router.post("/", async (req, res) => {
       where: {
         userId: req.user.id,
         chave: {
-          in: ['ELEVEN_API_KEY', 'VOICE_ID', 'ELEVEN_MODEL_ID']
-        }
-      }
+          in: ["ELEVEN_API_KEY", "VOICE_ID", "ELEVEN_MODEL_ID"],
+        },
+      },
     });
 
     const configMap = {};
-    userConfigs.forEach(config => {
+    userConfigs.forEach((config) => {
       configMap[config.chave] = config.valor;
     });
 
-    const elevenApiKey = configMap['ELEVEN_API_KEY'] || await getConfig('ELEVEN_API_KEY', null, 'ELEVEN_API_KEY');
-    const voiceId = configMap['VOICE_ID'] || await getConfig('VOICE_ID', null, 'VOICE_ID');
-    const elevenModelId = configMap['ELEVEN_MODEL_ID'] || await getConfig('ELEVEN_MODEL_ID', null, 'ELEVEN_MODEL_ID');
+    const elevenApiKey =
+      configMap["ELEVEN_API_KEY"] ||
+      (await getConfig("ELEVEN_API_KEY", null, "ELEVEN_API_KEY"));
+    const voiceId =
+      configMap["VOICE_ID"] || (await getConfig("VOICE_ID", null, "VOICE_ID"));
+    const elevenModelId =
+      configMap["ELEVEN_MODEL_ID"] ||
+      (await getConfig("ELEVEN_MODEL_ID", null, "ELEVEN_MODEL_ID"));
 
     if (!elevenApiKey || !voiceId || !elevenModelId) {
-      return res.status(500).json({ 
-        error: "Configurações do ElevenLabs não encontradas. Verifique ELEVEN_API_KEY, VOICE_ID e ELEVEN_MODEL_ID." 
+      return res.status(500).json({
+        error:
+          "Configurações do ElevenLabs não encontradas. Verifique ELEVEN_API_KEY, VOICE_ID e ELEVEN_MODEL_ID.",
       });
     }
 
@@ -181,7 +196,14 @@ router.post("/", async (req, res) => {
     for (const [nome, texto] of Object.entries(narracoes)) {
       const nomeArquivo = `${nome.replace(/\s+/g, "_")}_${timestamp}.mp3`;
       console.log(`🎙️ Gerando: ${nomeArquivo}`);
-      const caminho = await gerarAudio(texto, nomeArquivo, voiceId, elevenModelId, elevenApiKey, pastaUsuario);
+      const caminho = await gerarAudio(
+        texto,
+        nomeArquivo,
+        voiceId,
+        elevenModelId,
+        elevenApiKey,
+        pastaUsuario
+      );
 
       const buffer = fs.readFileSync(caminho);
       buffers.push(buffer);
@@ -200,7 +222,9 @@ router.post("/", async (req, res) => {
     arquivosGerados.forEach((arquivo) => {
       if (fs.existsSync(arquivo)) {
         fs.unlinkSync(arquivo);
-        console.log(`🗑️ Arquivo temporário deletado: ${path.basename(arquivo)}`);
+        console.log(
+          `🗑️ Arquivo temporário deletado: ${path.basename(arquivo)}`
+        );
       }
     });
 
@@ -208,10 +232,13 @@ router.post("/", async (req, res) => {
     const narracao = await prisma.userNarracao.create({
       data: {
         nome: titulo || `Narração ${new Date().toLocaleString()}`,
-        texto: typeof narracoes === 'object' ? JSON.stringify(narracoes) : String(narracoes),
+        texto:
+          typeof narracoes === "object"
+            ? JSON.stringify(narracoes)
+            : String(narracoes),
         audioPath: path.relative(pastaSaida, audioFinal),
-        userId: req.user.id
-      }
+        userId: req.user.id,
+      },
     });
 
     console.log("✅ Áudio final gerado:", audioFinal);
@@ -221,7 +248,7 @@ router.post("/", async (req, res) => {
     if (!isAdmin) {
       await prisma.user.update({
         where: { id: req.user.id },
-        data: { quotaNarracoes: { decrement: 1 } }
+        data: { quotaNarracoes: { decrement: 1 } },
       });
     }
 
@@ -229,7 +256,7 @@ router.post("/", async (req, res) => {
       id: narracao.id,
       mensagem: "Áudios gerados com sucesso!",
       final: path.basename(audioFinal),
-      audioPath: narracao.audioPath
+      audioPath: narracao.audioPath,
     });
   } catch (error) {
     console.error("❌ Erro na rota /narracoes:", error.message);
@@ -245,14 +272,14 @@ router.delete("/:id", async (req, res) => {
     const narracao = await prisma.userNarracao.update({
       where: {
         id: parseInt(id),
-        userId: req.user.id
+        userId: req.user.id,
       },
-      data: { ativo: false }
+      data: { ativo: false },
     });
 
     res.json({ message: "Narração removida com sucesso" });
   } catch (error) {
-    if (error.code === 'P2025') {
+    if (error.code === "P2025") {
       return res.status(404).json({ error: "Narração não encontrada" });
     }
     console.error("❌ Erro ao remover narração:", error);
