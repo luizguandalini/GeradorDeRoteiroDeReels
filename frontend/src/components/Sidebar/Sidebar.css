@@ -1,4 +1,4 @@
-﻿.sidebar {
+.sidebar {
   position: fixed;
   left: 0;
   top: 0;
@@ -376,4 +376,41 @@
 
 .sidebar-language-switch.language-switch.compact {
   justify-content: center;
+}
+.quota-panel {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.sidebar:not(.dark-theme) .quota-panel {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.quota-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.quota-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+
+.quota-item {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar:not(.dark-theme) .quota-item {
+  background: rgba(0, 0, 0, 0.06);
 }

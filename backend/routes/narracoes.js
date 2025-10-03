@@ -102,6 +102,17 @@ router.get("/", async (req, res) => {
 // POST - Criar nova narração
 router.post("/", async (req, res) => {
   try {
+    // Admin tem acesso irrestrito; usuários comuns precisam ter créditos de narração
+    const isAdmin = req.user?.role === 'ADMIN';
+    if (!getMockMode() && !isAdmin) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { quotaNarracoes: true }
+      });
+      if (!user || user.quotaNarracoes <= 0) {
+        return res.status(403).json({ error: "Limite de geração de narrações atingido" });
+      }
+    }
     // Verificar se está no modo mock
     if (getMockMode()) {
       console.log("🔶 Usando dados mock para narrações");
@@ -205,6 +216,14 @@ router.post("/", async (req, res) => {
 
     console.log("✅ Áudio final gerado:", audioFinal);
     console.log("💾 Narração salva no banco:", narracao.id);
+
+    // Decrementar crédito apenas em cenário feliz
+    if (!isAdmin) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { quotaNarracoes: { decrement: 1 } }
+      });
+    }
 
     res.json({
       id: narracao.id,

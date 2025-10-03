@@ -14,7 +14,7 @@ export const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Token de acesso requerido' });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+  const decoded = jwt.verify(token, JWT_SECRET);
     
     // Verificar se o usuário ainda existe e está ativo
     const user = await prisma.user.findUnique({
@@ -25,7 +25,13 @@ export const authenticateToken = async (req, res, next) => {
         name: true,
         role: true,
         active: true,
-        provider: true
+        provider: true,
+        // Incluir quotas para exibir no frontend quando necessário
+        quotaTemas: true,
+        quotaRoteiros: true,
+        quotaNarracoes: true,
+        quotaTemasCarrossel: true,
+        quotaCarrossel: true
       }
     });
 

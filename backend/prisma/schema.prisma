@@ -56,7 +56,23 @@ model User {
   provider   AuthProvider @default(CREDENTIALS)
   providerId String?      @unique
   language   String      @default("pt-BR")
-  
+  // Quotas individuais (créditos disponíveis) - iniciam em zero
+  quotaTemas           Int @default(0) // Geração de sugestões de temas por tópico
+  quotaRoteiros        Int @default(0) // Geração de roteiro a partir de sugestão
+  quotaNarracoes       Int @default(0) // Geração de áudio final
+  quotaTemasCarrossel  Int @default(0) // Geração de sugestões de temas de carrossel
+  quotaCarrossel       Int @default(0) // Geração de carrossel a partir de sugestão
+
+  // Colunas legadas (manter temporariamente para evitar perda de dados)
+  carouselLimit    Int?
+  carouselUsed     Int?
+  narrationLimit   Int?
+  narrationUsed    Int?
+  suggestionLimit  Int?
+  suggestionUsed   Int?
+  topicLimit       Int?
+  topicUsed        Int?
+
   // Relacionamentos com dados do usuário
   refreshTokens RefreshToken[]
   topicos       UserTopico[]

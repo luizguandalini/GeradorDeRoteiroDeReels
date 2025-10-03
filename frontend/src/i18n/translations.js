@@ -269,16 +269,18 @@ const translations = {
       },
       errors: {
         mockModeChange: "Não foi possível alterar o modo de operação.",
-        loadTopics: "Não foi possível carregar as sugestões da IA.",
+        loadTopics: "Saldo de Temas Insuficiente Recarregue Para Continuar",
         durationRequired: "Informe a duração do vídeo em segundos.",
         durationTooShort: "A duração mínima é de 30 segundos.",
-        generateScript: "Não foi possível gerar o roteiro.",
+        generateScript:
+          "Saldo de Sugestões Insuficiente Recarregue Para Continuar",
         themeRequired: "Tema é obrigatório para gerar o roteiro.",
         themeTooLong: "O tema não pode exceder 500 caracteres.",
         quantidadeRequired: "Informe a quantidade de slides.",
         quantidadeTooShort: "A quantidade mínima é de 2 slides.",
         quantidadeTooLong: "A quantidade máxima é de 8 slides.",
-        generateCarrossel: "Não foi possível gerar o carrossel.",
+        generateCarrossel:
+          "Saldo de Sugestões de Carrossel Insuficiente, Recarregue Para Continuar",
       },
     },
     login: {

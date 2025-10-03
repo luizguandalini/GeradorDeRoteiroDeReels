@@ -45,7 +45,13 @@ const buildResponseUser = (user) => ({
   language: user.language,
   active: user.active,
   createdAt: user.createdAt,
-  updatedAt: user.updatedAt
+  updatedAt: user.updatedAt,
+  // Incluir quotas para exibição/admin
+  quotaTemas: user.quotaTemas ?? 0,
+  quotaRoteiros: user.quotaRoteiros ?? 0,
+  quotaNarracoes: user.quotaNarracoes ?? 0,
+  quotaTemasCarrossel: user.quotaTemasCarrossel ?? 0,
+  quotaCarrossel: user.quotaCarrossel ?? 0
 });
 
 // Função para deletar arquivos de áudio do usuário
@@ -110,6 +116,11 @@ router.get("/admin/list", requireAdmin, async (req, res) => {
           active: true,
           createdAt: true,
           updatedAt: true,
+          quotaTemas: true,
+          quotaRoteiros: true,
+          quotaNarracoes: true,
+          quotaTemasCarrossel: true,
+          quotaCarrossel: true,
           _count: {
             select: {
               narracoes: true,
@@ -149,7 +160,7 @@ router.get("/admin/list", requireAdmin, async (req, res) => {
 // POST /api/users/admin/create - Criar novo usuário (ADMIN ONLY)
 router.post("/admin/create", requireAdmin, async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, quotaTemas, quotaRoteiros, quotaNarracoes, quotaTemasCarrossel, quotaCarrossel } = req.body;
 
     // Validações
     if (!name || !email || !password) {
@@ -185,7 +196,13 @@ router.post("/admin/create", requireAdmin, async (req, res) => {
         email,
         password: hashedPassword,
         role: 'GENERAL', // Sempre usuário normal
-        provider: 'CREDENTIALS'
+        provider: 'CREDENTIALS',
+        // Quotas iniciam em zero salvo se admin definir valores
+        quotaTemas: typeof quotaTemas === 'number' ? quotaTemas : 0,
+        quotaRoteiros: typeof quotaRoteiros === 'number' ? quotaRoteiros : 0,
+        quotaNarracoes: typeof quotaNarracoes === 'number' ? quotaNarracoes : 0,
+        quotaTemasCarrossel: typeof quotaTemasCarrossel === 'number' ? quotaTemasCarrossel : 0,
+        quotaCarrossel: typeof quotaCarrossel === 'number' ? quotaCarrossel : 0
       },
       select: {
         id: true,
@@ -196,7 +213,12 @@ router.post("/admin/create", requireAdmin, async (req, res) => {
         language: true,
         active: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        quotaTemas: true,
+        quotaRoteiros: true,
+        quotaNarracoes: true,
+        quotaTemasCarrossel: true,
+        quotaCarrossel: true
       }
     });
 
@@ -282,7 +304,7 @@ router.post("/admin", requireAdmin, async (req, res) => {
 router.put("/admin/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, password, role, active, language } = req.body;
+    const { name, email, password, role, active, language, quotaTemas, quotaRoteiros, quotaNarracoes, quotaTemasCarrossel, quotaCarrossel } = req.body;
     const userId = parseInt(id);
 
     // Validar limites de caracteres
@@ -335,6 +357,12 @@ router.put("/admin/:id", requireAdmin, async (req, res) => {
     if (language !== undefined && SUPPORTED_LANGUAGES.includes(language)) {
       updateData.language = language;
     }
+    // Atualizar quotas se fornecidas
+    if (quotaTemas !== undefined) updateData.quotaTemas = parseInt(quotaTemas, 10) || 0;
+    if (quotaRoteiros !== undefined) updateData.quotaRoteiros = parseInt(quotaRoteiros, 10) || 0;
+    if (quotaNarracoes !== undefined) updateData.quotaNarracoes = parseInt(quotaNarracoes, 10) || 0;
+    if (quotaTemasCarrossel !== undefined) updateData.quotaTemasCarrossel = parseInt(quotaTemasCarrossel, 10) || 0;
+    if (quotaCarrossel !== undefined) updateData.quotaCarrossel = parseInt(quotaCarrossel, 10) || 0;
 
     // Atualizar usuário
     const updatedUser = await prisma.user.update({
@@ -349,7 +377,12 @@ router.put("/admin/:id", requireAdmin, async (req, res) => {
         language: true,
         active: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        quotaTemas: true,
+        quotaRoteiros: true,
+        quotaNarracoes: true,
+        quotaTemasCarrossel: true,
+        quotaCarrossel: true
       }
     });
 
@@ -428,6 +461,11 @@ router.get("/admin/:id", requireAdmin, async (req, res) => {
         active: true,
         createdAt: true,
         updatedAt: true,
+        quotaTemas: true,
+        quotaRoteiros: true,
+        quotaNarracoes: true,
+        quotaTemasCarrossel: true,
+        quotaCarrossel: true,
         _count: {
           select: {
             narracoes: true,

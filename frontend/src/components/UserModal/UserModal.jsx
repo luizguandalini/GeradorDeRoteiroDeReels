@@ -15,7 +15,13 @@ const UserModal = ({
     password: '',
     role: 'GENERAL',
     active: true,
-    language: 'pt-BR'
+    language: 'pt-BR',
+    // Quotas
+    quotaTemas: 0,
+    quotaRoteiros: 0,
+    quotaNarracoes: 0,
+    quotaTemasCarrossel: 0,
+    quotaCarrossel: 0
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
@@ -30,7 +36,12 @@ const UserModal = ({
           password: '',
           role: user.role || 'GENERAL',
           active: user.active !== undefined ? user.active : true,
-          language: user.language || 'pt-BR'
+          language: user.language || 'pt-BR',
+          quotaTemas: user.quotaTemas ?? 0,
+          quotaRoteiros: user.quotaRoteiros ?? 0,
+          quotaNarracoes: user.quotaNarracoes ?? 0,
+          quotaTemasCarrossel: user.quotaTemasCarrossel ?? 0,
+          quotaCarrossel: user.quotaCarrossel ?? 0
         });
       } else {
         setFormData({
@@ -39,7 +50,12 @@ const UserModal = ({
           password: '',
           role: 'GENERAL',
           active: true,
-          language: 'pt-BR'
+          language: 'pt-BR',
+          quotaTemas: 0,
+          quotaRoteiros: 0,
+          quotaNarracoes: 0,
+          quotaTemasCarrossel: 0,
+          quotaCarrossel: 0
         });
       }
       setErrors({});
@@ -122,7 +138,7 @@ const UserModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="modal-body">
-          <div className="form-grid">
+        <div className="form-grid">
             {/* Nome */}
             <div className="form-group">
               <label htmlFor="name">Nome *</label>
@@ -216,6 +232,64 @@ const UserModal = ({
               <small className="help-text">
                 Usuários inativos não conseguem fazer login no sistema
               </small>
+            </div>
+
+            {/* Quotas */}
+            <div className="form-group">
+              <label>Créditos disponíveis</label>
+              <div className="quota-grid">
+                <div className="quota-field">
+                  <label htmlFor="quotaTemas">Temas</label>
+                  <input
+                    type="number"
+                    id="quotaTemas"
+                    value={formData.quotaTemas}
+                    onChange={(e) => handleInputChange('quotaTemas', parseInt(e.target.value || '0', 10))}
+                    min="0"
+                  />
+                </div>
+                <div className="quota-field">
+                  <label htmlFor="quotaRoteiros">Roteiros</label>
+                  <input
+                    type="number"
+                    id="quotaRoteiros"
+                    value={formData.quotaRoteiros}
+                    onChange={(e) => handleInputChange('quotaRoteiros', parseInt(e.target.value || '0', 10))}
+                    min="0"
+                  />
+                </div>
+                <div className="quota-field">
+                  <label htmlFor="quotaNarracoes">Narrações</label>
+                  <input
+                    type="number"
+                    id="quotaNarracoes"
+                    value={formData.quotaNarracoes}
+                    onChange={(e) => handleInputChange('quotaNarracoes', parseInt(e.target.value || '0', 10))}
+                    min="0"
+                  />
+                </div>
+                <div className="quota-field">
+                  <label htmlFor="quotaTemasCarrossel">Temas Carrossel</label>
+                  <input
+                    type="number"
+                    id="quotaTemasCarrossel"
+                    value={formData.quotaTemasCarrossel}
+                    onChange={(e) => handleInputChange('quotaTemasCarrossel', parseInt(e.target.value || '0', 10))}
+                    min="0"
+                  />
+                </div>
+                <div className="quota-field">
+                  <label htmlFor="quotaCarrossel">Carrossel</label>
+                  <input
+                    type="number"
+                    id="quotaCarrossel"
+                    value={formData.quotaCarrossel}
+                    onChange={(e) => handleInputChange('quotaCarrossel', parseInt(e.target.value || '0', 10))}
+                    min="0"
+                  />
+                </div>
+              </div>
+              <small className="help-text">Por padrão novos usuários começam com 0.</small>
             </div>
           </div>
 

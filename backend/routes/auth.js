@@ -32,7 +32,13 @@ const REFRESH_TOKEN_EXPIRATION_MS = REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000
 const buildUserResponse = (user) => ({
   name: user.name,
   role: user.role, // Necessário para controle de acesso no frontend
-  language: user.language
+  language: user.language,
+  // Expor quotas para o frontend
+  quotaTemas: user.quotaTemas ?? 0,
+  quotaRoteiros: user.quotaRoteiros ?? 0,
+  quotaNarracoes: user.quotaNarracoes ?? 0,
+  quotaTemasCarrossel: user.quotaTemasCarrossel ?? 0,
+  quotaCarrossel: user.quotaCarrossel ?? 0
 });
 
 const generateUserToken = (user) => jwt.sign(
@@ -137,7 +143,12 @@ const authUserSelect = {
   role: true,
   provider: true,
   language: true,
-  active: true
+  active: true,
+  quotaTemas: true,
+  quotaRoteiros: true,
+  quotaNarracoes: true,
+  quotaTemasCarrossel: true,
+  quotaCarrossel: true
 };
 
 const upsertSocialUser = async ({ email, name, provider, providerId }) => {

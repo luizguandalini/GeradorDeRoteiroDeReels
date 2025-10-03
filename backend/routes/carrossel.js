@@ -66,6 +66,21 @@ router.post("/", async (req, res) => {
       return res.json(languageForMock === "en" ? roteiroMockEn : roteiroMock);
     }
 
+    // Checagem de quota e flag de admin
+    const isAdmin = req.user?.role === 'ADMIN';
+    if (!isAdmin) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { quotaCarrossel: true }
+      });
+      if (!user || user.quotaCarrossel <= 0) {
+        const errorMessage = normalizeLanguage(req.user?.language) === 'en'
+          ? 'You have no remaining carousel generations'
+          : 'Limite de geração de carrossel atingido';
+        return res.status(403).json({ error: errorMessage });
+      }
+    }
+
     const { tema, quantidade, language: languageFromBody } = req.body;
     
     // Validar language - deve ser exatamente 'pt-BR' ou 'en'
@@ -323,6 +338,14 @@ router.post("/", async (req, res) => {
         }
       });
       console.log("Novo carrossel salvo no banco");
+      // Decrementar crédito apenas em cenário feliz
+      const isAdmin = req.user?.role === 'ADMIN';
+      if (!isAdmin) {
+        await prisma.user.update({
+          where: { id: req.user.id },
+          data: { quotaCarrossel: { decrement: 1 } }
+        });
+      }
       
       res.json({ ...parsed, language: effectiveLanguage, id: novoCarrossel.id });
     } catch (parseError) {

@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaHome,
@@ -200,6 +200,33 @@ const Sidebar = ({
       </nav>
 
       <div className="sidebar-controls">
+        {/* Painel de quotas disponíveis */}
+        {!isCollapsed && user && (
+          <div className="quota-panel">
+            <div className="quota-title">Saldos</div>
+            {admin ? (
+              <div className="quota-item">Ilimitado (admin)</div>
+            ) : (
+              <div className="quota-list">
+                <div className="quota-item">
+                  Tópicos de Reels: {user.quotaTemas ?? 0}
+                </div>
+                <div className="quota-item">
+                  Roteiros de Reels: {user.quotaRoteiros ?? 0}
+                </div>
+                <div className="quota-item">
+                  Narrações de Reels: {user.quotaNarracoes ?? 0}
+                </div>
+                <div className="quota-item">
+                  Tópicos de Carrossel: {user.quotaTemasCarrossel ?? 0}
+                </div>
+                <div className="quota-item">
+                  Sugestões de Carrossel: {user.quotaCarrossel ?? 0}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <div className="control-item language-control">
           <LanguageSwitch
             value={language}
@@ -294,5 +321,3 @@ const Sidebar = ({
 };
 
 export default Sidebar;
-
-

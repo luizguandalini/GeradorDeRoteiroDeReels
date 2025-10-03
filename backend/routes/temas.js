@@ -67,6 +67,17 @@ const SYSTEM_MESSAGES = {
 
 router.post("/", async (req, res) => {
   try {
+    // Admin tem acesso irrestrito; usuários comuns precisam ter créditos
+    const isAdmin = req.user?.role === 'ADMIN';
+    if (!getMockMode() && !isAdmin) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { quotaTemas: true }
+      });
+      if (!user || user.quotaTemas <= 0) {
+        return res.status(403).json({ error: "Limite de geração de temas atingido" });
+      }
+    }
     const requestedLanguageRaw =
       typeof req.body.language === "string" ? req.body.language.trim() : null;
     
@@ -203,6 +214,15 @@ router.post("/", async (req, res) => {
     );
 
     console.log("Temas salvos no banco de dados");
+
+    // Decrementar crédito apenas em cenário feliz
+    if (!getMockMode() && !isAdmin) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { quotaTemas: { decrement: 1 } }
+      });
+    }
+
     res.json({
       temas: temasCreated.map((t) => t.titulo),
       topico: topico.nome,

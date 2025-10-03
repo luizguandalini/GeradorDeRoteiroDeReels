@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { FaFilePdf, FaPlay, FaCopy, FaEdit, FaSave, FaTimes, FaTrash, FaPlus } from "react-icons/fa";
+import {
+  FaFilePdf,
+  FaPlay,
+  FaCopy,
+  FaEdit,
+  FaSave,
+  FaTimes,
+  FaTrash,
+  FaPlus,
+} from "react-icons/fa";
 import axios from "axios";
 import jsPDF from "jspdf";
 import { toast } from "react-toastify";
@@ -13,18 +22,18 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [addPosition, setAddPosition] = useState(1);
   const [newComboData, setNewComboData] = useState({
-    narracao: '',
-    imagem: ''
+    narracao: "",
+    imagem: "",
   });
 
   useEffect(() => {
     if (Array.isArray(roteiro) && roteiro.length > 0) {
       const steps = roteiro.map((r, i) => ({
         nar: r.narracao || "",
-        img: r.imagem || ""
+        img: r.imagem || "",
       }));
       setEditingSteps(steps);
-      
+
       // Manter compatibilidade com o texto original
       const linhas = roteiro.flatMap((r, i) => {
         const out = [];
@@ -48,11 +57,11 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
     const currentSteps = [...editingSteps];
     const oldValue = currentSteps[stepIndex][field] || "";
     currentSteps[stepIndex][field] = newValue;
-    
+
     const totalChars = currentSteps.reduce((total, step) => {
       return total + (step[field] ? step[field].length : 0);
     }, 0);
-    
+
     return totalChars <= 2000;
   };
 
@@ -66,12 +75,12 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
   // Função para salvar edição
   const saveEdit = async () => {
     if (!editingField) return;
-    
+
     const { stepIndex, field } = editingField;
-    
+
     // Validar limite de caracteres
     if (!validateCharacterLimit(tempValue, stepIndex, field)) {
-      const fieldName = field === 'nar' ? 'narrações' : 'imagens/vídeos';
+      const fieldName = field === "nar" ? "narrações" : "imagens/vídeos";
       toast.error(`Limite de 2000 caracteres excedido para ${fieldName}!`);
       return;
     }
@@ -79,10 +88,10 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
     const newSteps = [...editingSteps];
     newSteps[stepIndex][field] = tempValue;
     setEditingSteps(newSteps);
-    
+
     // Atualizar texto para manter compatibilidade
     updateTextoFromSteps(newSteps);
-    
+
     // Salvar no backend
     if (onSaveRoteiro) {
       const success = await onSaveRoteiro(newSteps, window.currentRoteiroId);
@@ -107,16 +116,18 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
 
   // Função para remover combo
   const removeStep = async (stepIndex) => {
-    if (window.confirm(`Tem certeza que deseja remover o combo ${stepIndex + 1}?`)) {
+    if (
+      window.confirm(`Tem certeza que deseja remover o combo ${stepIndex + 1}?`)
+    ) {
       const newSteps = editingSteps.filter((_, index) => index !== stepIndex);
       setEditingSteps(newSteps);
       updateTextoFromSteps(newSteps);
-      
+
       // Salvar no backend
       if (onSaveRoteiro) {
         await onSaveRoteiro(newSteps, window.currentRoteiroId);
       }
-      
+
       toast.success("Combo removido com sucesso!");
     }
   };
@@ -125,15 +136,17 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
   const addStep = async () => {
     // Validar se os campos obrigatórios estão preenchidos
     if (!newComboData.narracao.trim() || !newComboData.imagem.trim()) {
-      alert("É obrigatório preencher tanto a narração quanto a descrição da imagem/vídeo.");
+      alert(
+        "É obrigatório preencher tanto a narração quanto a descrição da imagem/vídeo."
+      );
       return;
     }
 
     const position = parseInt(addPosition) - 1;
-    
+
     const newCombo = {
       nar: newComboData.narracao.trim(),
-      img: newComboData.imagem.trim()
+      img: newComboData.imagem.trim(),
     };
 
     // Inserir o novo combo na posição especificada
@@ -143,20 +156,20 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
     // Renumerar todos os combos
     const renumberedSteps = newSteps.map((step, index) => ({
       ...step,
-      numero: index + 1
+      numero: index + 1,
     }));
 
     setEditingSteps(renumberedSteps);
     updateTextoFromSteps(renumberedSteps);
     setShowAddForm(false);
     setAddPosition(1);
-    setNewComboData({ narracao: '', imagem: '' });
-    
+    setNewComboData({ narracao: "", imagem: "" });
+
     // Salvar no backend
     if (onSaveRoteiro) {
       await onSaveRoteiro(renumberedSteps, window.currentRoteiroId);
     }
-    
+
     toast.success(`Combo adicionado na posição ${addPosition}!`);
   };
 
@@ -184,7 +197,7 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
   };
 
   const parseSteps = () => {
-    return editingSteps.filter(step => step.nar || step.img);
+    return editingSteps.filter((step) => step.nar || step.img);
   };
 
   const gerarVoz = async () => {
@@ -203,7 +216,7 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
     try {
       await axios.post("/api/narracoes", { narracoes });
       toast.success("Voz gerada com sucesso! Verifique a aba de Narrações.");
-      
+
       if (onNarracoesGeradas) {
         onNarracoesGeradas(true);
       }
@@ -212,7 +225,9 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
       }
     } catch (error) {
       console.error("Erro ao verificar/gerar narração:", error);
-      toast.error("Erro ao gerar voz");
+      toast.error(
+        "Saldo de Geração de Narrações Insuficiente, Recarregue Para Continuar"
+      );
     }
   };
 
@@ -302,9 +317,9 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
     return editingSteps.map((step, i) => (
       <div key={i} className="step">
         <div className="step-badge">{i + 1}</div>
-        
+
         <div className="step-actions">
-          <button 
+          <button
             className="btn-remove-step"
             onClick={() => removeStep(i)}
             title="Remover combo"
@@ -316,7 +331,7 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
         {/* Narração */}
         <div className="step-row">
           <span className="label label-nar">Narração {i + 1}:</span>
-          {editingField?.stepIndex === i && editingField?.field === 'nar' ? (
+          {editingField?.stepIndex === i && editingField?.field === "nar" ? (
             <div className="edit-container">
               <textarea
                 value={tempValue}
@@ -334,15 +349,20 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
                 </button>
               </div>
               <div className="char-counter">
-                {getTotalCharacters('nar') - (step.nar?.length || 0) + tempValue.length}/2000 caracteres (narrações)
+                {getTotalCharacters("nar") -
+                  (step.nar?.length || 0) +
+                  tempValue.length}
+                /2000 caracteres (narrações)
               </div>
             </div>
           ) : (
             <div className="editable-content">
-              <span className="row-content">{step.nar || "Clique para adicionar narração"}</span>
-              <button 
+              <span className="row-content">
+                {step.nar || "Clique para adicionar narração"}
+              </span>
+              <button
                 className="btn-edit"
-                onClick={() => startEditing(i, 'nar')}
+                onClick={() => startEditing(i, "nar")}
                 title="Editar narração"
               >
                 <FaEdit />
@@ -354,7 +374,7 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
         {/* Imagem/Vídeo */}
         <div className="step-row">
           <span className="label label-img">Imagem/Vídeo {i + 1}:</span>
-          {editingField?.stepIndex === i && editingField?.field === 'img' ? (
+          {editingField?.stepIndex === i && editingField?.field === "img" ? (
             <div className="edit-container">
               <textarea
                 value={tempValue}
@@ -372,15 +392,20 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
                 </button>
               </div>
               <div className="char-counter">
-                {getTotalCharacters('img') - (step.img?.length || 0) + tempValue.length}/2000 caracteres (imagens/vídeos)
+                {getTotalCharacters("img") -
+                  (step.img?.length || 0) +
+                  tempValue.length}
+                /2000 caracteres (imagens/vídeos)
               </div>
             </div>
           ) : (
             <div className="editable-content">
-              <span className="row-content">{step.img || "Clique para adicionar descrição da imagem/vídeo"}</span>
-              <button 
+              <span className="row-content">
+                {step.img || "Clique para adicionar descrição da imagem/vídeo"}
+              </span>
+              <button
                 className="btn-edit"
-                onClick={() => startEditing(i, 'img')}
+                onClick={() => startEditing(i, "img")}
                 title="Editar imagem/vídeo"
               >
                 <FaEdit />
@@ -397,17 +422,19 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
       {/* Contadores de caracteres */}
       <div className="character-counters">
         <div className="counter">
-          <span>Narrações: {getTotalCharacters('nar')}/2000 caracteres</span>
+          <span>Narrações: {getTotalCharacters("nar")}/2000 caracteres</span>
         </div>
         <div className="counter">
-          <span>Imagens/Vídeos: {getTotalCharacters('img')}/2000 caracteres</span>
+          <span>
+            Imagens/Vídeos: {getTotalCharacters("img")}/2000 caracteres
+          </span>
         </div>
       </div>
 
       {/* Botão para adicionar combo */}
       <div className="add-combo-section">
         {!showAddForm ? (
-          <button 
+          <button
             className="btn-add-combo"
             onClick={() => setShowAddForm(true)}
           >
@@ -425,12 +452,17 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
                 onChange={(e) => setAddPosition(e.target.value)}
               />
             </label>
-            
+
             <label>
               Narração: *
               <textarea
                 value={newComboData.narracao}
-                onChange={(e) => setNewComboData(prev => ({ ...prev, narracao: e.target.value }))}
+                onChange={(e) =>
+                  setNewComboData((prev) => ({
+                    ...prev,
+                    narracao: e.target.value,
+                  }))
+                }
                 placeholder="Digite a narração (obrigatório)..."
                 className="add-form-textarea"
                 required
@@ -439,12 +471,17 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
                 {newComboData.narracao.length}/2000 caracteres
               </div>
             </label>
-            
+
             <label>
               Imagem/Vídeo: *
               <textarea
                 value={newComboData.imagem}
-                onChange={(e) => setNewComboData(prev => ({ ...prev, imagem: e.target.value }))}
+                onChange={(e) =>
+                  setNewComboData((prev) => ({
+                    ...prev,
+                    imagem: e.target.value,
+                  }))
+                }
                 placeholder="Digite a descrição da imagem/vídeo (obrigatório)..."
                 className="add-form-textarea"
                 required
@@ -453,20 +490,22 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
                 {newComboData.imagem.length}/2000 caracteres
               </div>
             </label>
-            
+
             <div className="add-form-actions">
-              <button 
-                className="btn-save" 
+              <button
+                className="btn-save"
                 onClick={addStep}
-                disabled={!newComboData.narracao.trim() || !newComboData.imagem.trim()}
+                disabled={
+                  !newComboData.narracao.trim() || !newComboData.imagem.trim()
+                }
               >
                 <FaPlus /> Adicionar
               </button>
-              <button 
-                className="btn-cancel" 
+              <button
+                className="btn-cancel"
                 onClick={() => {
                   setShowAddForm(false);
-                  setNewComboData({ narracao: '', imagem: '' });
+                  setNewComboData({ narracao: "", imagem: "" });
                   setAddPosition(1);
                 }}
               >
@@ -479,9 +518,7 @@ function Roteiro({ roteiro, onSaveRoteiro }) {
 
       {/* LISTA (rolável) - Agora editável */}
       <div className="editor-container">
-        <div className="roteiro-display">
-          {renderEditableSteps()}
-        </div>
+        <div className="roteiro-display">{renderEditableSteps()}</div>
       </div>
 
       {/* AÇÕES (fora do container) */}

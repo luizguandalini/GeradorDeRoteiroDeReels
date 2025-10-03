@@ -66,6 +66,21 @@ router.post("/", async (req, res) => {
       return res.json(languageForMock === "en" ? roteiroMockEn : roteiroMock);
     }
 
+    // Admin tem acesso irrestrito; usuários comuns precisam ter créditos de roteiro
+    const isAdmin = req.user?.role === 'ADMIN';
+    if (!isAdmin) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { quotaRoteiros: true }
+      });
+      if (!user || user.quotaRoteiros <= 0) {
+        const errorMessage = normalizeLanguage(req.user?.language) === 'en'
+          ? 'You have no remaining script generations'
+          : 'Limite de geração de roteiros atingido';
+        return res.status(403).json({ error: errorMessage });
+      }
+    }
+
     const { tema, duracao, language: languageFromBody } = req.body;
     
     // Validar language - deve ser exatamente 'pt-BR' ou 'en'
@@ -306,6 +321,13 @@ router.post("/", async (req, res) => {
         }
       });
       console.log("Novo roteiro salvo no banco");
+      // Decrementar crédito apenas em cenário feliz
+      if (!isAdmin) {
+        await prisma.user.update({
+          where: { id: req.user.id },
+          data: { quotaRoteiros: { decrement: 1 } }
+        });
+      }
       
       res.json({ ...parsed, language: effectiveLanguage, id: novoRoteiro.id });
     } catch (parseError) {
