@@ -11,6 +11,10 @@ import {
   SUPPORTED_LANGUAGES,
   DEFAULT_LANGUAGE,
 } from "../config/language.js";
+import {
+  emitCarrosselGenerated,
+  emitCarrosselProgress,
+} from "../services/socketService.js";
 
 dotenv.config();
 const router = express.Router();
@@ -26,9 +30,9 @@ router.get("/", async (req, res) => {
     const ultimoCarrossel = await prisma.userCarrossel.findFirst({
       where: {
         userId: req.user.id,
-        ativo: true
+        ativo: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     if (!ultimoCarrossel) {
@@ -67,56 +71,66 @@ router.post("/", async (req, res) => {
     }
 
     // Checagem de quota e flag de admin
-    const isAdmin = req.user?.role === 'ADMIN';
+    const isAdmin = req.user?.role === "ADMIN";
     if (!isAdmin) {
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
-        select: { quotaCarrossel: true }
+        select: { quotaCarrossel: true },
       });
       if (!user || user.quotaCarrossel <= 0) {
-        const errorMessage = normalizeLanguage(req.user?.language) === 'en'
-          ? 'You have no remaining carousel generations'
-          : 'Limite de geração de carrossel atingido';
+        const errorMessage =
+          normalizeLanguage(req.user?.language) === "en"
+            ? "You have no remaining carousel generations"
+            : "Limite de geração de carrossel atingido";
         return res.status(403).json({ error: errorMessage });
       }
     }
 
     const { tema, quantidade, language: languageFromBody } = req.body;
-    
+
     // Validar language - deve ser exatamente 'pt-BR' ou 'en'
     const requestedLanguage =
       typeof languageFromBody === "string" ? languageFromBody.trim() : null;
     if (requestedLanguage && !SUPPORTED_LANGUAGES.includes(requestedLanguage)) {
-      return res.status(400).json({ 
-        error: "Invalid language parameter. Only 'pt-BR' and 'en' are supported." 
+      return res.status(400).json({
+        error:
+          "Invalid language parameter. Only 'pt-BR' and 'en' are supported.",
       });
     }
-    
+
     const effectiveLanguage = SUPPORTED_LANGUAGES.includes(requestedLanguage)
       ? requestedLanguage
       : normalizeLanguage(req.user?.language);
-    
+
     // Validar tema (deve ter no máximo 500 caracteres)
-    if (!tema || typeof tema !== 'string') {
-      const errorMessage = effectiveLanguage === 'en' 
-        ? 'Theme is required and must be a string'
-        : 'Tema é obrigatório e deve ser um texto';
+    if (!tema || typeof tema !== "string") {
+      const errorMessage =
+        effectiveLanguage === "en"
+          ? "Theme is required and must be a string"
+          : "Tema é obrigatório e deve ser um texto";
       return res.status(400).json({ error: errorMessage });
     }
-    
+
     if (tema.length > 500) {
-      const errorMessage = effectiveLanguage === 'en' 
-        ? 'Theme must not exceed 500 characters'
-        : 'O tema não pode exceder 500 caracteres';
+      const errorMessage =
+        effectiveLanguage === "en"
+          ? "Theme must not exceed 500 characters"
+          : "O tema não pode exceder 500 caracteres";
       return res.status(400).json({ error: errorMessage });
     }
-    
+
     // Validar quantidade (deve ser um número inteiro entre 2 e 8)
     const quantidadeInt = parseInt(quantidade, 10);
-    if (!quantidade || isNaN(quantidadeInt) || quantidadeInt < 2 || quantidadeInt > 8) {
-      const errorMessage = effectiveLanguage === 'en' 
-        ? 'Number of slides must be between 2 and 8'
-        : 'A quantidade de slides deve estar entre 2 e 8';
+    if (
+      !quantidade ||
+      isNaN(quantidadeInt) ||
+      quantidadeInt < 2 ||
+      quantidadeInt > 8
+    ) {
+      const errorMessage =
+        effectiveLanguage === "en"
+          ? "Number of slides must be between 2 and 8"
+          : "A quantidade de slides deve estar entre 2 e 8";
       return res.status(400).json({ error: errorMessage });
     }
 
@@ -207,7 +221,10 @@ router.post("/", async (req, res) => {
     console.log(chalk.blue("🌐 Language:"), chalk.green(effectiveLanguage));
     console.log(chalk.blue("🤖 Model:"), chalk.green(modelName));
     console.log(chalk.blue("🎬 Tema:"), chalk.green(tema));
-    console.log(chalk.blue("📊 Quantidade:"), chalk.green(quantidade + " slides"));
+    console.log(
+      chalk.blue("📊 Quantidade:"),
+      chalk.green(quantidade + " slides")
+    );
     console.log(chalk.cyan("─".repeat(60)));
 
     console.log("Enviando requisição para OpenRouter...");
@@ -260,70 +277,76 @@ router.post("/", async (req, res) => {
     try {
       parsed = JSON.parse(conteudo);
       console.log("Conteúdo parseado:", parsed);
-      
+
       // Validar limites de caracteres
       if (parsed.carrossel && Array.isArray(parsed.carrossel)) {
         let totalTitulos = 0;
         let totalParagrafos = 0;
         let totalImagens = 0;
-        
+
         for (const item of parsed.carrossel) {
           // Validar que nenhum slide tenha campos vazios
           if (!item.titulo || !item.titulo.trim()) {
-            const errorMessage = effectiveLanguage === 'en' 
-              ? 'All title fields must be filled'
-              : 'Todos os campos de título devem ser preenchidos';
+            const errorMessage =
+              effectiveLanguage === "en"
+                ? "All title fields must be filled"
+                : "Todos os campos de título devem ser preenchidos";
             return res.status(400).json({ error: errorMessage });
           }
-          
+
           if (!item.paragrafo || !item.paragrafo.trim()) {
-            const errorMessage = effectiveLanguage === 'en' 
-              ? 'All paragraph fields must be filled'
-              : 'Todos os campos de parágrafo devem ser preenchidos';
+            const errorMessage =
+              effectiveLanguage === "en"
+                ? "All paragraph fields must be filled"
+                : "Todos os campos de parágrafo devem ser preenchidos";
             return res.status(400).json({ error: errorMessage });
           }
-          
+
           if (!item.imagem || !item.imagem.trim()) {
-            const errorMessage = effectiveLanguage === 'en' 
-              ? 'All image description fields must be filled'
-              : 'Todos os campos de descrição de imagem devem ser preenchidos';
+            const errorMessage =
+              effectiveLanguage === "en"
+                ? "All image description fields must be filled"
+                : "Todos os campos de descrição de imagem devem ser preenchidos";
             return res.status(400).json({ error: errorMessage });
           }
-          
+
           totalTitulos += item.titulo.length;
           totalParagrafos += item.paragrafo.length;
           totalImagens += item.imagem.length;
         }
-        
+
         if (totalTitulos > 1000) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? `Total title characters (${totalTitulos}) exceeds the limit of 1000 characters`
-            : `Total de caracteres dos títulos (${totalTitulos}) excede o limite de 1000 caracteres`;
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? `Total title characters (${totalTitulos}) exceeds the limit of 1000 characters`
+              : `Total de caracteres dos títulos (${totalTitulos}) excede o limite de 1000 caracteres`;
           return res.status(400).json({ error: errorMessage });
         }
-        
+
         if (totalParagrafos > 3000) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? `Total paragraph characters (${totalParagrafos}) exceeds the limit of 3000 characters`
-            : `Total de caracteres dos parágrafos (${totalParagrafos}) excede o limite de 3000 caracteres`;
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? `Total paragraph characters (${totalParagrafos}) exceeds the limit of 3000 characters`
+              : `Total de caracteres dos parágrafos (${totalParagrafos}) excede o limite de 3000 caracteres`;
           return res.status(400).json({ error: errorMessage });
         }
-        
+
         if (totalImagens > 2000) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? `Total image description characters (${totalImagens}) exceeds the limit of 2000 characters`
-            : `Total de caracteres das descrições de imagem (${totalImagens}) excede o limite de 2000 caracteres`;
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? `Total image description characters (${totalImagens}) exceeds the limit of 2000 characters`
+              : `Total de caracteres das descrições de imagem (${totalImagens}) excede o limite de 2000 caracteres`;
           return res.status(400).json({ error: errorMessage });
         }
       }
-      
+
       // Deletar carrosseis antigos do usuário
       await prisma.userCarrossel.updateMany({
         where: {
           userId: req.user.id,
-          ativo: true
+          ativo: true,
         },
-        data: { ativo: false }
+        data: { ativo: false },
       });
       console.log("Carrosseis antigos desativados");
 
@@ -334,20 +357,31 @@ router.post("/", async (req, res) => {
           quantidade: parseInt(quantidade),
           conteudo: JSON.stringify(parsed),
           userId: req.user.id,
-          ativo: true
-        }
+          ativo: true,
+        },
       });
       console.log("Novo carrossel salvo no banco");
       // Decrementar crédito apenas em cenário feliz
-      const isAdmin = req.user?.role === 'ADMIN';
+      const isAdmin = req.user?.role === "ADMIN";
       if (!isAdmin) {
         await prisma.user.update({
           where: { id: req.user.id },
-          data: { quotaCarrossel: { decrement: 1 } }
+          data: { quotaCarrossel: { decrement: 1 } },
         });
       }
-      
-      res.json({ ...parsed, language: effectiveLanguage, id: novoCarrossel.id });
+
+      const responseData = {
+        ...parsed,
+        language: effectiveLanguage,
+        id: novoCarrossel.id,
+      };
+
+      // Emitir evento via websocket
+      if (req.io) {
+        emitCarrosselGenerated(req.io, req.user.id, responseData);
+      }
+
+      res.json(responseData);
     } catch (parseError) {
       console.error("❌ Erro ao fazer parse do JSON:", parseError.message);
       res.status(500).json({
@@ -377,93 +411,99 @@ router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { carrossel } = req.body;
-    
+
     // Determinar idioma efetivo para mensagens de erro
     const effectiveLanguage = normalizeLanguage(req.user?.language);
-    
+
     // Verificar se o carrossel pertence ao usuário
     const carrosselExistente = await prisma.userCarrossel.findFirst({
       where: {
         id: parseInt(id),
         userId: req.user.id,
-        ativo: true
-      }
+        ativo: true,
+      },
     });
-    
+
     if (!carrosselExistente) {
-      const errorMessage = effectiveLanguage === 'en' 
-        ? 'Carousel not found'
-        : 'Carrossel não encontrado';
+      const errorMessage =
+        effectiveLanguage === "en"
+          ? "Carousel not found"
+          : "Carrossel não encontrado";
       return res.status(404).json({ error: errorMessage });
     }
-    
+
     // Validar limites de caracteres
     if (carrossel && Array.isArray(carrossel)) {
       let totalTitulos = 0;
       let totalParagrafos = 0;
       let totalImagens = 0;
-      
+
       for (const item of carrossel) {
         // Validar que nenhum slide tenha campos vazios
         if (!item.titulo || !item.titulo.trim()) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? 'All title fields must be filled'
-            : 'Todos os campos de título devem ser preenchidos';
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? "All title fields must be filled"
+              : "Todos os campos de título devem ser preenchidos";
           return res.status(400).json({ error: errorMessage });
         }
-        
+
         if (!item.paragrafo || !item.paragrafo.trim()) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? 'All paragraph fields must be filled'
-            : 'Todos os campos de parágrafo devem ser preenchidos';
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? "All paragraph fields must be filled"
+              : "Todos os campos de parágrafo devem ser preenchidos";
           return res.status(400).json({ error: errorMessage });
         }
-        
+
         if (!item.imagem || !item.imagem.trim()) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? 'All image description fields must be filled'
-            : 'Todos os campos de descrição de imagem devem ser preenchidos';
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? "All image description fields must be filled"
+              : "Todos os campos de descrição de imagem devem ser preenchidos";
           return res.status(400).json({ error: errorMessage });
         }
-        
+
         totalTitulos += item.titulo.length;
         totalParagrafos += item.paragrafo.length;
         totalImagens += item.imagem.length;
       }
-      
+
       if (totalTitulos > 1000) {
-        const errorMessage = effectiveLanguage === 'en' 
-          ? `Total title characters (${totalTitulos}) exceeds the limit of 1000 characters`
-          : `Total de caracteres dos títulos (${totalTitulos}) excede o limite de 1000 caracteres`;
+        const errorMessage =
+          effectiveLanguage === "en"
+            ? `Total title characters (${totalTitulos}) exceeds the limit of 1000 characters`
+            : `Total de caracteres dos títulos (${totalTitulos}) excede o limite de 1000 caracteres`;
         return res.status(400).json({ error: errorMessage });
       }
-      
+
       if (totalParagrafos > 3000) {
-        const errorMessage = effectiveLanguage === 'en' 
-          ? `Total paragraph characters (${totalParagrafos}) exceeds the limit of 3000 characters`
-          : `Total de caracteres dos parágrafos (${totalParagrafos}) excede o limite de 3000 caracteres`;
+        const errorMessage =
+          effectiveLanguage === "en"
+            ? `Total paragraph characters (${totalParagrafos}) exceeds the limit of 3000 characters`
+            : `Total de caracteres dos parágrafos (${totalParagrafos}) excede o limite de 3000 caracteres`;
         return res.status(400).json({ error: errorMessage });
       }
-      
+
       if (totalImagens > 2000) {
-        const errorMessage = effectiveLanguage === 'en' 
-          ? `Total image description characters (${totalImagens}) exceeds the limit of 2000 characters`
-          : `Total de caracteres das descrições de imagem (${totalImagens}) excede o limite de 2000 caracteres`;
+        const errorMessage =
+          effectiveLanguage === "en"
+            ? `Total image description characters (${totalImagens}) exceeds the limit of 2000 characters`
+            : `Total de caracteres das descrições de imagem (${totalImagens}) excede o limite de 2000 caracteres`;
         return res.status(400).json({ error: errorMessage });
       }
     }
-    
+
     // Atualizar o carrossel no banco
     const carrosselAtualizado = await prisma.userCarrossel.update({
       where: { id: parseInt(id) },
       data: {
-        conteudo: JSON.stringify({ carrossel })
-      }
+        conteudo: JSON.stringify({ carrossel }),
+      },
     });
-    
+
     console.log("Carrossel atualizado com sucesso");
     res.json({ carrossel, id: carrosselAtualizado.id });
-    
   } catch (error) {
     console.error("❌ Erro ao atualizar carrossel:", error);
     res.status(500).json({ error: "Erro interno do servidor" });

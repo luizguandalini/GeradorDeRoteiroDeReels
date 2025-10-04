@@ -7,6 +7,19 @@ import "./App.css";
 
 import { LanguageProvider, useTranslation } from "./contexts/LanguageContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import {
+  initializeSocket,
+  disconnectSocket,
+  onTemasSuggestions,
+  offTemasSuggestions,
+  onRoteiroGenerated,
+  offRoteiroGenerated,
+  onTemasCarrosselSuggestions,
+  offTemasCarrosselSuggestions,
+  onCarrosselGenerated,
+  offCarrosselGenerated,
+} from "./services/socket";
+import logger from "./utils/logger";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import Login from "./components/Login/Login";
 import Header from "./components/Header/Header";
@@ -62,7 +75,7 @@ function App() {
 
 function AppContent() {
   const { t, setLanguage, language } = useTranslation();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [selectedTopico, setSelectedTopico] = useState("");
   const [temas, setTemas] = useState([]);
   const [selectedTema, setSelectedTema] = useState("");
@@ -80,6 +93,129 @@ function AppContent() {
   const [carrossel, setCarrossel] = useState([]);
   const [carrosselId, setCarrosselId] = useState(null);
   const [quantidade, setQuantidade] = useState(8); // Padrão 8 slides
+
+  // Inicializar WebSocket e configurar listeners quando usuário estiver autenticado
+  useEffect(() => {
+    // Debug: Verificar estado de autenticação
+    logger.sensitive("🔍 Verificando autenticação para WebSocket:");
+    logger.sensitive(
+      "  Token:",
+      token ? `${token.substring(0, 20)}...` : "❌ AUSENTE"
+    );
+    logger.debug("  User:", user ? "✅ Presente" : "❌ AUSENTE");
+    logger.sensitive("  User.email:", user?.email ? user.email : "❌ AUSENTE");
+
+    // Só inicializar se temos token e usuário válidos
+    if (!token || !user || !user.email) {
+      logger.warn(
+        "⚠️ WebSocket NÃO será inicializado - faltam dados de autenticação"
+      );
+      return;
+    }
+
+    logger.debug("🔌 Inicializando WebSocket para usuário:", user.email);
+    logger.sensitive("🔑 Token disponível:", token.substring(0, 20) + "...");
+
+    const socket = initializeSocket(token);
+
+    if (!socket) {
+      console.error("❌ Falha ao inicializar socket");
+      return;
+    }
+
+    // Expor função de debug globalmente (APENAS EM DESENVOLVIMENTO)
+    if (import.meta.env.DEV) {
+      window.__shakaDebug = () => {
+        logger.sensitive("=== 🔍 SHAKA DEBUG ===");
+        logger.sensitive("Token:", token);
+        logger.sensitive("User:", user);
+        logger.debug("Socket:", socket);
+        logger.debug("Socket conectado?", socket?.connected);
+        logger.debug("Socket ID:", socket?.id);
+        logger.sensitive("===================");
+      };
+    }
+
+    // Aguardar conexão antes de registrar listeners
+    const setupListeners = () => {
+      logger.debug("📡 Configurando listeners WebSocket...");
+
+      // Listener para sugestões de temas (roteiro-de-reels)
+      onTemasSuggestions((data) => {
+        logger.debug("📥 Sugestões de temas recebidas via WebSocket:", data);
+        if (data.temas && Array.isArray(data.temas)) {
+          setTemas(data.temas);
+          toast.success("Sugestões de temas carregadas!", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        }
+      });
+
+      // Listener para roteiro gerado
+      onRoteiroGenerated((data) => {
+        logger.debug("📥 Roteiro gerado recebido via WebSocket:", data);
+        if (data.roteiro && Array.isArray(data.roteiro)) {
+          setRoteiro(data.roteiro);
+          if (data.id) {
+            window.currentRoteiroId = data.id;
+          }
+          toast.success("Roteiro gerado com sucesso!", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        }
+      });
+
+      // Listener para sugestões de temas de carrossel
+      onTemasCarrosselSuggestions((data) => {
+        logger.debug(
+          "📥 Sugestões de temas de carrossel recebidas via WebSocket:",
+          data
+        );
+        if (data.temas && Array.isArray(data.temas)) {
+          setTemasCarrossel(data.temas);
+          toast.success("Sugestões de carrossel carregadas!", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        }
+      });
+
+      // Listener para carrossel gerado
+      onCarrosselGenerated((data) => {
+        logger.debug("📥 Carrossel gerado recebido via WebSocket:", data);
+        if (data.carrossel && Array.isArray(data.carrossel)) {
+          setCarrossel(data.carrossel);
+          if (data.id) {
+            setCarrosselId(data.id);
+          }
+          toast.success("Carrossel gerado com sucesso!", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        }
+      });
+    };
+
+    // Se já está conectado, configurar listeners imediatamente
+    if (socket.connected) {
+      setupListeners();
+    } else {
+      // Caso contrário, aguardar o evento de conexão
+      socket.once("connect", setupListeners);
+    }
+
+    // Cleanup: desconectar e remover listeners
+    return () => {
+      logger.debug("🔌 Limpando WebSocket e listeners...");
+      offTemasSuggestions();
+      offRoteiroGenerated();
+      offTemasCarrosselSuggestions();
+      offCarrosselGenerated();
+      disconnectSocket();
+    };
+  }, [token, user]);
 
   // Função para salvar quantidade preferida do usuário
   const saveQuantidadePreference = async (newQuantidade) => {
@@ -230,7 +366,10 @@ function AppContent() {
           carrosselResponse.data.carrossel.length > 0
         ) {
           setCarrossel(carrosselResponse.data.carrossel);
-          const returnedId = (carrosselResponse.data && carrosselResponse.data.id) ? carrosselResponse.data.id : null;
+          const returnedId =
+            carrosselResponse.data && carrosselResponse.data.id
+              ? carrosselResponse.data.id
+              : null;
           setCarrosselId(returnedId);
         } else {
           setCarrosselId(null);
@@ -401,21 +540,18 @@ function AppContent() {
     }
 
     try {
-      setLoading(true);
       setSelectedTopico(topico);
       setSelectedTema(null);
       setRoteiro([]);
       setNarracoesGeradas(false);
 
-      const res = await axios.post("/api/temas", {
+      // Dados chegam via WebSocket em tempo real
+      await axios.post("/api/temas", {
         topicoId: topico.id,
         language: language,
       });
-      setTemas(res.data.temas);
     } catch {
       toast.error(t("app.errors.loadTopics"), toastConfig);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -452,23 +588,17 @@ function AppContent() {
     }
 
     try {
-      setLoading(true);
       setSelectedTema(tema);
       setNarracoesGeradas(false);
-      const res = await axios.post("/api/roteiro", {
+
+      // Dados chegam via WebSocket em tempo real
+      await axios.post("/api/roteiro", {
         tema,
         duracao,
         language: language,
       });
-      setRoteiro(res.data.roteiro);
-      // Salvar o ID do roteiro para futuras atualizações
-      if (res.data.id) {
-        window.currentRoteiroId = res.data.id;
-      }
     } catch {
       toast.error(t("app.errors.generateScript"), toastConfig);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -515,21 +645,18 @@ function AppContent() {
     }
 
     try {
-      setLoading(true);
       setSelectedTopico(topico);
       setSelectedTemaCarrossel(null);
       setCarrossel([]);
       setCarrosselId(null);
 
-      const res = await axios.post("/api/temas-carrossel", {
+      // Dados chegam via WebSocket em tempo real
+      await axios.post("/api/temas-carrossel", {
         topicoId: topico.id,
         language: language,
       });
-      setTemasCarrossel(res.data.temas);
     } catch {
       toast.error(t("app.errors.loadTopics"), toastConfig);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -571,20 +698,16 @@ function AppContent() {
     }
 
     try {
-      setLoading(true);
       setSelectedTemaCarrossel(tema);
-      const res = await axios.post("/api/carrossel", {
+
+      // Dados chegam via WebSocket em tempo real
+      await axios.post("/api/carrossel", {
         tema,
         quantidade,
         language: language,
       });
-      setCarrossel(res.data.carrossel);
-      const retrievedId = res.data && res.data.id ? res.data.id : null;
-      setCarrosselId(retrievedId);
     } catch {
       toast.error(t("app.errors.generateCarrossel"), toastConfig);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -601,9 +724,7 @@ function AppContent() {
       });
 
       const updatedCarrossel =
-        response &&
-        response.data &&
-        Array.isArray(response.data.carrossel)
+        response && response.data && Array.isArray(response.data.carrossel)
           ? response.data.carrossel
           : novoCarrossel;
       setCarrossel(updatedCarrossel);
@@ -640,10 +761,7 @@ function AppContent() {
         <Header />
 
         <Routes>
-          <Route
-            path="/"
-            element={<Landing />}
-          />
+          <Route path="/" element={<Landing />} />
           <Route
             path="/roteiro-de-reels"
             element={

@@ -61,6 +61,7 @@ const Home = ({
       <ScriptSection
         roteiro={roteiro}
         onSaveRoteiro={onSaveRoteiro}
+        onNarracoesGeradas={onNarracoesGeradas}
       />
       <NarrationSection
         roteiro={roteiro}

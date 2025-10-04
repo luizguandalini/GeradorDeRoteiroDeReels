@@ -11,6 +11,7 @@ import {
   SUPPORTED_LANGUAGES,
   DEFAULT_LANGUAGE,
 } from "../config/language.js";
+import { emitTemasSuggestions } from "../services/socketService.js";
 
 dotenv.config();
 const router = express.Router();
@@ -24,11 +25,11 @@ router.get("/:topicoId", async (req, res) => {
     }
 
     const { topicoId } = req.params;
-    
+
     const topico = await prisma.userTopico.findFirst({
-      where: { 
+      where: {
         id: parseInt(topicoId, 10),
-        userId: req.user.id
+        userId: req.user.id,
       },
     });
 
@@ -40,11 +41,11 @@ router.get("/:topicoId", async (req, res) => {
       where: {
         userTopicoId: topico.id,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     res.json({
-      temas: temas.map(t => t.titulo),
+      temas: temas.map((t) => t.titulo),
       topico: topico.nome,
     });
   } catch (error) {
@@ -68,26 +69,32 @@ const SYSTEM_MESSAGES = {
 router.post("/", async (req, res) => {
   try {
     // Admin tem acesso irrestrito; usuários comuns precisam ter créditos
-    const isAdmin = req.user?.role === 'ADMIN';
+    const isAdmin = req.user?.role === "ADMIN";
     if (!getMockMode() && !isAdmin) {
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
-        select: { quotaTemas: true }
+        select: { quotaTemas: true },
       });
       if (!user || user.quotaTemas <= 0) {
-        return res.status(403).json({ error: "Limite de geração de temas atingido" });
+        return res
+          .status(403)
+          .json({ error: "Limite de geração de temas atingido" });
       }
     }
     const requestedLanguageRaw =
       typeof req.body.language === "string" ? req.body.language.trim() : null;
-    
+
     // Validar language - deve ser exatamente 'pt-BR' ou 'en'
-    if (requestedLanguageRaw && !SUPPORTED_LANGUAGES.includes(requestedLanguageRaw)) {
-      return res.status(400).json({ 
-        error: "Invalid language parameter. Only 'pt-BR' and 'en' are supported." 
+    if (
+      requestedLanguageRaw &&
+      !SUPPORTED_LANGUAGES.includes(requestedLanguageRaw)
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid language parameter. Only 'pt-BR' and 'en' are supported.",
       });
     }
-    
+
     const requestedLanguage = SUPPORTED_LANGUAGES.includes(requestedLanguageRaw)
       ? requestedLanguageRaw
       : null;
@@ -247,15 +254,33 @@ router.post("/", async (req, res) => {
     if (!getMockMode() && !isAdmin) {
       await prisma.user.update({
         where: { id: req.user.id },
-        data: { quotaTemas: { decrement: 1 } }
+        data: { quotaTemas: { decrement: 1 } },
       });
     }
 
-    res.json({
+    const responseData = {
       temas: temasCreated.map((t) => t.titulo),
       topico: topico.nome,
       language,
-    });
+    };
+
+    // Emitir evento via websocket
+    console.log("🔌 Verificando WebSocket...");
+    console.log("req.io disponível?", !!req.io);
+    console.log("User ID:", req.user.id);
+
+    if (req.io) {
+      console.log(
+        "📤 Emitindo evento temas:suggestions para usuário",
+        req.user.id
+      );
+      emitTemasSuggestions(req.io, req.user.id, responseData);
+      console.log("✅ Evento emitido com sucesso!");
+    } else {
+      console.error("❌ req.io não está disponível!");
+    }
+
+    res.json(responseData);
   } catch (error) {
     console.error("? Erro na rota /temas:", error.message);
     res.status(500).json({ error: error.message });

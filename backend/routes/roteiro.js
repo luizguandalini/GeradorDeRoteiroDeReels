@@ -11,6 +11,10 @@ import {
   SUPPORTED_LANGUAGES,
   DEFAULT_LANGUAGE,
 } from "../config/language.js";
+import {
+  emitRoteiroGenerated,
+  emitRoteiroProgress,
+} from "../services/socketService.js";
 
 dotenv.config();
 const router = express.Router();
@@ -26,9 +30,9 @@ router.get("/", async (req, res) => {
     const ultimoRoteiro = await prisma.userRoteiro.findFirst({
       where: {
         userId: req.user.id,
-        ativo: true
+        ativo: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
 
     if (!ultimoRoteiro) {
@@ -67,31 +71,33 @@ router.post("/", async (req, res) => {
     }
 
     // Admin tem acesso irrestrito; usuários comuns precisam ter créditos de roteiro
-    const isAdmin = req.user?.role === 'ADMIN';
+    const isAdmin = req.user?.role === "ADMIN";
     if (!isAdmin) {
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
-        select: { quotaRoteiros: true }
+        select: { quotaRoteiros: true },
       });
       if (!user || user.quotaRoteiros <= 0) {
-        const errorMessage = normalizeLanguage(req.user?.language) === 'en'
-          ? 'You have no remaining script generations'
-          : 'Limite de geração de roteiros atingido';
+        const errorMessage =
+          normalizeLanguage(req.user?.language) === "en"
+            ? "You have no remaining script generations"
+            : "Limite de geração de roteiros atingido";
         return res.status(403).json({ error: errorMessage });
       }
     }
 
     const { tema, duracao, language: languageFromBody } = req.body;
-    
+
     // Validar language - deve ser exatamente 'pt-BR' ou 'en'
     const requestedLanguage =
       typeof languageFromBody === "string" ? languageFromBody.trim() : null;
     if (requestedLanguage && !SUPPORTED_LANGUAGES.includes(requestedLanguage)) {
-      return res.status(400).json({ 
-        error: "Invalid language parameter. Only 'pt-BR' and 'en' are supported." 
+      return res.status(400).json({
+        error:
+          "Invalid language parameter. Only 'pt-BR' and 'en' are supported.",
       });
     }
-    
+
     const effectiveLanguage = SUPPORTED_LANGUAGES.includes(requestedLanguage)
       ? requestedLanguage
       : normalizeLanguage(req.user?.language);
@@ -104,9 +110,9 @@ router.post("/", async (req, res) => {
     console.log({
       userId: req.user?.id,
       role: req.user?.role,
-      ip: req.headers['x-forwarded-for'] || req.ip,
-      temaPreview: typeof tema === 'string' ? tema.slice(0, 120) : null,
-      temaLength: typeof tema === 'string' ? tema.length : null,
+      ip: req.headers["x-forwarded-for"] || req.ip,
+      temaPreview: typeof tema === "string" ? tema.slice(0, 120) : null,
+      temaLength: typeof tema === "string" ? tema.length : null,
       duracaoRaw: duracao,
       duracaoInt,
       languageFromBody: languageFromBody ?? null,
@@ -114,27 +120,30 @@ router.post("/", async (req, res) => {
       effectiveLanguage,
       timestamp: new Date().toISOString(),
     });
-    
+
     // Validar tema (deve ter no máximo 500 caracteres)
-    if (!tema || typeof tema !== 'string') {
-      const errorMessage = effectiveLanguage === 'en' 
-        ? 'Theme is required and must be a string'
-        : 'Tema é obrigatório e deve ser um texto';
+    if (!tema || typeof tema !== "string") {
+      const errorMessage =
+        effectiveLanguage === "en"
+          ? "Theme is required and must be a string"
+          : "Tema é obrigatório e deve ser um texto";
       return res.status(400).json({ error: errorMessage });
     }
-    
+
     if (tema.length > 500) {
-      const errorMessage = effectiveLanguage === 'en' 
-        ? 'Theme must not exceed 500 characters'
-        : 'O tema não pode exceder 500 caracteres';
+      const errorMessage =
+        effectiveLanguage === "en"
+          ? "Theme must not exceed 500 characters"
+          : "O tema não pode exceder 500 caracteres";
       return res.status(400).json({ error: errorMessage });
     }
-    
+
     // Validar duração (deve ser um número inteiro entre 30 e 120)
     if (!duracao || isNaN(duracaoInt) || duracaoInt < 30 || duracaoInt > 120) {
-      const errorMessage = effectiveLanguage === 'en' 
-        ? 'Duration must be between 30 and 120 seconds'
-        : 'A duração deve estar entre 30 e 120 segundos';
+      const errorMessage =
+        effectiveLanguage === "en"
+          ? "Duration must be between 30 and 120 seconds"
+          : "A duração deve estar entre 30 e 120 segundos";
       return res.status(400).json({ error: errorMessage });
     }
 
@@ -276,7 +285,10 @@ router.post("/", async (req, res) => {
         usage: usage ?? null,
       });
     } catch (usageErr) {
-      console.log("Não foi possível obter usage da resposta:", usageErr?.message);
+      console.log(
+        "Não foi possível obter usage da resposta:",
+        usageErr?.message
+      );
     }
     let conteudo = response.data.choices[0].message.content;
     console.log("Conteúdo retornado:", conteudo);
@@ -290,54 +302,58 @@ router.post("/", async (req, res) => {
     try {
       parsed = JSON.parse(conteudo);
       console.log("Conteúdo parseado:", parsed);
-      
+
       // Validar limites de caracteres
       if (parsed.roteiro && Array.isArray(parsed.roteiro)) {
         let totalNarracoes = 0;
         let totalImagens = 0;
-        
+
         for (const item of parsed.roteiro) {
           // Validar que nenhum combo tenha campos vazios
           if (!item.narracao || !item.narracao.trim()) {
-            const errorMessage = effectiveLanguage === 'en' 
-              ? 'All narration fields must be filled'
-              : 'Todos os campos de narração devem ser preenchidos';
+            const errorMessage =
+              effectiveLanguage === "en"
+                ? "All narration fields must be filled"
+                : "Todos os campos de narração devem ser preenchidos";
             return res.status(400).json({ error: errorMessage });
           }
-          
+
           if (!item.imagem || !item.imagem.trim()) {
-            const errorMessage = effectiveLanguage === 'en' 
-              ? 'All image/video description fields must be filled'
-              : 'Todos os campos de descrição de imagem/vídeo devem ser preenchidos';
+            const errorMessage =
+              effectiveLanguage === "en"
+                ? "All image/video description fields must be filled"
+                : "Todos os campos de descrição de imagem/vídeo devem ser preenchidos";
             return res.status(400).json({ error: errorMessage });
           }
-          
+
           totalNarracoes += item.narracao.length;
           totalImagens += item.imagem.length;
         }
-        
+
         if (totalNarracoes > 2000) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? `Total narration characters (${totalNarracoes}) exceeds the limit of 2000 characters`
-            : `Total de caracteres das narrações (${totalNarracoes}) excede o limite de 2000 caracteres`;
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? `Total narration characters (${totalNarracoes}) exceeds the limit of 2000 characters`
+              : `Total de caracteres das narrações (${totalNarracoes}) excede o limite de 2000 caracteres`;
           return res.status(400).json({ error: errorMessage });
         }
-        
+
         if (totalImagens > 2000) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? `Total image/video description characters (${totalImagens}) exceeds the limit of 2000 characters`
-            : `Total de caracteres das descrições de imagem/vídeo (${totalImagens}) excede o limite de 2000 caracteres`;
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? `Total image/video description characters (${totalImagens}) exceeds the limit of 2000 characters`
+              : `Total de caracteres das descrições de imagem/vídeo (${totalImagens}) excede o limite de 2000 caracteres`;
           return res.status(400).json({ error: errorMessage });
         }
       }
-      
+
       // Deletar roteiros antigos do usuário
       await prisma.userRoteiro.updateMany({
         where: {
           userId: req.user.id,
-          ativo: true
+          ativo: true,
         },
-        data: { ativo: false }
+        data: { ativo: false },
       });
       console.log("Roteiros antigos desativados");
 
@@ -348,19 +364,30 @@ router.post("/", async (req, res) => {
           duracao: parseInt(duracao),
           conteudo: JSON.stringify(parsed),
           userId: req.user.id,
-          ativo: true
-        }
+          ativo: true,
+        },
       });
       console.log("Novo roteiro salvo no banco");
       // Decrementar crédito apenas em cenário feliz
       if (!isAdmin) {
         await prisma.user.update({
           where: { id: req.user.id },
-          data: { quotaRoteiros: { decrement: 1 } }
+          data: { quotaRoteiros: { decrement: 1 } },
         });
       }
-      
-      res.json({ ...parsed, language: effectiveLanguage, id: novoRoteiro.id });
+
+      const responseData = {
+        ...parsed,
+        language: effectiveLanguage,
+        id: novoRoteiro.id,
+      };
+
+      // Emitir evento via websocket
+      if (req.io) {
+        emitRoteiroGenerated(req.io, req.user.id, responseData);
+      }
+
+      res.json(responseData);
     } catch (parseError) {
       console.error("? Erro ao fazer parse do JSON:", parseError.message);
       res.status(500).json({
@@ -390,77 +417,81 @@ router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { roteiro } = req.body;
-    
+
     // Determinar idioma efetivo para mensagens de erro
     const effectiveLanguage = normalizeLanguage(req.user?.language);
-    
+
     // Verificar se o roteiro pertence ao usuário
     const roteiroExistente = await prisma.userRoteiro.findFirst({
       where: {
         id: parseInt(id),
         userId: req.user.id,
-        ativo: true
-      }
+        ativo: true,
+      },
     });
-    
+
     if (!roteiroExistente) {
-      const errorMessage = effectiveLanguage === 'en' 
-        ? 'Script not found'
-        : 'Roteiro não encontrado';
+      const errorMessage =
+        effectiveLanguage === "en"
+          ? "Script not found"
+          : "Roteiro não encontrado";
       return res.status(404).json({ error: errorMessage });
     }
-    
+
     // Validar limites de caracteres
     if (roteiro && Array.isArray(roteiro)) {
       let totalNarracoes = 0;
       let totalImagens = 0;
-      
+
       for (const item of roteiro) {
         // Validar que nenhum combo tenha campos vazios
         if (!item.narracao || !item.narracao.trim()) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? 'All narration fields must be filled'
-            : 'Todos os campos de narração devem ser preenchidos';
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? "All narration fields must be filled"
+              : "Todos os campos de narração devem ser preenchidos";
           return res.status(400).json({ error: errorMessage });
         }
-        
+
         if (!item.imagem || !item.imagem.trim()) {
-          const errorMessage = effectiveLanguage === 'en' 
-            ? 'All image/video description fields must be filled'
-            : 'Todos os campos de descrição de imagem/vídeo devem ser preenchidos';
+          const errorMessage =
+            effectiveLanguage === "en"
+              ? "All image/video description fields must be filled"
+              : "Todos os campos de descrição de imagem/vídeo devem ser preenchidos";
           return res.status(400).json({ error: errorMessage });
         }
-        
+
         totalNarracoes += item.narracao.length;
         totalImagens += item.imagem.length;
       }
-      
+
       if (totalNarracoes > 2000) {
-        const errorMessage = effectiveLanguage === 'en' 
-          ? `Total narration characters (${totalNarracoes}) exceeds the limit of 2000 characters`
-          : `Total de caracteres das narrações (${totalNarracoes}) excede o limite de 2000 caracteres`;
+        const errorMessage =
+          effectiveLanguage === "en"
+            ? `Total narration characters (${totalNarracoes}) exceeds the limit of 2000 characters`
+            : `Total de caracteres das narrações (${totalNarracoes}) excede o limite de 2000 caracteres`;
         return res.status(400).json({ error: errorMessage });
       }
-      
+
       if (totalImagens > 2000) {
-        const errorMessage = effectiveLanguage === 'en' 
-          ? `Total image/video description characters (${totalImagens}) exceeds the limit of 2000 characters`
-          : `Total de caracteres das descrições de imagem/vídeo (${totalImagens}) excede o limite de 2000 caracteres`;
+        const errorMessage =
+          effectiveLanguage === "en"
+            ? `Total image/video description characters (${totalImagens}) exceeds the limit of 2000 characters`
+            : `Total de caracteres das descrições de imagem/vídeo (${totalImagens}) excede o limite de 2000 caracteres`;
         return res.status(400).json({ error: errorMessage });
       }
     }
-    
+
     // Atualizar o roteiro no banco
     const roteiroAtualizado = await prisma.userRoteiro.update({
       where: { id: parseInt(id) },
       data: {
-        conteudo: JSON.stringify({ roteiro })
-      }
+        conteudo: JSON.stringify({ roteiro }),
+      },
     });
-    
+
     console.log("Roteiro atualizado com sucesso");
     res.json({ roteiro, id: roteiroAtualizado.id });
-    
   } catch (error) {
     console.error("❌ Erro ao atualizar roteiro:", error);
     res.status(500).json({ error: "Erro interno do servidor" });

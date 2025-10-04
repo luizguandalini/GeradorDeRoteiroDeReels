@@ -1,9 +1,9 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import { OAuth2Client } from 'google-auth-library';
-import { PrismaClient } from '@prisma/client';
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { OAuth2Client } from "google-auth-library";
+import { PrismaClient } from "@prisma/client";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -13,23 +13,34 @@ const MAX_EMAIL_LENGTH = 254; // RFC 5321 padrão para email
 const MAX_PASSWORD_LENGTH = 128; // Limite razoável para senhas
 const MAX_NAME_LENGTH = 100; // Limite para nomes de usuário
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
-const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
+const googleClient = GOOGLE_CLIENT_ID
+  ? new OAuth2Client(GOOGLE_CLIENT_ID)
+  : null;
 
 const parsePositiveInt = (value, fallback) => {
   const parsed = parseInt(value, 10);
   return Number.isNaN(parsed) || parsed <= 0 ? fallback : parsed;
 };
 
-const isProduction = process.env.NODE_ENV === 'production';
-const ACCESS_TOKEN_TTL_SECONDS = parsePositiveInt(process.env.ACCESS_TOKEN_TTL_SECONDS, 900);
-const REFRESH_TOKEN_TTL_DAYS = parsePositiveInt(process.env.REFRESH_TOKEN_TTL_DAYS, 7);
-const REFRESH_COOKIE_NAME = 'refreshToken';
-const REFRESH_TOKEN_EXPIRATION_MS = REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000;
+const isProduction = process.env.NODE_ENV === "production";
+const ACCESS_TOKEN_TTL_SECONDS = parsePositiveInt(
+  process.env.ACCESS_TOKEN_TTL_SECONDS,
+  900
+);
+const REFRESH_TOKEN_TTL_DAYS = parsePositiveInt(
+  process.env.REFRESH_TOKEN_TTL_DAYS,
+  7
+);
+const REFRESH_COOKIE_NAME = "refreshToken";
+const REFRESH_TOKEN_EXPIRATION_MS =
+  REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000;
 
 const buildUserResponse = (user) => ({
+  email: user.email, // Necessário para identificação no frontend e WebSocket
   name: user.name,
   role: user.role, // Necessário para controle de acesso no frontend
   language: user.language,
@@ -38,28 +49,30 @@ const buildUserResponse = (user) => ({
   quotaRoteiros: user.quotaRoteiros ?? 0,
   quotaNarracoes: user.quotaNarracoes ?? 0,
   quotaTemasCarrossel: user.quotaTemasCarrossel ?? 0,
-  quotaCarrossel: user.quotaCarrossel ?? 0
+  quotaCarrossel: user.quotaCarrossel ?? 0,
 });
 
-const generateUserToken = (user) => jwt.sign(
-  {
-    userId: user.id,
-    email: user.email,
-    role: user.role
-  },
-  JWT_SECRET,
-  { expiresIn: ACCESS_TOKEN_TTL_SECONDS }
-);
+const generateUserToken = (user) =>
+  jwt.sign(
+    {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    },
+    JWT_SECRET,
+    { expiresIn: ACCESS_TOKEN_TTL_SECONDS }
+  );
 
-const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+const hashToken = (token) =>
+  crypto.createHash("sha256").update(token).digest("hex");
 
 const setRefreshTokenCookie = (res, token) => {
   res.cookie(REFRESH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
-    path: '/api/auth',
-    maxAge: REFRESH_TOKEN_EXPIRATION_MS
+    sameSite: isProduction ? "strict" : "lax",
+    path: "/api/auth",
+    maxAge: REFRESH_TOKEN_EXPIRATION_MS,
   });
 };
 
@@ -67,39 +80,39 @@ const clearRefreshTokenCookie = (res) => {
   res.clearCookie(REFRESH_COOKIE_NAME, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
-    path: '/api/auth'
+    sameSite: isProduction ? "strict" : "lax",
+    path: "/api/auth",
   });
 };
 
 const issueRefreshToken = async (userId) => {
   const now = new Date();
-  const rawToken = crypto.randomBytes(64).toString('hex');
+  const rawToken = crypto.randomBytes(64).toString("hex");
   const tokenHash = hashToken(rawToken);
   const expiresAt = new Date(now.getTime() + REFRESH_TOKEN_EXPIRATION_MS);
 
   await prisma.refreshToken.deleteMany({
     where: {
       userId,
-      expiresAt: { lt: now }
-    }
+      expiresAt: { lt: now },
+    },
   });
 
   await prisma.refreshToken.updateMany({
     where: {
       userId,
       revokedAt: null,
-      expiresAt: { gt: now }
+      expiresAt: { gt: now },
     },
-    data: { revokedAt: now }
+    data: { revokedAt: now },
   });
 
   await prisma.refreshToken.create({
     data: {
       userId,
       tokenHash,
-      expiresAt
-    }
+      expiresAt,
+    },
   });
 
   return { rawToken, expiresAt };
@@ -111,11 +124,11 @@ const extractRefreshToken = (req) => {
     return null;
   }
 
-  const cookies = cookiesHeader.split(';').map((cookie) => cookie.trim());
+  const cookies = cookiesHeader.split(";").map((cookie) => cookie.trim());
   for (const cookie of cookies) {
-    const [name, ...rest] = cookie.split('=');
+    const [name, ...rest] = cookie.split("=");
     if (decodeURIComponent(name) === REFRESH_COOKIE_NAME) {
-      return decodeURIComponent(rest.join('='));
+      return decodeURIComponent(rest.join("="));
     }
   }
 
@@ -132,7 +145,7 @@ const sendAuthResponse = async (res, user, message) => {
     message,
     token,
     user: buildUserResponse(user),
-    expiresIn: ACCESS_TOKEN_TTL_SECONDS
+    expiresIn: ACCESS_TOKEN_TTL_SECONDS,
   });
 };
 
@@ -148,19 +161,19 @@ const authUserSelect = {
   quotaRoteiros: true,
   quotaNarracoes: true,
   quotaTemasCarrossel: true,
-  quotaCarrossel: true
+  quotaCarrossel: true,
 };
 
 const upsertSocialUser = async ({ email, name, provider, providerId }) => {
   if (providerId) {
     const userByProvider = await prisma.user.findUnique({
       where: { providerId },
-      select: authUserSelect
+      select: authUserSelect,
     });
 
     if (userByProvider) {
       if (!userByProvider.active) {
-        throw new Error('Conta de usuário inativa');
+        throw new Error("Conta de usuário inativa");
       }
 
       return prisma.user.update({
@@ -168,9 +181,9 @@ const upsertSocialUser = async ({ email, name, provider, providerId }) => {
         data: {
           name: userByProvider.name || name,
           provider,
-          providerId
+          providerId,
         },
-        select: authUserSelect
+        select: authUserSelect,
       });
     }
   }
@@ -178,15 +191,19 @@ const upsertSocialUser = async ({ email, name, provider, providerId }) => {
   const normalizedEmail = email.trim().toLowerCase();
 
   let user = await prisma.user.findUnique({
-    where: { email: normalizedEmail }
+    where: { email: normalizedEmail },
   });
 
   if (user) {
     if (!user.active) {
-      throw new Error('Conta de usuário inativa');
+      throw new Error("Conta de usuário inativa");
     }
 
-    if (user.provider && user.provider !== provider && user.provider !== 'CREDENTIALS') {
+    if (
+      user.provider &&
+      user.provider !== provider &&
+      user.provider !== "CREDENTIALS"
+    ) {
       throw new Error(`Conta já vinculada ao login via ${user.provider}`);
     }
 
@@ -195,9 +212,9 @@ const upsertSocialUser = async ({ email, name, provider, providerId }) => {
       data: {
         name: user.name || name,
         provider,
-        providerId
+        providerId,
       },
-      select: authUserSelect
+      select: authUserSelect,
     });
 
     return user;
@@ -210,55 +227,59 @@ const upsertSocialUser = async ({ email, name, provider, providerId }) => {
       provider,
       providerId,
       password: null,
-      role: 'GENERAL'
+      role: "GENERAL",
     },
-    select: authUserSelect
+    select: authUserSelect,
   });
 };
 
 // Função para validar limites de entrada
 const validateInputLimits = (data) => {
   const errors = [];
-  
+
   if (data.email && data.email.length > MAX_EMAIL_LENGTH) {
     errors.push(`Email deve ter no máximo ${MAX_EMAIL_LENGTH} caracteres`);
   }
-  
+
   if (data.password && data.password.length > MAX_PASSWORD_LENGTH) {
     errors.push(`Senha deve ter no máximo ${MAX_PASSWORD_LENGTH} caracteres`);
   }
-  
+
   if (data.name && data.name.length > MAX_NAME_LENGTH) {
     errors.push(`Nome deve ter no máximo ${MAX_NAME_LENGTH} caracteres`);
   }
-  
+
   return errors;
 };
 
 // Registro de usuário
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
-    const { email, password, name, role = 'GENERAL' } = req.body;
+    const { email, password, name, role = "GENERAL" } = req.body;
 
     // Validar limites de caracteres
     const validationErrors = validateInputLimits({ email, password, name });
     if (validationErrors.length > 0) {
-      return res.status(400).json({ error: validationErrors.join(', ') });
+      return res.status(400).json({ error: validationErrors.join(", ") });
     }
 
     const normalizedEmail = email?.trim().toLowerCase();
 
     if (!normalizedEmail || !password || !name) {
-      return res.status(400).json({ error: 'Email, senha e nome são obrigatórios' });
+      return res
+        .status(400)
+        .json({ error: "Email, senha e nome são obrigatórios" });
     }
 
     // Verificar se o usuário já existe
     const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail }
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
-      return res.status(400).json({ error: 'Usuário já existe com este email' });
+      return res
+        .status(400)
+        .json({ error: "Usuário já existe com este email" });
     }
 
     // Hash da senha
@@ -271,7 +292,7 @@ router.post('/register', async (req, res) => {
         password: hashedPassword,
         name,
         role: role.toUpperCase(),
-        provider: 'CREDENTIALS'
+        provider: "CREDENTIALS",
       },
       select: {
         id: true,
@@ -280,110 +301,125 @@ router.post('/register', async (req, res) => {
         role: true,
         provider: true,
         language: true,
-        createdAt: true
-      }
+        createdAt: true,
+      },
     });
 
-    res.status(201).json({ 
-      message: 'Usuário criado com sucesso',
-      user 
+    res.status(201).json({
+      message: "Usuário criado com sucesso",
+      user,
     });
   } catch (error) {
-    console.error('Erro no registro:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error("Erro no registro:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Validar limites de caracteres
     const validationErrors = validateInputLimits({ email, password });
     if (validationErrors.length > 0) {
-      return res.status(400).json({ error: validationErrors.join(', ') });
+      return res.status(400).json({ error: validationErrors.join(", ") });
     }
 
     // Buscar usuário
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (!user || !user.active) {
-      return res.status(401).json({ error: 'Credenciais inválidas' });
+      return res.status(401).json({ error: "Credenciais inválidas" });
     }
 
     if (!user.password) {
-      const providerLabel = user.provider === 'GOOGLE' ? 'Google' : 'social';
-      return res.status(400).json({ error: `Esta conta está vinculada ao login via ${providerLabel}. Utilize o botão de login social correspondente.` });
+      const providerLabel = user.provider === "GOOGLE" ? "Google" : "social";
+      return res
+        .status(400)
+        .json({
+          error: `Esta conta está vinculada ao login via ${providerLabel}. Utilize o botão de login social correspondente.`,
+        });
     }
 
     // Verificar senha
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Credenciais inválidas' });
+      return res.status(401).json({ error: "Credenciais inválidas" });
     }
 
-    return sendAuthResponse(res, user, 'Login realizado com sucesso');
+    return sendAuthResponse(res, user, "Login realizado com sucesso");
   } catch (error) {
-    console.error('Erro no login:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error("Erro no login:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
 
 // Login com Google
-router.post('/google', async (req, res) => {
+router.post("/google", async (req, res) => {
   try {
     const { token } = req.body;
 
     if (!token) {
-      return res.status(400).json({ error: 'Token do Google não informado' });
+      return res.status(400).json({ error: "Token do Google não informado" });
     }
 
     if (!googleClient) {
-      return res.status(500).json({ error: 'Login com Google não está configurado no servidor' });
+      return res
+        .status(500)
+        .json({ error: "Login com Google não está configurado no servidor" });
     }
 
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
-      audience: GOOGLE_CLIENT_ID
+      audience: GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
 
     if (!payload?.email) {
-      return res.status(401).json({ error: 'Não foi possível obter o email do Google' });
+      return res
+        .status(401)
+        .json({ error: "Não foi possível obter o email do Google" });
     }
 
     if (payload.email_verified === false) {
-      return res.status(401).json({ error: 'Email Google não verificado' });
+      return res.status(401).json({ error: "Email Google não verificado" });
     }
 
     const user = await upsertSocialUser({
       email: payload.email,
-      name: payload.name || `${payload.given_name || ''} ${payload.family_name || ''}`.trim() || 'Usuário Google',
-      provider: 'GOOGLE',
-      providerId: payload.sub
+      name:
+        payload.name ||
+        `${payload.given_name || ""} ${payload.family_name || ""}`.trim() ||
+        "Usuário Google",
+      provider: "GOOGLE",
+      providerId: payload.sub,
     });
 
-    return sendAuthResponse(res, user, 'Login via Google realizado com sucesso');
+    return sendAuthResponse(
+      res,
+      user,
+      "Login via Google realizado com sucesso"
+    );
   } catch (error) {
-    console.error('Erro no login com Google:', error);
-    const message = error.message?.includes('Conta já vinculada')
+    console.error("Erro no login com Google:", error);
+    const message = error.message?.includes("Conta já vinculada")
       ? error.message
-      : 'Não foi possível autenticar com Google';
+      : "Não foi possível autenticar com Google";
     return res.status(401).json({ error: message });
   }
 });
 
 // Renovar access token
-router.post('/refresh', async (req, res) => {
+router.post("/refresh", async (req, res) => {
   try {
     const refreshToken = extractRefreshToken(req);
 
     if (!refreshToken) {
-      return res.status(401).json({ error: 'Refresh token não fornecido' });
+      return res.status(401).json({ error: "Refresh token não fornecido" });
     }
 
     const tokenHash = hashToken(refreshToken);
@@ -393,51 +429,59 @@ router.post('/refresh', async (req, res) => {
       where: { tokenHash },
       include: {
         user: {
-          select: authUserSelect
-        }
-      }
+          select: authUserSelect,
+        },
+      },
     });
 
     if (!storedToken || storedToken.revokedAt || storedToken.expiresAt <= now) {
       if (storedToken?.id && !storedToken.revokedAt) {
         await prisma.refreshToken.update({
           where: { id: storedToken.id },
-          data: { revokedAt: now }
+          data: { revokedAt: now },
         });
       }
 
       clearRefreshTokenCookie(res);
-      return res.status(401).json({ error: 'Refresh token inválido' });
+      return res.status(401).json({ error: "Refresh token inválido" });
     }
 
     if (!storedToken.user || !storedToken.user.active) {
       clearRefreshTokenCookie(res);
-      return res.status(401).json({ error: 'Usuário não encontrado ou inativo' });
+      return res
+        .status(401)
+        .json({ error: "Usuário não encontrado ou inativo" });
     }
 
     await prisma.refreshToken.update({
       where: { id: storedToken.id },
-      data: { revokedAt: now }
+      data: { revokedAt: now },
     });
 
-    return sendAuthResponse(res, storedToken.user, 'Sessão renovada com sucesso');
+    return sendAuthResponse(
+      res,
+      storedToken.user,
+      "Sessão renovada com sucesso"
+    );
   } catch (error) {
-    console.error('Erro no refresh token:', error);
-    return res.status(401).json({ error: 'Não foi possível renovar o token de acesso' });
+    console.error("Erro no refresh token:", error);
+    return res
+      .status(401)
+      .json({ error: "Não foi possível renovar o token de acesso" });
   }
 });
 
 // Verificar token
-router.get('/verify', async (req, res) => {
+router.get("/verify", async (req, res) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
+    const token = req.headers.authorization?.replace("Bearer ", "");
+
     if (!token) {
-      return res.status(401).json({ error: 'Token não fornecido' });
+      return res.status(401).json({ error: "Token não fornecido" });
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    
+
     // Buscar usuário atualizado
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -448,23 +492,25 @@ router.get('/verify', async (req, res) => {
         role: true,
         active: true,
         provider: true,
-        language: true
-      }
+        language: true,
+      },
     });
 
     if (!user || !user.active) {
-      return res.status(401).json({ error: 'Usuário não encontrado ou inativo' });
+      return res
+        .status(401)
+        .json({ error: "Usuário não encontrado ou inativo" });
     }
 
     res.json({ user });
   } catch (error) {
-    console.error('Erro na verificação do token:', error);
-    res.status(401).json({ error: 'Token inválido' });
+    console.error("Erro na verificação do token:", error);
+    res.status(401).json({ error: "Token inválido" });
   }
 });
 
 // Logout (encerra sessão e revoga refresh token)
-router.post('/logout', async (req, res) => {
+router.post("/logout", async (req, res) => {
   try {
     const refreshToken = extractRefreshToken(req);
 
@@ -472,25 +518,16 @@ router.post('/logout', async (req, res) => {
       const tokenHash = hashToken(refreshToken);
       await prisma.refreshToken.updateMany({
         where: { tokenHash, revokedAt: null },
-        data: { revokedAt: new Date() }
+        data: { revokedAt: new Date() },
       });
     }
   } catch (error) {
-    console.error('Erro no logout:', error);
+    console.error("Erro no logout:", error);
   } finally {
     clearRefreshTokenCookie(res);
   }
 
-  res.json({ message: 'Logout realizado com sucesso' });
+  res.json({ message: "Logout realizado com sucesso" });
 });
 
 export default router;
-
-
-
-
-
-
-
-
-

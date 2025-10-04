@@ -14,7 +14,12 @@ import jsPDF from "jspdf";
 import { toast } from "react-toastify";
 import "./Roteiro.css";
 
-function Roteiro({ roteiro, onSaveRoteiro }) {
+function Roteiro({
+  roteiro,
+  onSaveRoteiro,
+  onNarracoesGeradas,
+  onAudioGenerated,
+}) {
   const [texto, setTexto] = useState("");
   const [editingSteps, setEditingSteps] = useState([]); // Array de objetos com os passos editáveis
   const [editingField, setEditingField] = useState(null); // { stepIndex, field: 'nar' | 'img' }
